@@ -13,6 +13,9 @@ dependencies:
   provider: ^6.1.5+1
   shared_preferences: ^2.5.5
   image_picker: ^1.1.2
+  file_picker: ^11.0.2
+  mime: ^2.0.0
+  audiotags: ^1.4.5
 
 dev_dependencies:
   flutter_test:
