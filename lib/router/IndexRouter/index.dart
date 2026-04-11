@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:myapp/providers/ThemeProvider/index.dart';
 import 'package:myapp/views/Files/index.dart';
 import 'package:myapp/views/Home/index.dart';
+import 'package:myapp/views/Login/index.dart';
+import 'package:myapp/views/Login/register.dart';
 import 'package:myapp/views/Music/index.dart';
 import 'package:myapp/views/Settings/index.dart';
 import 'package:myapp/views/Splash/index.dart';
@@ -41,8 +43,12 @@ final _shellBranches = [
 
 final _routes = [
   GoRoute(path: "/splash", builder: (context, state) => SplashPage()),
+  GoRoute(path: "/login", builder: (context, state) => LoginPage()),
+  GoRoute(path: "/register", builder: (context, state) => RegisterPage()),
   ShellRoute(
-    builder: (context, state, child) => MainPage(content: child),
+    builder: (context, state, child) {
+      return MainPage(content: child);
+    },
     routes: [
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) => navigationShell,
@@ -64,17 +70,14 @@ class IndexRouter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => ThemeProvider(),
-      child: Consumer<ThemeProvider>(
-        builder: (context, themeProvider, child) {
-          return MaterialApp.router(
-            theme: themeProvider.themeData,
-            themeMode: themeProvider.themeMode,
-            routerConfig: _router,
-          );
-        },
-      ),
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return MaterialApp.router(
+          theme: themeProvider.themeData,
+          themeMode: themeProvider.themeMode,
+          routerConfig: _router,
+        );
+      },
     );
   }
 }

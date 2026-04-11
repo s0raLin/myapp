@@ -10,6 +10,18 @@ class FilesPage extends StatefulWidget {
 class _FilesPageState extends State<FilesPage> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(body: Center(child: Text("文件")));
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Scaffold(
+      body: Center(
+        child: Text(
+          "文件",
+          style: TextStyle(
+            color: colorScheme.onSurface.withValues(alpha: 0.8),
+            fontSize: 24,
+          ),
+        ),
+      ),
+    );
   }
 }

@@ -3,7 +3,7 @@ import 'package:myapp/contants/Routes/index.dart';
 
 class BottomBar extends StatelessWidget {
   final int currentIndex;
-  final Function(int) onTap;
+  final ValueChanged<int> onTap;
 
   const BottomBar({super.key, required this.currentIndex, required this.onTap});
 
@@ -21,8 +21,9 @@ class BottomBar extends StatelessWidget {
       labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
       destinations: customNavItems.map((item) {
         return NavigationDestination(
-          icon: Icon(item.icon, size: 36),
-          selectedIcon: Icon(item.icon, size: 36),
+          tooltip: item.tooltip,
+          icon: Icon(item.icon),
+          selectedIcon: Icon(item.icon),
           label: item.label,
         );
       }).toList(),

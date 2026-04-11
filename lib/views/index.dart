@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:myapp/components/BottomBar/index.dart';
+import 'package:myapp/components/Drawer/index.dart';
 import 'package:myapp/components/Header/index.dart';
 import 'package:myapp/components/Sidebar/index.dart';
 import 'package:myapp/contants/Routes/index.dart';
-import 'package:myapp/router/IndexRouter/index.dart';
 
 class MainPage extends StatefulWidget {
   final Widget content;
@@ -18,55 +18,26 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  var _currentIndex = 0;
   void onTabChanged(int idx) {
-    _currentIndex = idx;
-    context.go(customNavItems[idx].path);
-    setState(() {});
+    final destination = customNavItems[idx].path;
+    final currentPath = GoRouterState.of(context).uri.path;
+
+    if (currentPath != destination) {
+      context.go(destination);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     const maxWidth = 800;
     final colorScheme = Theme.of(context).colorScheme;
+    final currentIndex = navIndexFromPath(GoRouterState.of(context).uri.path);
+    final contentBackground = colorScheme.surfaceContainerLow;
 
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: colorScheme.surface,
-      drawer: Drawer(
-        child: Container(
-          color: colorScheme.surfaceContainerLow,
-          width: 280,
-          child: ListView(
-            padding: EdgeInsets.zero,
-            children: [
-              DrawerHeader(
-                decoration: BoxDecoration(color: colorScheme.primaryContainer),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Icon(
-                      Icons.music_note,
-                      size: 48,
-                      color: colorScheme.primary,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '音乐播放器',
-                      style: TextStyle(
-                        color: colorScheme.onPrimaryContainer,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+      backgroundColor: contentBackground,
+      drawer: const MainDrawer(),
       body: LayoutBuilder(
         builder: (context, constraints) {
           final bool isLargeScreen = constraints.maxWidth >= maxWidth;
@@ -74,12 +45,24 @@ class _MainPageState extends State<MainPage> {
           return Row(
             children: [
               if (isLargeScreen)
-                Sidebar(currentIndex: _currentIndex, onTap: onTabChanged),
+                SizedBox(
+                  width: 168,
+                  child: Sidebar(
+                    currentIndex: currentIndex,
+                    onTap: onTabChanged,
+                  ),
+                ),
               Expanded(
                 child: Scaffold(
-                  backgroundColor: colorScheme.surface,
-                  appBar: Header(scaffoldKey: _scaffoldKey),
-                  body: widget.content,
+                  backgroundColor: contentBackground,
+                  appBar: Header(
+                    scaffoldKey: _scaffoldKey,
+                    backgroundColor: contentBackground,
+                  ),
+                  body: ColoredBox(
+                    color: contentBackground,
+                    child: widget.content,
+                  ),
                 ),
               ),
             ],
@@ -91,7 +74,7 @@ class _MainPageState extends State<MainPage> {
           if (constraints.maxWidth >= maxWidth) {
             return const SizedBox.shrink();
           }
-          return BottomBar(currentIndex: _currentIndex, onTap: onTabChanged);
+          return BottomBar(currentIndex: currentIndex, onTap: onTabChanged);
         },
       ),
     );
