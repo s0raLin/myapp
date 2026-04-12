@@ -4,12 +4,11 @@ import 'package:myapp/components/BottomBar/index.dart';
 import 'package:myapp/components/Drawer/index.dart';
 import 'package:myapp/components/Header/index.dart';
 import 'package:myapp/components/Sidebar/index.dart';
-import 'package:myapp/contants/Routes/index.dart';
 
 class MainPage extends StatefulWidget {
-  final Widget content;
+  final StatefulNavigationShell navigationShell;
 
-  const MainPage({super.key, required this.content});
+  const MainPage({super.key, required this.navigationShell});
 
   @override
   State<MainPage> createState() => _MainPageState();
@@ -19,19 +18,14 @@ class _MainPageState extends State<MainPage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   void onTabChanged(int idx) {
-    final destination = customNavItems[idx].path;
-    final currentPath = GoRouterState.of(context).uri.path;
-
-    if (currentPath != destination) {
-      context.go(destination);
-    }
+    widget.navigationShell.goBranch(idx);
   }
 
   @override
   Widget build(BuildContext context) {
     const maxWidth = 800;
     final colorScheme = Theme.of(context).colorScheme;
-    final currentIndex = navIndexFromPath(GoRouterState.of(context).uri.path);
+    final currentIndex = widget.navigationShell.currentIndex;
     final contentBackground = colorScheme.surfaceContainerLow;
 
     return Scaffold(
@@ -55,14 +49,8 @@ class _MainPageState extends State<MainPage> {
               Expanded(
                 child: Scaffold(
                   backgroundColor: contentBackground,
-                  appBar: Header(
-                    scaffoldKey: _scaffoldKey,
-                    backgroundColor: contentBackground,
-                  ),
-                  body: ColoredBox(
-                    color: contentBackground,
-                    child: widget.content,
-                  ),
+                  appBar: Header(scaffoldKey: _scaffoldKey),
+                  body: widget.navigationShell,
                 ),
               ),
             ],
@@ -72,7 +60,7 @@ class _MainPageState extends State<MainPage> {
       bottomNavigationBar: LayoutBuilder(
         builder: (context, constraints) {
           if (constraints.maxWidth >= maxWidth) {
-            return const SizedBox.shrink();
+            return SizedBox.shrink();
           }
           return BottomBar(currentIndex: currentIndex, onTap: onTabChanged);
         },

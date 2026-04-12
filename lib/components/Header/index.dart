@@ -15,7 +15,8 @@ class Header extends StatelessWidget implements PreferredSizeWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return AppBar(
-      backgroundColor: backgroundColor ?? colorScheme.surfaceContainerLow,
+      
+      backgroundColor: backgroundColor ?? Colors.transparent,
       centerTitle: true,
       elevation: 0,
       surfaceTintColor: Colors.transparent,
@@ -25,45 +26,37 @@ class Header extends StatelessWidget implements PreferredSizeWidget {
         },
         icon: Icon(Icons.menu, color: colorScheme.onSurface),
       ),
-      title: Container(
-        height: 40,
-        constraints: const BoxConstraints(maxWidth: 240), // 限制最大宽度以确保居中感
-        child: TextField(
-          textAlignVertical: TextAlignVertical.center,
-          decoration: InputDecoration(
-            hintText: "搜索...",
-            hintStyle: TextStyle(
-              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-              fontSize: 14,
+      title: SearchAnchor(
+        builder: (BuildContext context, SearchController controller) {
+          return SearchBar(
+            //去除阴影
+            elevation: const WidgetStatePropertyAll(0),
+            //调整高度
+            constraints: const BoxConstraints(minHeight: 45.0, maxHeight: 45.0),
+            controller: controller,
+            padding: const WidgetStatePropertyAll<EdgeInsets>(
+              EdgeInsets.symmetric(horizontal: 16.0),
             ),
-            prefixIcon: Icon(
-              Icons.search,
-              size: 20,
-              color: colorScheme.primary,
-            ),
-            filled: true,
-            fillColor: colorScheme.surfaceContainerHighest.withValues(
-              alpha: 0.5,
-            ),
-            // 去掉 TextField 默认的边框和下划线
-            contentPadding: EdgeInsets.zero,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(20),
-              borderSide: BorderSide.none,
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(20),
-              borderSide: BorderSide.none,
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(20),
-              borderSide: BorderSide(color: colorScheme.primary, width: 1),
-            ),
-          ),
-          onSubmitted: (value) {
-            // 处理搜索逻辑
-          },
-        ),
+            onTap: () {
+              controller.openView();
+            },
+            leading: const Icon(Icons.search),
+            hintText: "搜索",
+          );
+        },
+        suggestionsBuilder:
+            (BuildContext context, SearchController controller) {
+              // 这里返回搜索建议列表
+              return List<ListTile>.generate(5, (int index) {
+                final String item = '建议项 $index';
+                return ListTile(
+                  title: Text(item),
+                  onTap: () {
+                    controller.closeView(item);
+                  },
+                );
+              });
+            },
       ),
       actions: [
         IconButton(

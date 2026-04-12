@@ -6,60 +6,85 @@ import 'package:myapp/views/Home/index.dart';
 import 'package:myapp/views/Login/index.dart';
 import 'package:myapp/views/Login/register.dart';
 import 'package:myapp/views/Music/index.dart';
+import 'package:myapp/views/Music/music_detail.dart';
 import 'package:myapp/views/Settings/index.dart';
 import 'package:myapp/views/Splash/index.dart';
 import 'package:myapp/views/index.dart';
 import 'package:provider/provider.dart';
 
-final _shellBranches = [
-  StatefulShellBranch(
-    routes: [
-      GoRoute(
-        name: "home",
-        path: "/home",
-        builder: (context, state) => HomePage(),
-      ),
-    ],
+class AppNavItem {
+  final String name;
+  final String path;
+  final Widget page;
+  final IconData icon;
+  final String label;
+  final List<RouteBase> routes;
+
+  AppNavItem({
+    required this.name,
+    required this.path,
+    required this.page,
+    required this.icon,
+    required this.label,
+    this.routes = const [],
+  });
+}
+
+final List<AppNavItem> navItems = [
+  AppNavItem(
+    name: "home",
+    path: "/home",
+    page: HomePage(),
+    icon: Icons.home,
+    label: "首页",
   ),
-  StatefulShellBranch(
-    routes: [
-      GoRoute(
-        name: "music",
-        path: "/music",
-        builder: (context, state) => MusicPage(),
-      ),
-    ],
+  AppNavItem(
+    name: "music",
+    path: "/music",
+    page: MusicPage(),
+    icon: Icons.music_note,
+    label: "音乐",
   ),
-  StatefulShellBranch(
-    routes: [
-      GoRoute(
-        name: "files",
-        path: "/files",
-        builder: (context, state) => FilesPage(),
-      ),
-    ],
+  AppNavItem(
+    name: "files",
+    path: "/files",
+    page: FilesPage(),
+    icon: Icons.folder,
+    label: "文件",
   ),
 ];
+
+final _shellBranches = navItems.map((item) {
+  return StatefulShellBranch(
+    routes: [
+      GoRoute(
+        name: item.name,
+        path: item.path,
+        builder: (context, state) => item.page,
+        routes: item.routes,
+      ),
+    ],
+  );
+}).toList();
 
 final _routes = [
   GoRoute(path: "/splash", builder: (context, state) => SplashPage()),
   GoRoute(path: "/login", builder: (context, state) => LoginPage()),
   GoRoute(path: "/register", builder: (context, state) => RegisterPage()),
-  ShellRoute(
-    builder: (context, state, child) {
-      return MainPage(content: child);
-    },
-    routes: [
-      StatefulShellRoute.indexedStack(
-        builder: (context, state, navigationShell) => navigationShell,
-        branches: _shellBranches,
-      ),
-      GoRoute(
-        name: "settings",
-        path: "/settings",
-        builder: (context, state) => SettingsPage(),
-      ),
-    ],
+  GoRoute(
+    path: "/music/:songId",
+    builder: (context, state) =>
+        MusicDetailPage(id: state.pathParameters["songId"]),
+  ),
+  GoRoute(
+    name: "settings",
+    path: "/settings",
+    builder: (context, state) => SettingsPage(),
+  ),
+  StatefulShellRoute.indexedStack(
+    builder: (context, state, navigationShell) =>
+        MainPage(navigationShell: navigationShell),
+    branches: _shellBranches,
   ),
 ];
 

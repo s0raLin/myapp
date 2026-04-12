@@ -16,6 +16,7 @@ dependencies:
   file_picker: ^11.0.2
   mime: ^2.0.0
   audiotags: ^1.4.5
+  carousel_slider: ^5.1.2
 
 dev_dependencies:
   flutter_test:

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:myapp/contants/Routes/index.dart';
+import 'package:myapp/router/IndexRouter/index.dart';
 
 class BottomBar extends StatelessWidget {
   final int currentIndex;
@@ -11,22 +11,25 @@ class BottomBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return NavigationBar(
-      elevation: 0,
-      height: 65,
-      backgroundColor: colorScheme.surfaceContainerLow,
-      indicatorColor: colorScheme.secondaryContainer,
-      selectedIndex: currentIndex,
-      onDestinationSelected: onTap,
-      labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
-      destinations: customNavItems.map((item) {
-        return NavigationDestination(
-          tooltip: item.tooltip,
-          icon: Icon(item.icon),
-          selectedIcon: Icon(item.icon),
-          label: item.label,
-        );
-      }).toList(),
+    return NavigationBarTheme(
+      data: NavigationBarThemeData(
+        height: 65,
+        backgroundColor: colorScheme.surfaceContainer,
+        indicatorColor: colorScheme.secondaryContainer,
+        labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
+      ),
+      child: NavigationBar(
+        selectedIndex: currentIndex,
+        onDestinationSelected: onTap,
+        destinations: navItems.map((item) {
+          return NavigationDestination(
+            tooltip: item.label,
+            icon: Icon(item.icon),
+            selectedIcon: Icon(item.icon),
+            label: item.label,
+          );
+        }).toList(),
+      ),
     );
   }
 }

@@ -87,7 +87,8 @@ class MainDrawer extends StatelessWidget {
               ListTile(
                 onTap: () {
                   Navigator.pop(context);
-                  context.toSettings();
+                  // context.toSettings();
+                  context.push("/settings");
                 },
                 leading: const Icon(Icons.settings),
                 title: const Text("设置"),

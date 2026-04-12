@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 
 class MusicPage extends StatefulWidget {
@@ -10,6 +11,6 @@ class MusicPage extends StatefulWidget {
 class _MusicPageState extends State<MusicPage> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(body: Center(child: Text("Music")));
+    return Scaffold(body: Center(child: Text("音乐")));
   }
 }

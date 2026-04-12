@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'dart:typed_data';
+
 
 import 'package:audiotags/audiotags.dart';
 import 'package:file_picker/file_picker.dart';
@@ -17,7 +17,6 @@ class FilesPage extends StatefulWidget {
 class _FilesPageState extends State<FilesPage> {
   var _isLoading = false;
   List<File> _musicFiles = [];
-  List<Tag?> _tags = [];
 
   Future pickDirectory() async {
     //弹窗
@@ -38,17 +37,9 @@ class _FilesPageState extends State<FilesPage> {
         return mimeType != null && mimeType.startsWith("audio/");
       }).toList();
 
-      // 生成一个Future列表
-      Iterable<Future<Tag?>> tagFutures = files.map((file) {
-        return AudioTags.read(file.path);
-      });
-
-      //使用Future.wait等待所有操作完成
-      List<Tag?> resolvedTags = await Future.wait(tagFutures);
-
       setState(() {
         _musicFiles = files;
-        _tags = resolvedTags;
+
         _isLoading = false;
       });
     }
@@ -109,7 +100,7 @@ class _FilesPageState extends State<FilesPage> {
                             child: Container(
                               width: double.infinity,
                               color: colorScheme.primary.withOpacity(0.1),
-                              
+
                               child: bytes != null
                                   ? Image.memory(
                                       bytes,
@@ -144,6 +135,7 @@ class _FilesPageState extends State<FilesPage> {
             bottom: 20,
             right: 20,
             child: FloatingActionButton(
+              
               onPressed: pickDirectory,
               backgroundColor: colorScheme.primary,
               child: const Icon(Icons.add, color: Colors.white, size: 30),
