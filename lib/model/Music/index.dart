@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 class MusicInfo {
+  final String id;
   final String title; // 标题
   final String artist; // 歌手
   final Duration duration; // 时长
@@ -14,6 +15,6 @@ class MusicInfo {
     required this.duration,
     required this.coverBytes,
     required this.lyrics,
-    this.album,
+    this.album, required this.id,
   });
 }

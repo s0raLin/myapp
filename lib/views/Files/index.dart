@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:myapp/model/Music/index.dart';
 import 'package:myapp/service/Music/index.dart';
 
@@ -150,7 +151,11 @@ class _FilesPageState extends State<FilesPage> {
           final item = _playList[index];
           return ListTile(
             // 这里的 ListTile 会自动继承上方 ListTileTheme 的样式
-            onTap: () {},
+            onTap: () {
+              final filePath = item.id;
+
+              context.push("/music-detail", extra: filePath);
+            },
             leading: Container(
               width: 50,
               height: 50,

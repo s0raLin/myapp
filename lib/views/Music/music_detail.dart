@@ -1,7 +1,12 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
 import 'package:myapp/model/Music/index.dart';
-import 'package:myapp/service/Music/index.dart';
+import 'package:myapp/providers/MusicProvider/index.dart';
+
+import 'package:provider/provider.dart';
 
 class MusicDetailPage extends StatefulWidget {
   final String? id;
@@ -13,25 +18,22 @@ class MusicDetailPage extends StatefulWidget {
 }
 
 class _MusicDetailPageState extends State<MusicDetailPage> {
-  // 定义 Future 变量，避免 build 时重复请求
-  late Future<MusicInfo> _musicFuture;
-
-  bool _isPlaying = true;
   bool _isLiked = false;
-  double _progress = 0.38;
 
   // 模拟歌词
   static const List<Map<String, dynamic>> _lyrics = [];
-
-  void _togglePlay() {
-    setState(() => _isPlaying = !_isPlaying);
-  }
 
   @override
   void initState() {
     super.initState();
     // 初始化时加载数据
-    _musicFuture = MusicService.getSongById(widget.id ?? '0');
+    //等当前这一帧画面彻底画完了，再去执行下面
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.id != null) {
+        // 核心：设置 shouldPlay 为 false
+        context.read<MusicProvider>().playMusic(widget.id!, shouldPlay: false);
+      }
+    });
   }
 
   @override
@@ -40,99 +42,66 @@ class _MusicDetailPageState extends State<MusicDetailPage> {
     final size = MediaQuery.of(context).size;
     final isWide = size.width > 700;
 
-    return FutureBuilder<MusicInfo>(
-      future: _musicFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Scaffold(
-            appBar: AppBar(
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              leading: IconButton(
-                icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 28),
-                onPressed: () => context.pop(),
+    //监听Provider状态
+    final musicProvider = context.watch<MusicProvider>();
+    final music = musicProvider.currentMusic;
+
+    // 如果 Provider 还没拿到数据，显示加载中
+    if (music == null) {
+      return Scaffold(
+        appBar: AppBar(backgroundColor: Colors.transparent),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: colorScheme.surface,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 28),
+          onPressed: () => context.pop(),
+        ),
+        title: Column(
+          children: [
+            Text(
+              '正在播放',
+              style: TextStyle(
+                fontSize: 12,
+                color: colorScheme.onSurfaceVariant,
               ),
             ),
-            body: const Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [CircularProgressIndicator(), Text("加载中...")],
-              ),
+            Text(
+              music.title,
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
-          );
-        }
+          ],
+        ),
+        centerTitle: true,
+        actions: [
+          IconButton(icon: const Icon(Icons.more_vert), onPressed: () {}),
+        ],
+      ),
+      body: isWide
+          ? _WideLayout(
+              isLiked: _isLiked,
+              lyrics: _lyrics,
+              colorScheme: colorScheme,
 
-        if (snapshot.hasError || !snapshot.hasData) {
-          return Scaffold(
-            appBar: AppBar(
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              leading: IconButton(
-                icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 28),
-                onPressed: () => context.pop(),
-              ),
-            ),
-            body: const Center(child: Text("数据加载失败")),
-          );
-        }
+              onToggleLike: () => setState(() => _isLiked = !_isLiked),
 
-        //拿到数据实体
-        final music = snapshot.data!;
+              music: music,
+            )
+          : _NarrowLayout(
+              isLiked: _isLiked,
+              lyrics: _lyrics,
+              colorScheme: colorScheme,
 
-        return Scaffold(
-          backgroundColor: colorScheme.surface,
-          appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            leading: IconButton(
-              icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 28),
-              onPressed: () => context.pop(),
+              onToggleLike: () => setState(() => _isLiked = !_isLiked),
+
+              music: music,
             ),
-            title: Column(
-              children: [
-                Text(
-                  '正在播放',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                Text(
-                  music.title,
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                ),
-              ],
-            ),
-            centerTitle: true,
-            actions: [
-              IconButton(icon: const Icon(Icons.more_vert), onPressed: () {}),
-            ],
-          ),
-          body: isWide
-              ? _WideLayout(
-                  progress: _progress,
-                  isPlaying: _isPlaying,
-                  isLiked: _isLiked,
-                  lyrics: _lyrics,
-                  colorScheme: colorScheme,
-                  onTogglePlay: _togglePlay,
-                  onToggleLike: () => setState(() => _isLiked = !_isLiked),
-                  onProgressChanged: (v) => setState(() => _progress = v),
-                  music: music,
-                )
-              : _NarrowLayout(
-                  progress: _progress,
-                  isPlaying: _isPlaying,
-                  isLiked: _isLiked,
-                  lyrics: _lyrics,
-                  colorScheme: colorScheme,
-                  onTogglePlay: _togglePlay,
-                  onToggleLike: () => setState(() => _isLiked = !_isLiked),
-                  onProgressChanged: (v) => setState(() => _progress = v),
-                  music: music,
-                ),
-        );
-      },
     );
   }
 }
@@ -141,24 +110,20 @@ class _MusicDetailPageState extends State<MusicDetailPage> {
 
 class _NarrowLayout extends StatelessWidget {
   final MusicInfo music;
-  final double progress;
-  final bool isPlaying;
+
   final bool isLiked;
   final List<Map<String, dynamic>> lyrics;
   final ColorScheme colorScheme;
-  final VoidCallback onTogglePlay;
+
   final VoidCallback onToggleLike;
-  final ValueChanged<double> onProgressChanged;
 
   const _NarrowLayout({
-    required this.progress,
-    required this.isPlaying,
     required this.isLiked,
     required this.lyrics,
     required this.colorScheme,
-    required this.onTogglePlay,
+
     required this.onToggleLike,
-    required this.onProgressChanged,
+
     required this.music,
   });
 
@@ -169,7 +134,11 @@ class _NarrowLayout extends StatelessWidget {
       child: Column(
         children: [
           const SizedBox(height: 24),
-          _AlbumCover(colorScheme: colorScheme, size: 320),
+          _AlbumCover(
+            colorScheme: colorScheme,
+            size: 320,
+            coverBytes: music.coverBytes,
+          ),
           const SizedBox(height: 40),
           _SongMeta(
             isLiked: isLiked,
@@ -178,18 +147,7 @@ class _NarrowLayout extends StatelessWidget {
             music: music,
           ),
           const SizedBox(height: 24),
-          _ProgressSection(
-            progress: progress,
-            colorScheme: colorScheme,
-            onChanged: onProgressChanged,
-            totalDuration: music.duration,
-          ),
-          const SizedBox(height: 16),
-          _ControlButtons(
-            isPlaying: isPlaying,
-            colorScheme: colorScheme,
-            onTogglePlay: onTogglePlay,
-          ),
+          _PlayerConsole(),
           const SizedBox(height: 40),
           _LyricsSection(lyrics: lyrics, colorScheme: colorScheme),
           const SizedBox(height: 32),
@@ -203,24 +161,20 @@ class _NarrowLayout extends StatelessWidget {
 
 class _WideLayout extends StatelessWidget {
   final MusicInfo music;
-  final double progress;
-  final bool isPlaying;
+
   final bool isLiked;
   final List<Map<String, dynamic>> lyrics;
   final ColorScheme colorScheme;
-  final VoidCallback onTogglePlay;
+
   final VoidCallback onToggleLike;
-  final ValueChanged<double> onProgressChanged;
 
   const _WideLayout({
-    required this.progress,
-    required this.isPlaying,
     required this.isLiked,
     required this.lyrics,
     required this.colorScheme,
-    required this.onTogglePlay,
+
     required this.onToggleLike,
-    required this.onProgressChanged,
+
     required this.music,
   });
 
@@ -235,7 +189,11 @@ class _WideLayout extends StatelessWidget {
             child: Column(
               children: [
                 const SizedBox(height: 20),
-                _AlbumCover(colorScheme: colorScheme, size: 280),
+                _AlbumCover(
+                  colorScheme: colorScheme,
+                  size: 280,
+                  coverBytes: music.coverBytes,
+                ),
                 const SizedBox(height: 40),
                 _SongMeta(
                   isLiked: isLiked,
@@ -244,18 +202,7 @@ class _WideLayout extends StatelessWidget {
                   music: music,
                 ),
                 const SizedBox(height: 24),
-                _ProgressSection(
-                  progress: progress,
-                  colorScheme: colorScheme,
-                  onChanged: onProgressChanged,
-                  totalDuration: music.duration,
-                ),
-                const SizedBox(height: 16),
-                _ControlButtons(
-                  isPlaying: isPlaying,
-                  colorScheme: colorScheme,
-                  onTogglePlay: onTogglePlay,
-                ),
+                _PlayerConsole(),
               ],
             ),
           ),
@@ -276,13 +223,19 @@ class _WideLayout extends StatelessWidget {
 // ─── 子组件 ───────────────────────────────────────────────────────────────────
 
 class _AlbumCover extends StatelessWidget {
+  final Uint8List? coverBytes;
   final ColorScheme colorScheme;
   final double size;
 
-  const _AlbumCover({required this.colorScheme, required this.size});
+  const _AlbumCover({
+    required this.colorScheme,
+    required this.size,
+    required this.coverBytes,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final hasImage = coverBytes != null && coverBytes!.isNotEmpty;
     return Center(
       child: Container(
         width: size,
@@ -290,10 +243,13 @@ class _AlbumCover extends StatelessWidget {
         decoration: BoxDecoration(
           color: colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(28), // 现代大圆角
-          image: const DecorationImage(
-            image: NetworkImage('https://placeholder.com/300'), // 这里可以放真实的封面图
-            fit: BoxFit.cover,
-          ),
+          image: hasImage
+              ? DecorationImage(
+                  // image: NetworkImage('https://placeholder.com/300'), // 这里可以放真实的封面图
+                  image: MemoryImage(coverBytes!),
+                  fit: BoxFit.cover,
+                )
+              : null,
         ),
         child: Icon(
           Icons.music_note_rounded,
@@ -359,143 +315,162 @@ class _SongMeta extends StatelessWidget {
   }
 }
 
-class _ProgressSection extends StatelessWidget {
-  final double progress;
-  final Duration totalDuration; //总时长
-  final ColorScheme colorScheme;
-  final ValueChanged<double> onChanged;
-  // final String Function(double, Duration totalDuration) formatDuration;
+class _PlayerConsole extends StatelessWidget {
+  const _PlayerConsole();
 
-  const _ProgressSection({
-    required this.progress,
-    required this.colorScheme,
-    required this.onChanged,
-    required this.totalDuration,
-    // required this.formatDuration,
-  });
-
-  String _formatTime(double p) {
-    final totalSec = totalDuration.inSeconds;
-    final sec = (p * totalSec).round();
-    final m = sec ~/ 60;
-    final s = sec % 60;
+  String _formatTime(Duration d) {
+    final m = d.inMinutes;
+    final s = d.inSeconds % 60;
     return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
   }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        SliderTheme(
-          data: SliderTheme.of(context).copyWith(
-            // Android 13-16 风格：极粗轨道，无明显 Thumb（或小点）
-            trackHeight: 12,
-            trackShape: const RoundedRectSliderTrackShape(),
-            thumbShape: const RoundSliderThumbShape(
-              enabledThumbRadius: 0, // 默认不显示滑块，触摸时显示或保持简约
-              elevation: 0,
-            ),
-            overlayShape: const RoundSliderOverlayShape(overlayRadius: 20),
-            activeTrackColor: colorScheme.primary,
-            inactiveTrackColor: colorScheme.primary.withOpacity(0.1),
-          ),
-          child: Slider(value: progress, onChanged: onChanged),
-        ),
-        const SizedBox(height: 4),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                _formatTime(progress),
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: colorScheme.onSurfaceVariant,
+    final colorScheme = Theme.of(context).colorScheme;
+    final musicProvider = context.watch<MusicProvider>();
+    final player = musicProvider.player;
+
+    return StreamBuilder<PositionData>(
+      stream: musicProvider.positionDataStream,
+      builder: (context, snapshot) {
+        final data =
+            snapshot.data ??
+            PositionData(Duration.zero, Duration.zero, Duration.zero);
+
+        final position = data.position;
+        final duration = data.duration;
+        final buffered = data.bufferedPosition;
+
+        //计算进度百分比
+        double progress = 0.0;
+        double bufferProgress = 0.0;
+        if (duration.inMicroseconds > 0) {
+          progress = (position.inMilliseconds / duration.inMilliseconds).clamp(
+            0.0,
+            1.0,
+          );
+
+          bufferProgress = (buffered.inMilliseconds / duration.inMilliseconds)
+              .clamp(0.0, 1.0);
+        }
+        return Column(
+          children: [
+            //进度条(带缓冲条效果)
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                //缓冲条背景(浅色)
+                SliderTheme(
+                  data: SliderTheme.of(context).copyWith(
+                    trackHeight: 12,
+                    activeTrackColor: colorScheme.primary.withOpacity(
+                      0.2,
+                    ), // 缓冲部分颜色
+                    inactiveTrackColor: colorScheme.primary.withOpacity(
+                      0.05,
+                    ), // 未缓冲颜色
+                    thumbShape: SliderComponentShape.noThumb, // 缓冲条不需要滑块
+                  ),
+                  child: Slider(value: bufferProgress, onChanged: null),
                 ),
-              ),
-              Text(
-                _formatTime(1.0),
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: colorScheme.onSurfaceVariant,
+
+                //真实的播放进度条
+                SliderTheme(
+                  data: SliderTheme.of(context).copyWith(
+                    trackHeight: 12,
+                    activeTrackColor: colorScheme.primary,
+                    inactiveTrackColor: Colors.transparent, // 背景透明，透出下层的缓冲条
+                    thumbShape: const RoundSliderThumbShape(
+                      enabledThumbRadius: 0,
+                    ),
+                    overlayShape: const RoundSliderOverlayShape(
+                      overlayRadius: 20,
+                    ),
+                  ),
+                  child: Slider(
+                    value: progress,
+                    onChanged: (value) => player.seek(duration * value),
+                  ),
                 ),
+              ],
+            ),
+            //时间显示
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    _formatTime(position),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  Text(
+                    _formatTime(duration),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _ControlButtons extends StatelessWidget {
-  final bool isPlaying;
-  final ColorScheme colorScheme;
-  final VoidCallback onTogglePlay;
-
-  const _ControlButtons({
-    required this.isPlaying,
-    required this.colorScheme,
-    required this.onTogglePlay,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        IconButton(
-          onPressed: () {},
-          icon: Icon(
-            Icons.shuffle_rounded,
-            color: colorScheme.onSurfaceVariant,
-            size: 24,
-          ),
-        ),
-        IconButton(
-          onPressed: () {},
-          icon: Icon(
-            Icons.skip_previous_rounded,
-            color: colorScheme.onSurface,
-            size: 42,
-          ),
-        ),
-        GestureDetector(
-          onTap: onTogglePlay,
-          child: Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: colorScheme.primaryContainer,
             ),
-            child: Icon(
-              isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-              color: colorScheme.onPrimaryContainer,
-              size: 40,
+
+            const SizedBox(height: 16),
+
+            StreamBuilder<bool>(
+              stream: player.playingStream,
+              builder: (context, snapshot) {
+                final isPlaying = snapshot.data ?? false;
+
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    IconButton(
+                      onPressed: () {},
+                      icon: const Icon(Icons.shuffle_rounded),
+                    ),
+                    IconButton(
+                      onPressed: () {},
+                      icon: const Icon(Icons.skip_previous_rounded, size: 42),
+                    ),
+                    GestureDetector(
+                      onTap: () => musicProvider.togglePlay(),
+                      child: Container(
+                        width: 72,
+                        height: 72,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: colorScheme.primaryContainer,
+                        ),
+                        child: Icon(
+                          isPlaying
+                              ? Icons.pause_rounded
+                              : Icons.play_arrow_rounded,
+                          color: colorScheme.onPrimaryContainer,
+                          size: 40,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () {},
+                      icon: Icon(Icons.skip_next_rounded, size: 42),
+                    ),
+                    IconButton(
+                      onPressed: () {},
+                      icon: const Icon(Icons.repeat_rounded),
+                    ),
+                  ],
+                );
+              },
             ),
-          ),
-        ),
-        IconButton(
-          onPressed: () {},
-          icon: Icon(
-            Icons.skip_next_rounded,
-            color: colorScheme.onSurface,
-            size: 42,
-          ),
-        ),
-        IconButton(
-          onPressed: () {},
-          icon: Icon(
-            Icons.repeat_rounded,
-            color: colorScheme.onSurfaceVariant,
-            size: 24,
-          ),
-        ),
-      ],
+          ],
+
+          //时间显示
+        );
+      },
     );
   }
 }

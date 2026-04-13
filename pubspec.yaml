@@ -19,6 +19,12 @@ dependencies:
   lrc_parser: ^0.0.1
   audiotags: ^1.4.5
   google_fonts: ^8.0.2
+  just_audio: ^0.10.5
+  rxdart: ^0.28.0
+  just_audio_media_kit: ^2.1.0
+
+  media_kit_libs_linux: any
+  media_kit_libs_windows_audio: any
 
 dev_dependencies:
   flutter_test:
@@ -28,6 +34,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
+    - assets/images/
     - lib/assets/
     - lib/assets/images/
   fonts:

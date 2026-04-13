@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:myapp/contants/Assets/index.dart';
 import 'package:myapp/providers/ThemeProvider/index.dart';
 import 'package:myapp/views/Files/index.dart';
 import 'package:myapp/views/Home/index.dart';
@@ -15,6 +16,7 @@ import 'package:provider/provider.dart';
 class AppNavItem {
   final String name;
   final String path;
+
   final Widget page;
   final IconData icon;
   final String label;
@@ -72,11 +74,13 @@ final _routes = [
   GoRoute(path: "/login", builder: (context, state) => LoginPage()),
   GoRoute(path: "/register", builder: (context, state) => RegisterPage()),
   GoRoute(
-    path: "/music/:songId",
+    path: "/music-detail",
     pageBuilder: (context, state) {
-      final id = state.pathParameters["songId"];
+
+      final filePath = state.extra as String?;
+
       return CustomTransitionPage(
-        child: MusicDetailPage(id: id),
+        child: MusicDetailPage(id: filePath),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return SlideTransition(
             position:

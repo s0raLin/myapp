@@ -11,6 +11,7 @@ class MusicService {
     await Future.delayed(const Duration(milliseconds: 500));
 
     return MusicInfo(
+      id: '',
       title: '千本桜',
       artist: '黒うさP / 初音ミク',
       album: 'ALL THAT 千本桜',
@@ -32,6 +33,7 @@ class MusicService {
     }
 
     return MusicInfo(
+      id: path,
       title: tag?.title ?? "未知标题",
       artist: artist,
       album: tag?.album ?? "未知",
