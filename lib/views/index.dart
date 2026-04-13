@@ -39,7 +39,6 @@ class _MainPageState extends State<MainPage> {
 
           return Column(
             children: [
-              
               Expanded(
                 child: Row(
                   children: [
@@ -58,9 +57,9 @@ class _MainPageState extends State<MainPage> {
               ),
               NowPlayingBar(
                 onTap: () {},
-                onPlayPause: () {},
+
                 onNext: () {},
-                songId: '',
+
                 onPrevious: () {},
                 onQueue: () {},
               ),

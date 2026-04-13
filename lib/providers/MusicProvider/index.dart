@@ -12,6 +12,8 @@ class PositionData {
   PositionData(this.position, this.bufferedPosition, this.duration);
 }
 
+enum PlayMode { sequence, shuffle }
+
 class MusicProvider extends ChangeNotifier {
   //私有播放器实例
   final AudioPlayer player = AudioPlayer();
@@ -56,6 +58,16 @@ class MusicProvider extends ChangeNotifier {
       debugPrint("！！！播放器报错了！！！: $e");
       return;
     }
+  }
+
+  PlayMode _playMode = PlayMode.sequence;
+  PlayMode get playMode => _playMode;
+
+  void togglePlayMode() {
+    _playMode = _playMode == PlayMode.sequence
+        ? PlayMode.shuffle
+        : PlayMode.sequence;
+    notifyListeners();
   }
 
   Stream<PositionData> get positionDataStream =>
