@@ -2,6 +2,8 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:myapp/providers/MusicProvider/index.dart';
+import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -22,13 +24,15 @@ class _HomePageState extends State<HomePage> {
     {'title': '电台精选', 'sub': '陪你度过每一天'},
   ];
 
-  static const List<Map<String, String>> _songs = [
-    {'title': "1", 'artist': "1", 'album': '1'},
-  ];
+  // static const List<Map<String, String>> _songs = [
+  //   {'title': "1", 'artist': "1", 'album': '1'},
+  // ];
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+
+    final history = context.read<MusicProvider>().history;
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
@@ -172,16 +176,17 @@ class _HomePageState extends State<HomePage> {
                 ), //外轮廓
               ),
               child: SliverList.separated(
-                itemCount: _songs.length,
+                itemCount: history.length,
                 itemBuilder: (context, index) {
-                  final song = _songs[index];
                   return ListTile(
                     onTap: () {
                       context.push("/music/$index");
                     },
                     leading: Icon(Icons.library_music, size: 42),
-                    title: Text(song["title"] ?? "未知"),
-                    subtitle: Text('${song["artist"]} · ${song["album"]}'),
+                    title: Text(history[index].title),
+                    subtitle: Text(
+                      '${history[index].artist} · ${history[index].album}',
+                    ),
                     horizontalTitleGap: 4,
                     trailing: Icon(Icons.chevron_right),
                   );

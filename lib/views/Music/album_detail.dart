@@ -26,7 +26,11 @@ class AlbumDetailPage extends StatelessWidget {
             title: Text(music.title),
             subtitle: Text(music.artist),
             onTap: () {
-              context.read<MusicProvider>().playFromLibrary(music);
+              context.read<MusicProvider>().replaceQueue(
+                songs,
+                startIndex: index,
+              );
+
               context.push("/music-detail", extra: music);
             },
           );

@@ -56,6 +56,9 @@ class _MusicPageState extends State<MusicPage> {
               ),
               title: Text(item.title),
               subtitle: Text(item.artist),
+              trailing: IconButton(onPressed: () {
+                context.read<MusicProvider>().remoteFromQueue(index);
+              }, icon: Icon(Icons.close)),
             );
           },
         ),

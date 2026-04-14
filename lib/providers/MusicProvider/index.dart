@@ -6,6 +6,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:myapp/model/Music/index.dart';
 
 import 'package:rxdart/rxdart.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PositionData {
   final Duration position;
@@ -33,6 +34,48 @@ class MusicProvider extends ChangeNotifier {
   int _currentIndex = -1;
 
   List<MusicInfo> get queue => _queue;
+
+  final _historyKey = "play_history";
+  List<MusicInfo> _history = [];
+  List<MusicInfo> get history => _history;
+
+  Future<void> _saveHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(_historyKey, _history.map((m) => m.id).toList());
+  }
+
+  Future<void> _addToHistory(MusicInfo music) async {
+    _history.removeWhere((m) => m.id == music.id); //去重
+    _history.insert(0, music); // 插到最前
+    if (_history.length > 200) _history.removeLast(); //最多保留200条
+    _saveHistory();
+    notifyListeners();
+  }
+
+  //清空历史
+  Future<void> clearHistory() async {
+    _history.clear();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_historyKey);
+    notifyListeners();
+  }
+
+  Future<void> _loadHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    final ids = prefs.getStringList(_historyKey) ?? [];
+
+    _history = ids
+        .map((id) {
+          try {
+            return _library.firstWhere((m) => m.id == id);
+          } catch (_) {
+            return null; //歌曲已被删除
+          }
+        })
+        .whereType<MusicInfo>()
+        .toList();
+    notifyListeners();
+  }
 
   bool isInQueue(String id) => _queue.any((m) => m.id == id);
   //添加到队尾
@@ -101,6 +144,17 @@ class MusicProvider extends ChangeNotifier {
     return _queue[_currentIndex];
   }
 
+  // 清空队列,替换为新列表
+  Future<void> replaceQueue(List<MusicInfo> songs, {int startIndex = 0}) async {
+    _queue = List.from(songs);
+    _currentIndex = -1;
+    await player.stop();
+    notifyListeners();
+    if (_queue.isNotEmpty) {
+      await playByIndex(startIndex);
+    }
+  }
+
   //切换播放/暂停
   void togglePlay() {
     if (player.playing) {
@@ -131,9 +185,10 @@ class MusicProvider extends ChangeNotifier {
     _currentIndex = index;
     notifyListeners();
 
-    final path = _queue[index].id;
+    final music = _queue[index];
+    _addToHistory(music); //添加到历史
     await player.stop(); //* 停止当前播放,清理状态
-    await player.setFilePath(path);
+    await player.setFilePath(music.id);
     player.play();
   }
 
@@ -185,6 +240,7 @@ class MusicProvider extends ChangeNotifier {
   }
 
   MusicProvider() {
+    _loadHistory(); //初始化时加载历史
     _stateSubscription = player.processingStateStream.listen((state) {
       if (state == ProcessingState.completed) _playNext();
     });
