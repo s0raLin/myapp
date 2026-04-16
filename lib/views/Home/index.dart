@@ -35,7 +35,6 @@ class _HomePageState extends State<HomePage> {
     final history = context.read<MusicProvider>().history;
 
     return Scaffold(
-      backgroundColor: colorScheme.surface,
       body: CustomScrollView(
         slivers: [
           // ── Banner 轮播 ──────────────────────────────────────────────────
@@ -163,14 +162,11 @@ class _HomePageState extends State<HomePage> {
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             sliver: ListTileTheme(
               data: ListTileThemeData(
+                selectedTileColor: colorScheme.surfaceContainer,
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 8,
                 ),
-                iconColor: colorScheme.primary,
-                textColor: colorScheme.onSurface,
-
-                tileColor: colorScheme.surface,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ), //外轮廓

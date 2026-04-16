@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui';
 import 'package:collection/collection.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -103,58 +104,69 @@ class _FilesPageState extends State<FilesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: StreamBuilder<List<MusicInfo>>(
-        stream: _musicStream,
-        builder: (context, snapshot) {
-          final list = snapshot.data ?? [];
-          if (list.isEmpty && _paths.isNotEmpty) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          final albums = groupBy(
-            list,
-            (MusicInfo m) => m.album,
-          ).entries.toList();
-
-          return GridView.builder(
-            padding: const EdgeInsets.all(16),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              childAspectRatio: 1.0,
-            ),
-            itemCount: albums.length,
-            itemBuilder: (context, i) {
-              final cover = albums[i].value.first.coverBytes;
-              return InkWell(
-                onTap: () {
-                  final albumName = albums[i].key;
-                  final album = albums[i].value;
-                  context.push(
-                    "/album-detail",
-                    extra: {"albumName": albumName, "songs": album},
-                  );
-                },
-                child: Card(
-                  elevation: 0, // 去掉卡片阴影，更简洁
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  clipBehavior: Clip.antiAlias,
-                  child: cover != null && cover.isNotEmpty
-                      ? Image.memory(cover, fit: BoxFit.cover)
-                      : Container(
-                          color: Theme.of(context).colorScheme.surfaceContainer,
-                          child: Center(
-                            child: Image.asset(MyAssets.music_note, width: 40),
-                          ),
-                        ),
-                ),
-              );
-            },
-          );
+      appBar: AppBar(title: const Text("库")),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          _startScan();
         },
+        child: StreamBuilder<List<MusicInfo>>(
+          stream: _musicStream,
+          builder: (context, snapshot) {
+            final list = snapshot.data ?? [];
+            if (list.isEmpty && _paths.isNotEmpty) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            final albums = groupBy(
+              list,
+              (MusicInfo m) => m.album,
+            ).entries.toList();
+
+            return GridView.builder(
+              padding: const EdgeInsets.all(16),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                childAspectRatio: 1.0,
+              ),
+              itemCount: albums.length,
+              itemBuilder: (context, i) {
+                final cover = albums[i].value.first.coverBytes;
+                return InkWell(
+                  onTap: () {
+                    final albumName = albums[i].key;
+                    final album = albums[i].value;
+                    context.push(
+                      "/album-detail",
+                      extra: {"albumName": albumName, "songs": album},
+                    );
+                  },
+                  child: Card(
+                    elevation: 0, // 去掉卡片阴影，更简洁
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: cover != null && cover.isNotEmpty
+                        ? Image.memory(cover, fit: BoxFit.cover)
+                        : Container(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.surfaceContainer,
+                            child: Center(
+                              child: Image.asset(
+                                MyAssets.music_note,
+                                width: 40,
+                              ),
+                            ),
+                          ),
+                  ),
+                );
+              },
+            );
+          },
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showPickDialog(),
