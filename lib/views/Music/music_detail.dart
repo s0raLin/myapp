@@ -268,11 +268,7 @@ class _ProgressSlider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SliderTheme(
-      data: SliderTheme.of(context).copyWith(
-        trackHeight: 8,
-        thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-        overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
-      ),
+      data: SliderThemeData(year2023: false, overlayColor: Colors.transparent),
       child: Slider(
         max: total > 0 ? total : 1.0,
         value: pos,

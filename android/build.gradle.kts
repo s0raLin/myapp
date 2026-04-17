@@ -5,9 +5,6 @@ allprojects {
         google()
         mavenCentral()
     }
-
-
-
 }
 
 
