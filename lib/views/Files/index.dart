@@ -103,9 +103,11 @@ class _FilesPageState extends State<FilesPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(title: const Text("库")),
       body: RefreshIndicator(
+        edgeOffset: MediaQuery.of(context).padding.top + 56,
         onRefresh: () async {
           _startScan();
         },
@@ -169,12 +171,19 @@ class _FilesPageState extends State<FilesPage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
+        foregroundColor: colorScheme.onSecondaryContainer,
+        backgroundColor: colorScheme.secondaryContainer,
         onPressed: () => _showPickDialog(),
-        elevation: 0,
-        highlightElevation: 0,
-        child: Icon(Icons.folder_open),
-        // label: const Text('选择目录'),
+        child: const Icon(Icons.folder_open),
       ),
+
+      //  FloatingActionButton(
+      //   onPressed:,
+      //   elevation: 0,
+      //   highlightElevation: 0,
+      //   child: Icon(Icons.folder_open),
+      //   // label: const Text('选择目录'),
+      // ),
     );
   }
 }
