@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/s0raLin/miku_music/compare/v1.0.0...v1.1.0) (2026-04-17)
+
+
+### Features
+
+* **ui:** migrate to native CarouselView and add background assets ([592cee3](https://github.com/s0raLin/miku_music/commit/592cee3bb969e831ac1f591d5e2b455a05e8b551))
+
 ## 1.0.0 (2026-04-17)
 
 
