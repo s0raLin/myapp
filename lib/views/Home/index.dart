@@ -45,22 +45,28 @@ class _HomePageState extends State<HomePage> {
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.only(top: 16),
-              child: AspectRatio(
-                aspectRatio: 16 / 9,
-                child: CarouselView.weighted(
-                  itemSnapping: true,
-                  controller: controller,
-                  flexWeights: const <int>[1, 7, 1],
-                  padding: EdgeInsets.zero,
-                  onTap: (index) => controller.animateToItem(
-                    index,
-                    duration: const Duration(milliseconds: 600),
-                    curve: Curves.elasticOut,
-                  ),
-                  children: ImageInfo.values
-                      .map((image) => HeroLayoutCard(imageInfo: image))
-                      .toList(),
-                ),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final isDesktop = constraints.maxWidth > 600;
+                  final aspectRatio = isDesktop ? 21 / 9 : 16 / 9;
+                  return AspectRatio(
+                    aspectRatio: aspectRatio,
+                    child: CarouselView.weighted(
+                      itemSnapping: true,
+                      controller: controller,
+                      flexWeights: const <int>[1, 7, 1],
+                      padding: EdgeInsets.zero,
+                      onTap: (index) => controller.animateToItem(
+                        index,
+                        duration: const Duration(milliseconds: 600),
+                        curve: Curves.elasticOut,
+                      ),
+                      children: ImageInfo.values
+                          .map((image) => HeroLayoutCard(imageInfo: image))
+                          .toList(),
+                    ),
+                  );
+                },
               ),
             ),
           ),

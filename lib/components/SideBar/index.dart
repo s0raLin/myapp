@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'package:myapp/router/IndexRouter/index.dart';
 
 class SideBar extends StatelessWidget {
@@ -10,51 +9,57 @@ class SideBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
 
-    return NavigationRailTheme(
-      data: NavigationRailThemeData(
-        // 继承 titleLarge 的所有属性，只覆盖颜色和粗细
-        unselectedLabelTextStyle: textTheme.titleLarge?.copyWith(
-          color: colorScheme.onSurfaceVariant,
-        ),
-        selectedLabelTextStyle: textTheme.titleLarge?.copyWith(
-          color: colorScheme.primary, // 选中文字变色
-          fontWeight: FontWeight.bold,
-        ),
-        // 2. 图标样式
-        unselectedIconTheme: IconThemeData(
-          color: colorScheme.onSurfaceVariant,
-          size: 28,
-        ),
-        selectedIconTheme: IconThemeData(
-          color: colorScheme.onPrimaryContainer,
-          size: 28,
-        ),
-        backgroundColor: colorScheme.surfaceContainerLow,
-        indicatorColor: colorScheme.secondaryContainer,
-      ),
-      child: NavigationRail(
-        extended: true,
+    // 重点：使用 NavigationDrawer 而不是 Rail
+    return SizedBox(
+      width: 200,
+      child: NavigationDrawer(
         selectedIndex: currentIndex,
-        backgroundColor: colorScheme.surface,
-        // 选中项的指示器颜色
-        indicatorColor: colorScheme.primaryContainer,
-        onDestinationSelected: (index) => onTap(index),
-        leading: const Padding(
-          padding: EdgeInsets.only(top: 10, bottom: 10),
-          child: Text(
-            "Miku Music",
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        onDestinationSelected: onTap,
+        // 这里的背景色会自动适配 M3 规范
+        backgroundColor: colorScheme.surfaceContainerLow,
+        indicatorColor: colorScheme.secondaryContainer, // 选中后的胶囊颜色
+        children: [
+          // 1. 修复标题：给标题增加 M3 标准内边距 (28, 16, 16, 10)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(28, 20, 16, 10),
+            child: Text(
+              "Miku Music",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: colorScheme.onSurface,
+              ),
+            ),
           ),
-        ),
-        destinations: navItems.map((item) {
-          return NavigationRailDestination(
-            icon: item.i!,
-            label: Text(item.label),
-          );
-        }).toList(),
+
+          // 也可以在这里插入像图中那样的 "Add timer" 按钮
+          // Padding(
+          //   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          //   child: FloatingActionButton.extended(...),
+          // ),
+          const SizedBox(height: 10),
+
+          // 2. 映射导航项
+          ...navItems.map((item) {
+            return NavigationDrawerDestination(
+              icon: item.i!,
+              label: Text(
+                item.label,
+                style: TextStyle(
+                  // 对应你提到的 M3 变更：选中项使用 secondary
+                  color: navItems.indexOf(item) == currentIndex
+                      ? colorScheme.secondary
+                      : colorScheme.onSurfaceVariant,
+                  fontWeight: navItems.indexOf(item) == currentIndex
+                      ? FontWeight.bold
+                      : FontWeight.normal,
+                ),
+              ),
+            );
+          }),
+        ],
       ),
     );
   }
