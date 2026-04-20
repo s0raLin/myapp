@@ -35,8 +35,6 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final double height = MediaQuery.sizeOf(context).height;
-
     final colorScheme = Theme.of(context).colorScheme;
     final history = context.read<MusicProvider>().history;
 
@@ -47,21 +45,21 @@ class _HomePageState extends State<HomePage> {
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.only(top: 16),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(maxHeight: height / 2),
+              child: AspectRatio(
+                aspectRatio: 16 / 9, 
                 child: CarouselView.weighted(
                   itemSnapping: true,
                   controller: controller,
                   flexWeights: const <int>[1, 7, 1],
-                  // 建议加上 tap 自动居中，这样交互更顺滑
+                  padding: EdgeInsets.zero,
                   onTap: (index) => controller.animateToItem(
                     index,
                     duration: const Duration(milliseconds: 600),
-                    curve: Curves.elasticOut, // 维持你想要的果冻感
+                    curve: Curves.elasticOut,
                   ),
-                  children: ImageInfo.values.map((image) {
-                    return HeroLayoutCard(imageInfo: image);
-                  }).toList(),
+                  children: ImageInfo.values
+                      .map((image) => HeroLayoutCard(imageInfo: image))
+                      .toList(),
                 ),
               ),
             ),
@@ -141,33 +139,31 @@ class HeroLayoutCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final double width = MediaQuery.sizeOf(context).width;
     return Stack(
-      alignment: AlignmentDirectional.bottomStart,
-      children: <Widget>[
-        ClipRect(
-          child: OverflowBox(
-            maxWidth: width * 7 / 8,
-            minWidth: width * 7 / 8,
-            child: Image(
-              fit: BoxFit.cover,
-              // image: NetworkImage(
-              //   'https://flutter.github.io/assets-for-api-docs/assets/material/${imageInfo.url}',
-              // ),
-              image: AssetImage(imageInfo.url),
-            ),
+      fit: StackFit.expand, // ← 关键：让 Stack 充满父容器
+      children: [
+        // 图片部分 - 确保完全充满
+        ClipRRect(
+          // 推荐换成 ClipRRect，支持圆角（如果需要）
+          borderRadius: BorderRadius.circular(16), // 可根据设计加圆角
+          child: Image(
+            image: AssetImage(imageInfo.url),
+            fit: BoxFit.cover, // cover 会自动裁剪并充满，无空白
+            width: double.infinity, // 强制宽度充满
+            height: double.infinity, // 强制高度充满（配合 StackFit.expand）
           ),
         ),
+
+        // 文字叠加层
         Padding(
           padding: const EdgeInsets.all(18.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
+            mainAxisAlignment: MainAxisAlignment.end, // 文字靠底对齐
+            children: [
               Text(
                 imageInfo.title,
-                overflow: TextOverflow.clip,
-                softWrap: false,
                 style: Theme.of(
                   context,
                 ).textTheme.headlineLarge?.copyWith(color: Colors.white),
@@ -175,8 +171,6 @@ class HeroLayoutCard extends StatelessWidget {
               const SizedBox(height: 10),
               Text(
                 imageInfo.subtitle,
-                overflow: TextOverflow.clip,
-                softWrap: false,
                 style: Theme.of(
                   context,
                 ).textTheme.bodyMedium?.copyWith(color: Colors.white),
