@@ -56,74 +56,144 @@ class _SettingsPageState extends State<SettingsPage> {
           padding: const EdgeInsets.all(16),
           children: [
             // _buildSectionHeader('外观'),
-            Text("外观", style: Theme.of(context).textTheme.labelLarge),
-            ListTile(
-              onTap: () {},
-              leading: Icon(Icons.dark_mode),
-              title: Text("深色模式"),
-              trailing: Switch(
-                value: themeProvider.isDark,
-                onChanged: (value) => themeProvider.toggleThemeMode(),
-              ),
+            _buildSectionTile(context, "外观"),
+            _buildSettingsCard(
+              context,
+              children: [
+                ListTile(
+                  onTap: () {},
+                  leading: Icon(Icons.dark_mode),
+                  title: Text("深色模式"),
+                  trailing: Switch(
+                    value: themeProvider.isDark,
+                    onChanged: (value) => themeProvider.toggleThemeMode(),
+                  ),
+                ),
+              ],
             ),
-            Text("主题色", style: Theme.of(context).textTheme.labelLarge),
-            ListTile(
-              onTap: () {},
-              title: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Wrap(
-                  spacing: 12,
-                  runSpacing: 12,
-                  children: _themeColors.map((color) {
-                    final isSelected = themeProvider.seedColor == color;
-                    return GestureDetector(
-                      onTap: () => themeProvider.setSeedColor(color),
-                      child: Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
+            _buildSectionTile(context, "主题色"),
+
+            _buildSettingsCard(
+              context,
+              children: [
+                ListTile(
+                  onTap: () {},
+                  title: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
+                      children: _themeColors.map((color) {
+                        final isSelected = themeProvider.seedColor == color;
+                        return _ThemeSeedButton(
                           color: color,
-                          shape: BoxShape.circle,
-                          border: isSelected
-                              ? Border.all(color: colorScheme.primary, width: 3)
-                              : null,
-                          boxShadow: isSelected
-                              ? [
-                                  BoxShadow(
-                                    color: color.withValues(alpha: 0.5),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ]
-                              : null,
-                        ),
-                        child: isSelected
-                            ? const Icon(
-                                Icons.check,
-                                color: Colors.white,
-                                size: 24,
-                              )
-                            : null,
-                      ),
-                    );
-                  }).toList(),
+                          isSelected: isSelected,
+                          onTap: () => themeProvider.setSeedColor(color),
+                        );
+                      }).toList(),
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
-            Text("关于", style: Theme.of(context).textTheme.labelLarge),
-            ListTile(
-              onTap: () {},
-              leading: Icon(Icons.info_outline),
-              title: Text("版本"),
-              trailing: Text(
-                "1.0.0",
-                style: TextStyle(
-                  color: colorScheme.onSurface.withValues(alpha: 0.6),
+            _buildSectionTile(context, "关于"),
+            _buildSettingsCard(
+              context,
+              children: [
+                ListTile(
+                  onTap: () {},
+                  leading: Icon(Icons.info_outline),
+                  title: Text("版本"),
+                  trailing: Text(
+                    "1.0.0",
+                    style: TextStyle(
+                      color: colorScheme.onSurface.withValues(alpha: 0.6),
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  //构建分组标题
+  Widget _buildSectionTile(BuildContext context, String title) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: 8),
+      child: Text(
+        title,
+        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+          color: Theme.of(context).colorScheme.primary,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  //构建容器卡片
+  Widget _buildSettingsCard(
+    BuildContext context, {
+    required List<Widget> children,
+  }) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24), // M3 典型的大圆角
+        side: BorderSide(
+          color: Theme.of(
+            context,
+          ).colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
+      ),
+      color: Theme.of(context).colorScheme.surfaceContainerLow, // 容器表面色
+      clipBehavior: Clip.antiAlias,
+      child: Column(children: children),
+    );
+  }
+}
+
+// 优化的主题色选择按钮
+class _ThemeSeedButton extends StatelessWidget {
+  final Color color;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _ThemeSeedButton({
+    required this.color,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(isSelected ? 12 : 22),
+          border: isSelected
+              ? Border.all(
+                  color: Theme.of(context).colorScheme.onSurface,
+                  width: 3,
+                )
+              : null,
+        ),
+        child: isSelected
+            ? Icon(
+                Icons.check,
+                color: color.computeLuminance() > 0.5
+                    ? Colors.black
+                    : Colors.white,
+              )
+            : null,
       ),
     );
   }

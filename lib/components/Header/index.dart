@@ -10,6 +10,7 @@ class Header extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppBar(
       centerTitle: true,
+      shadowColor: Theme.of(context).shadowColor,
       leading: IconButton(
         onPressed: () {
           scaffoldKey?.currentState?.openDrawer();

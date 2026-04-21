@@ -36,7 +36,7 @@ class _MusicPageState extends State<MusicPage> {
   Widget _buildLeft() {
     return RefreshIndicator(
       onRefresh: () async {},
-      child: const Center(child: Text("单曲列表")),
+      child: const Center(child: Text("收藏")),
     );
   }
 

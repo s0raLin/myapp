@@ -73,7 +73,9 @@ class ThemeProvider extends ChangeNotifier {
       navigationBarTheme: NavigationBarThemeData(
         height: 68,
         labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
-        indicatorShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        indicatorShape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
         indicatorColor: scheme.secondaryContainer,
       ),
       navigationDrawerTheme: NavigationDrawerThemeData(
@@ -99,9 +101,36 @@ class ThemeProvider extends ChangeNotifier {
           borderSide: BorderSide(color: scheme.outlineVariant),
         ),
       ),
-      cardTheme: const CardThemeData(
-        elevation: 0,
-        margin: EdgeInsets.zero,
+      cardTheme: const CardThemeData(elevation: 0, margin: EdgeInsets.zero),
+
+      //设置MenuAnchor弹出面板的样式
+      menuTheme: MenuThemeData(
+        style: MenuStyle(
+          backgroundColor: WidgetStatePropertyAll(scheme.surfaceContainer),
+          elevation: const WidgetStatePropertyAll(3),
+          shape: WidgetStatePropertyAll(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ), // 面板圆角
+          ),
+          // 可以统一定义菜单的内边距
+          padding: const WidgetStatePropertyAll(
+            EdgeInsets.symmetric(vertical: 8),
+          ),
+        ),
+      ),
+
+      // 2. 设置 MenuItemButton 和 SubmenuButton 的全局样式
+      menuButtonTheme: MenuButtonThemeData(
+        style: MenuItemButton.styleFrom(
+          foregroundColor: scheme.onSurface,
+          iconColor: scheme.onSurfaceVariant,
+          // 设置菜单项的圆角（通常比面板圆角略小，看起来更协调）
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        ),
       ),
     );
   }
