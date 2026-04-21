@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:ui';
 import 'package:collection/collection.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -227,35 +226,6 @@ class _FilesPageState extends State<FilesPage> {
           ),
         ],
       ),
-
-      // PopupMenuButton(
-      //   child: Container(
-      //     width: 56, // 标准 FAB 直径
-      //     height: 56,
-      //     decoration: BoxDecoration(
-      //       borderRadius: BorderRadius.circular(16.0),
-      //       color: Theme.of(context).colorScheme.primaryContainer, // 使用主题容器色
-      //     ),
-      //     child: Icon(
-      //       Icons.add,
-      //       color: Theme.of(context).colorScheme.onPrimaryContainer, // 图标颜色适配
-      //     ),
-      //   ),
-      //   itemBuilder: (context) => [
-      //     PopupMenuItem(
-      //       child: ListTile(
-      //         onTap: () => _showPickDialog(),
-      //         leading: const Icon(Icons.folder_open),
-      //         title: const Text('选择目录'),
-      //       ),
-      //     ),
-      //   ],
-      // ),
-
-      // FloatingActionButton(
-      //   onPressed: () => _showPickDialog(),
-      //   child: const Icon(Icons.folder_open),
-      // ),
     );
   }
 }
