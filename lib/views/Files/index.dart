@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:collection/collection.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:go_router/go_router.dart';
 import 'package:myapp/contants/Assets/index.dart';
 import 'package:myapp/model/Music/index.dart';
@@ -104,10 +105,9 @@ class _FilesPageState extends State<FilesPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("库"),
-      ),
+      appBar: AppBar(title: const Text("库")),
       body: RefreshIndicator(
         edgeOffset: MediaQuery.of(context).padding.top + 56,
         onRefresh: () async {
@@ -178,10 +178,84 @@ class _FilesPageState extends State<FilesPage> {
           },
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showPickDialog(),
-        child: const Icon(Icons.folder_open),
+      floatingActionButton: SpeedDial(
+        icon: Icons.menu, // 未展开时的图标
+        activeIcon: Icons.close, // 展开时的图标
+        backgroundColor: colorScheme.primaryContainer,
+        foregroundColor: colorScheme.onPrimaryContainer,
+        overlayColor: Colors.black, // 展开时的背景遮罩色
+        overlayOpacity: 0.5,
+        spacing: 12, // 子按钮之间的间距
+        children: [
+          SpeedDialChild(
+            // child: const Icon(Icons.folder_open),
+            backgroundColor: colorScheme.secondaryContainer,
+            labelWidget: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 10.0,
+              ),
+              decoration: BoxDecoration(
+                // Stadium 形状的关键：使用 StadiumBorder 或者设置很大的圆角
+                borderRadius: BorderRadius.circular(28.0),
+                color: Theme.of(context).colorScheme.secondaryContainer,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min, // 紧凑
+                mainAxisAlignment: MainAxisAlignment.center, // 内容居中
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.folder_open,
+                    size: 20,
+                    color: Theme.of(context).colorScheme.onSecondaryContainer,
+                  ),
+                  const SizedBox(width: 8.0),
+                  Text(
+                    '选择目录',
+                    style: TextStyle(
+                      fontSize: 14.0,
+                      fontWeight: FontWeight.w500,
+                      // 关键：标签的字体颜色
+                      color: Theme.of(context).colorScheme.onSecondaryContainer,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            onTap: () => _showPickDialog(),
+          ),
+        ],
       ),
+
+      // PopupMenuButton(
+      //   child: Container(
+      //     width: 56, // 标准 FAB 直径
+      //     height: 56,
+      //     decoration: BoxDecoration(
+      //       borderRadius: BorderRadius.circular(16.0),
+      //       color: Theme.of(context).colorScheme.primaryContainer, // 使用主题容器色
+      //     ),
+      //     child: Icon(
+      //       Icons.add,
+      //       color: Theme.of(context).colorScheme.onPrimaryContainer, // 图标颜色适配
+      //     ),
+      //   ),
+      //   itemBuilder: (context) => [
+      //     PopupMenuItem(
+      //       child: ListTile(
+      //         onTap: () => _showPickDialog(),
+      //         leading: const Icon(Icons.folder_open),
+      //         title: const Text('选择目录'),
+      //       ),
+      //     ),
+      //   ],
+      // ),
+
+      // FloatingActionButton(
+      //   onPressed: () => _showPickDialog(),
+      //   child: const Icon(Icons.folder_open),
+      // ),
     );
   }
 }
