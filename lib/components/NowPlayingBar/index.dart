@@ -214,7 +214,7 @@ class _PlaybackCenter extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 2),
         _ProgressBar(fmt: fmt),
       ],
     );
@@ -291,9 +291,19 @@ class _QueueActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final isPlaying = context.select<MusicProvider, bool>(
       (p) => p.player.playing,
     );
+    final queue = context.select<MusicProvider, List<MusicInfo>>(
+      (p) => p.queue,
+    );
+
+    final currentMusic = context.select<MusicProvider, MusicInfo?>(
+      (p) => p.currentMusic,
+    );
+
+    final mp = context.read<MusicProvider>();
 
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -305,7 +315,59 @@ class _QueueActions extends StatelessWidget {
           ),
         // 点击弹出播放队列菜单
         MenuAnchor(
-          menuChildren: [/* ...此处省略内部 List 逻辑... */],
+          menuChildren: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                children: [
+                  const Text(
+                    '播放队列',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    '${queue.length} 首',
+                    style: TextStyle(color: cs.outline),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            SizedBox(
+              height: 300,
+              width: 260,
+              child: ListView(
+                children: queue.asMap().entries.map((entry) {
+                  final music = entry.value;
+                  final isCurrent = currentMusic?.id == music.id;
+                  return MenuItemButton(
+                    onPressed: () => mp.playByIndex(entry.key),
+                    leadingIcon: isCurrent
+                        ? const Icon(Icons.play_arrow_rounded, size: 24)
+                        : (music.coverBytes != null &&
+                                  music.coverBytes!.isNotEmpty
+                              ? SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(6),
+                                    child: Image.memory(
+                                      music.coverBytes!,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                )
+                              : const Icon(Icons.music_note_rounded, size: 24)),
+                    child: Text(
+                      music.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ],
           builder: (context, controller, child) {
             return _MiniIconButton(
               icon: Icons.queue_music_rounded,
