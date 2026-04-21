@@ -57,61 +57,45 @@ class _SettingsPageState extends State<SettingsPage> {
           children: [
             // _buildSectionHeader('外观'),
             _buildSectionTile(context, "外观"),
-            _buildSettingsCard(
-              context,
-              children: [
-                ListTile(
-                  onTap: () {},
-                  leading: Icon(Icons.dark_mode),
-                  title: Text("深色模式"),
-                  trailing: Switch(
-                    value: themeProvider.isDark,
-                    onChanged: (value) => themeProvider.toggleThemeMode(),
-                  ),
-                ),
-              ],
+            ListTile(
+              onTap: () {},
+              leading: Icon(Icons.dark_mode),
+              title: Text("深色模式"),
+              trailing: Switch(
+                value: themeProvider.isDark,
+                onChanged: (value) => themeProvider.toggleThemeMode(),
+              ),
             ),
             _buildSectionTile(context, "主题色"),
-
-            _buildSettingsCard(
-              context,
-              children: [
-                ListTile(
-                  onTap: () {},
-                  title: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Wrap(
-                      spacing: 12,
-                      runSpacing: 12,
-                      children: _themeColors.map((color) {
-                        final isSelected = themeProvider.seedColor == color;
-                        return _ThemeSeedButton(
-                          color: color,
-                          isSelected: isSelected,
-                          onTap: () => themeProvider.setSeedColor(color),
-                        );
-                      }).toList(),
-                    ),
-                  ),
+            ListTile(
+              onTap: () {},
+              title: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: _themeColors.map((color) {
+                    final isSelected = themeProvider.seedColor == color;
+                    return _ThemeSeedButton(
+                      color: color,
+                      isSelected: isSelected,
+                      onTap: () => themeProvider.setSeedColor(color),
+                    );
+                  }).toList(),
                 ),
-              ],
+              ),
             ),
             _buildSectionTile(context, "关于"),
-            _buildSettingsCard(
-              context,
-              children: [
-                ListTile(
-                  onTap: () {},
-                  leading: Icon(Icons.info_outline),
-                  title: Text("版本"),
-                  trailing: Text(
-                    "1.0.0",
-                    style: TextStyle(
-                      color: colorScheme.onSurface.withValues(alpha: 0.6),
-                    ),
-                  ),
+            ListTile(
+              onTap: () {},
+              leading: Icon(Icons.info_outline),
+              title: Text("版本"),
+              trailing: Text(
+                "1.0.0",
+                style: TextStyle(
+                  color: colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
-              ],
+              ),
             ),
           ],
         ),
@@ -130,27 +114,6 @@ class _SettingsPageState extends State<SettingsPage> {
           fontWeight: FontWeight.bold,
         ),
       ),
-    );
-  }
-
-  //构建容器卡片
-  Widget _buildSettingsCard(
-    BuildContext context, {
-    required List<Widget> children,
-  }) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24), // M3 典型的大圆角
-        side: BorderSide(
-          color: Theme.of(
-            context,
-          ).colorScheme.outlineVariant.withValues(alpha: 0.5),
-        ),
-      ),
-      color: Theme.of(context).colorScheme.surfaceContainerLow, // 容器表面色
-      clipBehavior: Clip.antiAlias,
-      child: Column(children: children),
     );
   }
 }
