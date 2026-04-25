@@ -2,16 +2,15 @@ package main
 
 import (
 	"log"
+	"miku_music/config"
+	"miku_music/internal/repository"
 	"miku_music/router"
 
 	"github.com/gin-gonic/gin"
 )
 
-func main() {
-	r := gin.Default()
-
-	// 全局 CORS（Flutter 调试时跨域用）
-	r.Use(func(c *gin.Context) {
+func globalCORE() gin.HandlerFunc {
+	return func(c *gin.Context) {
 		c.Header("Access-Control-Allow-Origin", "*")
 		c.Header("Access-Control-Allow-Headers", "Authorization, Content-Type")
 		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
@@ -20,14 +19,29 @@ func main() {
 			return
 		}
 		c.Next()
-	})
+	}
+}
+func main() {
+
+	cfg, err := config.Load()
+	if err != nil {
+		log.Fatal("配置加载失败", err)
+	}
+
+	// 数据库初始化
+	repository.Init(cfg)
+
+	r := gin.Default()
+
+	// 全局 CORS（Flutter 调试时跨域用）
+	r.Use(globalCORE())
 
 	//把所有路由注册交给router包
 	router.Setup(r)
 
 	// 启动
-	log.Println("Server running on :8080")
-	if err := r.Run(":8080"); err != nil {
-		log.Fatal(err)
+	log.Println("Server running on", cfg.Port)
+	if err := r.Run(":" + cfg.Port); err != nil {
+		log.Fatal("服务器启动失败")
 	}
 }

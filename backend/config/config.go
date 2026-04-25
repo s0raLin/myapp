@@ -1,6 +1,11 @@
 package config
 
-import "os"
+import (
+	"fmt"
+	"os"
+
+	"github.com/joho/godotenv"
+)
 
 type Config struct {
 	DBDriver string
@@ -8,24 +13,25 @@ type Config struct {
 	Port     string
 }
 
-func Load() *Config {
-	driver := os.Getenv("DB_DRIVER")
-	if driver == "" {
-		driver = "mysql"
-	}
-	source := os.Getenv("DB_SOURCE")
-	if source == "" {
-		source = "root:123456@tcp(127.0.0.1:3306)/music_app?charset=utf8mb4&parseTime=True&loc=Local"
+func Load() (*Config, error) {
+
+	_ = godotenv.Load() //加载.env文件,不存在时忽略
+
+	cfg := &Config{
+		DBDriver: getEnv("DB_DRIVER", "mysql"),
+		DBSource: getEnv("DB_SOURCE", ""),
+		Port:     getEnv("PORT", "8080"),
 	}
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
+	if cfg.DBSource == "" {
+		return nil, fmt.Errorf("缺少环境变量: DB_SOURCE")
 	}
+	return cfg, nil
+}
 
-	return &Config{
-		DBDriver: driver,
-		DBSource: source,
-		Port:     port,
+func getEnv(key, defaultVal string) string {
+	if val := os.Getenv(key); val != "" {
+		return val
 	}
+	return defaultVal
 }
