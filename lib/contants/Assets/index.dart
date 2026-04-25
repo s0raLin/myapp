@@ -1,10 +1,12 @@
 class MyAssets {
   static const String mikulogo = "lib/assets/images/icon.png";
   static const String avatar = "lib/assets/images/miku.jpeg";
-  static const String music_note = "assets/images/music_note.png";
+  static const String music_note = "assets/icons/music.png";
   static const String home = "assets/icons/home.png";
   static const String music = "assets/icons/music.png";
   static const String folder = "assets/icons/folder.png";
+
+
 
   static const String background = "assets/background/AdachiRei.jpg";
   static const String background2 = "assets/background/HatsuneMiku1.jpg";

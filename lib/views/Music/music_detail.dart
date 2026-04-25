@@ -6,9 +6,16 @@ import 'package:myapp/providers/MusicProvider/index.dart';
 import 'package:provider/provider.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
-class MusicDetailPage extends StatelessWidget {
+class MusicDetailPage extends StatefulWidget {
   const MusicDetailPage({super.key});
 
+  @override
+  State<MusicDetailPage> createState() => _MusicDetailPageState();
+}
+
+class _MusicDetailPageState extends State<MusicDetailPage> {
+  // 窄屏模式下，是否强制显示歌词
+  bool _showLyricsOnMobile = false;
   @override
   Widget build(BuildContext context) {
     // 用 select 只监听必要字段，避免无关变化触发重建
@@ -31,6 +38,23 @@ class MusicDetailPage extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     final mainContent = _MainContent(music: music, isLiked: isLiked);
+    final Widget mobileContent;
+    if (_showLyricsOnMobile) {
+      mobileContent = GestureDetector(
+        onTap: () => setState(() {
+          _showLyricsOnMobile = false;
+        }),
+        child: _LyricsSection(lyrics: lyrics),
+      );
+    } else {
+      mobileContent = _MainContent(
+        music: music,
+        isLiked: isLiked,
+        onCoverTap: () => setState(() {
+          _showLyricsOnMobile = true;
+        }),
+      );
+    }
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
@@ -45,7 +69,12 @@ class MusicDetailPage extends StatelessWidget {
                   Expanded(flex: 4, child: _LyricsSection(lyrics: lyrics)),
                 ],
               )
-            : mainContent,
+            : AnimatedSwitcher(
+                duration: const Duration(milliseconds: 400),
+                transitionBuilder: (child, animation) =>
+                    FadeTransition(opacity: animation, child: child),
+                child: mobileContent,
+              ),
       ),
     );
   }
@@ -84,8 +113,13 @@ class MusicDetailPage extends StatelessWidget {
 class _MainContent extends StatelessWidget {
   final MusicInfo music;
   final bool isLiked;
+  final VoidCallback? onCoverTap; //新增回调
 
-  const _MainContent({required this.music, required this.isLiked});
+  const _MainContent({
+    required this.music,
+    required this.isLiked,
+    this.onCoverTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -95,7 +129,13 @@ class _MainContent extends StatelessWidget {
       children: [
         const SizedBox(height: 20),
         Expanded(
-          child: _AlbumCover(title: music.title, coverBytes: music.coverBytes),
+          child: GestureDetector(
+            onTap: onCoverTap, //点击封面触发
+            child: _AlbumCover(
+              title: music.title,
+              coverBytes: music.coverBytes,
+            ),
+          ),
         ),
         const SizedBox(height: 32),
         _SongMeta(
@@ -420,7 +460,7 @@ class _LyricsSectionState extends State<_LyricsSection> {
           currentIndex = widget.lyrics.length - 1;
         }
 
-        // 💡 核心改动：在 build 过程中通过微任务触发滚动，避免 build 冲突
+        // 核心改动：在 build 过程中通过微任务触发滚动，避免 build 冲突
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _scrollToCurrent(currentIndex);
         });

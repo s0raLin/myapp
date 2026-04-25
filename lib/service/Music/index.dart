@@ -67,7 +67,6 @@ class MusicService {
   static Future<MusicInfo> parse(String path) async {
     final Tag? tag = await AudioTags.read(path);
 
-
     String? artist = tag?.trackArtist ?? tag?.albumArtist ?? "未知歌手";
     Uint8List? coverBytes;
     if (tag?.pictures.isNotEmpty ?? false) {
@@ -82,9 +81,6 @@ class MusicService {
 
     if (await file.exists()) {
       lyrics = await file.readAsString();
-      print("✅ [扫描成功] 路径: $lrcPath, 长度: ${lyrics.length}");
-    } else {
-      print("❌ [扫描失败] 找不到歌词文件: $lrcPath");
     }
 
     return MusicInfo(
