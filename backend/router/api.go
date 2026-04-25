@@ -9,6 +9,9 @@ import (
 func Setup(r *gin.Engine) *gin.Engine {
 	authHandler := handler.NewAuthHandler()
 
+	//限制上传大小
+	r.MaxMultipartMemory = 8 << 20 // 8MB
+
 	//公开路由
 	public := r.Group("/api")
 	{
