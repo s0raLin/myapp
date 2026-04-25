@@ -62,6 +62,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		})
 		return
 	}
+	
 	//保存头像到目录
 	if err := c.SaveUploadedFile(avatar, savePath); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
