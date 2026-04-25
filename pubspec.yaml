@@ -30,6 +30,7 @@ dependencies:
   flutter_animate: ^4.5.2
   flex_color_scheme: ^8.4.0
   flutter_speed_dial: ^7.0.0
+  scrollable_positioned_list: ^0.3.8
 
 dev_dependencies:
   flutter_test:

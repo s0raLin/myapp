@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:myapp/model/Music/index.dart';
 import 'package:myapp/providers/MusicProvider/index.dart';
 import 'package:provider/provider.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 class MusicDetailPage extends StatelessWidget {
   const MusicDetailPage({super.key});
@@ -363,59 +364,118 @@ class _PlaybackControls extends StatelessWidget {
 //     );
 //   }
 // }
-
-class _LyricsSection extends StatelessWidget {
+class _LyricsSection extends StatefulWidget {
   final List<Map<String, dynamic>> lyrics;
-
   const _LyricsSection({required this.lyrics});
+
+  @override
+  State<_LyricsSection> createState() => _LyricsSectionState();
+}
+
+class _LyricsSectionState extends State<_LyricsSection> {
+  final ItemScrollController _itemScrollController = ItemScrollController();
+
+  // 关键：记录上一次滚动的索引，避免重复触发
+  int _lastIndex = -1;
+
+  void _scrollToCurrent(int index) {
+    // 只有索引变化了，且控制器已挂载时才滚动
+    if (index != _lastIndex && _itemScrollController.isAttached) {
+      _lastIndex = index;
+
+      // 使用 jumpTo 可以实现“瞬间”定位，但 scrollTo 体验更好
+      // 我们通过缩短 duration (从 800ms 降到 400ms) 来实现“快速滚动”
+      _itemScrollController.scrollTo(
+        index: index,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeOutCubic,
+        alignment: 0.45,
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final musicProvider = context.read<MusicProvider>();
+    final colorScheme = Theme.of(context).colorScheme;
 
-    // 1. 使用 StreamBuilder 监听进度
+    if (widget.lyrics.isEmpty) {
+      return const Center(child: Text('歌詞が見つかりません'));
+    }
+
     return StreamBuilder<PositionData>(
       stream: musicProvider.positionDataStream,
       builder: (context, snapshot) {
         final position = snapshot.data?.position ?? Duration.zero;
 
-        // 2. 找到当前应该高亮的歌词索引
+        // 计算当前索引
         int currentIndex =
-            lyrics.indexWhere((lyric) {
-              // 假设你的 map 里有 'time' 字段 (Duration 或 毫秒)
-              final startTime = lyric['time'] as Duration;
-              return startTime > position;
-            }) -
+            widget.lyrics.indexWhere(
+              (l) => (l['time'] as Duration) > position,
+            ) -
             1;
-        if (currentIndex < 0) currentIndex = 0;
 
-        if (lyrics.isEmpty) {
-          return const Center(
-            child: Text(
-              '歌詞が見つかりません',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-            ),
-          );
+        if (currentIndex < 0) currentIndex = 0;
+        if (position >= (widget.lyrics.last['time'] as Duration)) {
+          currentIndex = widget.lyrics.length - 1;
         }
 
-        return ListView.builder(
-          itemCount: lyrics.length,
-          // 这里的关键是：你需要根据 currentIndex 来控制高亮和自动滚动
-          itemBuilder: (context, i) {
-            final isCurrent = i == currentIndex;
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              child: Text(
-                lyrics[i]['text'] as String,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: isCurrent ? 22 : 18, // 高亮变大
-                  color: isCurrent ? Colors.blue : Colors.grey, // 高亮变色
-                  fontWeight: isCurrent ? FontWeight.bold : FontWeight.w500,
-                ),
-              ),
-            );
+        // 💡 核心改动：在 build 过程中通过微任务触发滚动，避免 build 冲突
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _scrollToCurrent(currentIndex);
+        });
+
+        return ShaderMask(
+          // ... ShaderMask 代码保持不变 ...
+          shaderCallback: (rect) {
+            return LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.transparent,
+                Colors.black,
+                Colors.black,
+                Colors.transparent,
+              ],
+              stops: const [0.0, 0.2, 0.8, 1.0],
+            ).createShader(rect);
           },
+          blendMode: BlendMode.dstIn,
+          child: ScrollablePositionedList.builder(
+            itemCount: widget.lyrics.length,
+            itemScrollController: _itemScrollController,
+            physics: const BouncingScrollPhysics(),
+            itemBuilder: (context, i) {
+              final isCurrent = i == currentIndex;
+              return AnimatedScale(
+                scale: isCurrent ? 1.1 : 1.0,
+                duration: const Duration(milliseconds: 300),
+                child: AnimatedOpacity(
+                  opacity: isCurrent ? 1.0 : 0.3,
+                  duration: const Duration(milliseconds: 300),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 20,
+                      horizontal: 24,
+                    ),
+                    child: Text(
+                      widget.lyrics[i]['text'] as String,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: isCurrent
+                            ? FontWeight.bold
+                            : FontWeight.w500,
+                        color: isCurrent
+                            ? colorScheme.primary
+                            : colorScheme.onSurface,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
         );
       },
     );
