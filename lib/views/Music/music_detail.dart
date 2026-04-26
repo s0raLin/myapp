@@ -376,34 +376,6 @@ class _PlaybackControls extends StatelessWidget {
 
 // ─── 歌词区 ──────────────────────────────────────────────────────────────────────
 
-// class _LyricsSection extends StatelessWidget {
-//   final List<Map<String, dynamic>> lyrics;
-
-//   const _LyricsSection({required this.lyrics});
-
-//   @override
-//   Widget build(BuildContext context) {
-//     if (lyrics.isNotEmpty) {
-//       return ListView.builder(
-//         itemCount: lyrics.length,
-//         itemBuilder: (context, i) => Padding(
-//           padding: const EdgeInsets.symmetric(vertical: 10),
-//           child: Text(
-//             lyrics[i]['text'] as String,
-//             textAlign: TextAlign.center,
-//             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-//           ),
-//         ),
-//       );
-//     }
-//     return const Center(
-//       child: Text(
-//         '歌詞が見つかりません',
-//         style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-//       ),
-//     );
-//   }
-// }
 class _LyricsSection extends StatefulWidget {
   final List<Map<String, dynamic>> lyrics;
   const _LyricsSection({required this.lyrics});
@@ -414,24 +386,43 @@ class _LyricsSection extends StatefulWidget {
 
 class _LyricsSectionState extends State<_LyricsSection> {
   final ItemScrollController _itemScrollController = ItemScrollController();
-
-  // 关键：记录上一次滚动的索引，避免重复触发
   int _lastIndex = -1;
 
-  void _scrollToCurrent(int index) {
-    // 只有索引变化了，且控制器已挂载时才滚动
-    if (index != _lastIndex && _itemScrollController.isAttached) {
-      _lastIndex = index;
+  // 修复：分离"首次定位"和"滚动动画"逻辑
+  void _scrollToCurrent(int index, {bool animate = true}) {
+    if (!_itemScrollController.isAttached) return;
+    if (index == _lastIndex) return;
+    _lastIndex = index;
 
-      // 使用 jumpTo 可以实现“瞬间”定位，但 scrollTo 体验更好
-      // 我们通过缩短 duration (从 800ms 降到 400ms) 来实现“快速滚动”
+    if (animate) {
       _itemScrollController.scrollTo(
         index: index,
         duration: const Duration(milliseconds: 400),
         curve: Curves.easeOutCubic,
         alignment: 0.45,
       );
+    } else {
+      // 首次进入页面时直接跳转，不做动画，避免从顶部滑下来的违和感
+      _itemScrollController.jumpTo(index: index, alignment: 0.45);
     }
+  }
+
+  // 修复：抽取计算逻辑，避免边界错误
+  int _calcCurrentIndex(Duration position) {
+    if (widget.lyrics.isEmpty) return 0;
+
+    // 找到第一个时间 > position 的歌词
+    final nextIndex = widget.lyrics.indexWhere(
+      (l) => (l['time'] as Duration) > position,
+    );
+
+    if (nextIndex <= 0) {
+      // nextIndex == -1：position 超过所有歌词时间，显示最后一句
+      // nextIndex == 0：position 在第一句之前，显示第一句
+      return nextIndex == -1 ? widget.lyrics.length - 1 : 0;
+    }
+
+    return nextIndex - 1;
   }
 
   @override
@@ -447,28 +438,17 @@ class _LyricsSectionState extends State<_LyricsSection> {
       stream: musicProvider.positionDataStream,
       builder: (context, snapshot) {
         final position = snapshot.data?.position ?? Duration.zero;
+        final currentIndex = _calcCurrentIndex(position);
 
-        // 计算当前索引
-        int currentIndex =
-            widget.lyrics.indexWhere(
-              (l) => (l['time'] as Duration) > position,
-            ) -
-            1;
-
-        if (currentIndex < 0) currentIndex = 0;
-        if (position >= (widget.lyrics.last['time'] as Duration)) {
-          currentIndex = widget.lyrics.length - 1;
-        }
-
-        // 核心改动：在 build 过程中通过微任务触发滚动，避免 build 冲突
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          _scrollToCurrent(currentIndex);
+          if (!mounted) return;
+          // 修复：首次滚动（_lastIndex == -1）用 jump，后续用 animate
+          _scrollToCurrent(currentIndex, animate: _lastIndex != -1);
         });
 
         return ShaderMask(
-          // ... ShaderMask 代码保持不变 ...
           shaderCallback: (rect) {
-            return LinearGradient(
+            return const LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
@@ -477,7 +457,7 @@ class _LyricsSectionState extends State<_LyricsSection> {
                 Colors.black,
                 Colors.transparent,
               ],
-              stops: const [0.0, 0.2, 0.8, 1.0],
+              stops: [0.0, 0.2, 0.8, 1.0],
             ).createShader(rect);
           },
           blendMode: BlendMode.dstIn,
@@ -487,13 +467,13 @@ class _LyricsSectionState extends State<_LyricsSection> {
             physics: const BouncingScrollPhysics(),
             itemBuilder: (context, i) {
               final isCurrent = i == currentIndex;
-              final lyric = widget.lyrics[i]; //获取当前歌词行数据
+              final lyric = widget.lyrics[i];
               return GestureDetector(
                 onTap: () {
-                  final targetTime = lyric["time"] as Duration;
-                  musicProvider.player.seek(targetTime); //调用播放器跳转
+                  final targetTime = lyric['time'] as Duration;
+                  musicProvider.player.seek(targetTime);
                 },
-                behavior: HitTestBehavior.opaque, //确保空白区域也可点击
+                behavior: HitTestBehavior.opaque,
                 child: AnimatedScale(
                   scale: isCurrent ? 1.1 : 1.0,
                   duration: const Duration(milliseconds: 300),
@@ -506,7 +486,7 @@ class _LyricsSectionState extends State<_LyricsSection> {
                         horizontal: 24,
                       ),
                       child: Text(
-                        widget.lyrics[i]['text'] as String,
+                        lyric['text'] as String,
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 22,
