@@ -140,7 +140,7 @@ final _routes = [
   GoRoute(
     path: "/user",
     builder: (context, state) {
-      return UserPage();
+      return UserProfilePage();
     },
   ),
   StatefulShellRoute.indexedStack(

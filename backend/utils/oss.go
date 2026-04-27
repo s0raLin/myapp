@@ -34,7 +34,7 @@ func OSSUpload(file *multipart.FileHeader, fileName string) (string, error) {
 	defer f.Close()
 
 	//拼接生成新的文件名(路径+UUID+后缀)
-	objectKey := fmt.Sprintf("music/%s", fileName)
+	objectKey := fmt.Sprintf("miku_music/%s", fileName)
 
 	// 方式一：只填写Region（推荐）
 	cfg := oss.LoadDefaultConfig().

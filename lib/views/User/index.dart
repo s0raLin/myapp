@@ -1,16 +1,46 @@
 import 'package:flutter/material.dart';
 
-class UserPage extends StatefulWidget {
-  const UserPage({super.key});
+class UserProfilePage extends StatefulWidget {
+  const UserProfilePage({super.key});
 
   @override
-  State<UserPage> createState() => _UserPageState();
+  State<UserProfilePage> createState() => _UserProfilePageState();
 }
 
-class _UserPageState extends State<UserPage> {
+class _UserProfilePageState extends State<UserProfilePage> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(appBar: AppBar(), body: M3UserCard());
+    return Scaffold(
+      body: CustomScrollView(
+        slivers: [
+          // 1. 沉浸式顶部栏
+          SliverAppBar.large(
+            title: const Text("个人主页"),
+            actions: [
+              IconButton(
+                onPressed: () {},
+                icon: const Icon(Icons.share_outlined),
+              ),
+              IconButton(
+                onPressed: () {},
+                icon: const Icon(Icons.settings_outlined),
+              ),
+            ],
+          ),
+
+          // 2. 用户信息卡片区域
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: const M3UserCard(),
+            ),
+          ),
+
+          // 底部留白
+          const SliverToBoxAdapter(child: SizedBox(height: 40)),
+        ],
+      ),
+    );
   }
 }
 

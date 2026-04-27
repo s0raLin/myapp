@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
 
@@ -34,5 +36,39 @@ class MusicApi {
     } else {
       print("上传失败");
     }
+  }
+}
+
+class UserApi {
+  static final Dio _dio = Dio(
+    BaseOptions(baseUrl: "http://localhost:8080/api/auth/"),
+  );
+
+  static Future<Response> register({
+    required String username,
+    required String password,
+    required String email,
+    Uint8List? avatarBytes,
+  }) async {
+    final formData = FormData.fromMap({
+      "username": username,
+      "password": password,
+      "email": email,
+      if (avatarBytes != null)
+        "avatar": MultipartFile.fromBytes(
+          avatarBytes,
+          filename: "${username}_avatar.jpg",
+        ),
+    });
+
+    final response = await _dio.post(
+      "/register",
+      data: formData,
+      onSendProgress: (sent, total) {
+        print("上传进度: ${(sent / total * 100).toStringAsFixed(0)}");
+      },
+    );
+
+    return response;
   }
 }

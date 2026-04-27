@@ -1,7 +1,11 @@
 import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:myapp/api/Client/index.dart';
+
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -44,8 +48,24 @@ class _RegisterPageState extends State<RegisterPage> {
     super.dispose();
   }
 
-  void _register() {
+  Future<void> _register() async {
     if (_formKey.currentState!.validate()) {
+      Uint8List? avatarBytes;
+      if (_avatarImage != null) {
+        avatarBytes = await _avatarImage!.readAsBytes();
+      }
+
+      final response = await UserApi.register(
+        username: _usernameController.text,
+        password: _passwordController.text,
+        email: _emailController.text,
+        avatarBytes: avatarBytes,
+      );
+
+      if (response.statusCode == 200) {
+
+      }
+
       context.pop();
     }
   }
@@ -55,9 +75,7 @@ class _RegisterPageState extends State<RegisterPage> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        leading: BackButton(onPressed: () => context.pop()),
-      ),
+      appBar: AppBar(leading: BackButton(onPressed: () => context.pop())),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
