@@ -28,7 +28,7 @@ func (s *AuthHandler) Login(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"code": 0,
-		"msg":  "ok",
+		"msg":  "登录成功",
 		"data": gin.H{"token": "jwt.token"},
 	})
 }
