@@ -13,6 +13,7 @@ import 'package:myapp/views/Music/music_detail.dart';
 import 'package:myapp/views/NotFound/index.dart';
 import 'package:myapp/views/Settings/index.dart';
 import 'package:myapp/views/Splash/index.dart';
+import 'package:myapp/views/User/index.dart';
 import 'package:myapp/views/index.dart';
 import 'package:provider/provider.dart';
 
@@ -133,6 +134,13 @@ final _routes = [
           );
         },
       );
+    },
+  ),
+
+  GoRoute(
+    path: "/user",
+    builder: (context, state) {
+      return UserPage();
     },
   ),
   StatefulShellRoute.indexedStack(

@@ -21,6 +21,14 @@ class MainDrawer extends StatelessWidget {
           ListTile(
             onTap: () {
               Navigator.pop(context);
+              context.push("/user");
+            },
+            leading: const Icon(Icons.person),
+            title: const Text("用户信息"),
+          ),
+          ListTile(
+            onTap: () {
+              Navigator.pop(context);
               context.push("/login");
             },
             leading: const Icon(Icons.login),
