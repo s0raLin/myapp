@@ -81,6 +81,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		})
 		return
 	}
+	
 	user.Username = req.Username
 	user.Password = req.Password
 	user.Email = req.Email
