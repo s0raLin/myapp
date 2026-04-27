@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:myapp/api/Client/index.dart';
+import 'package:myapp/api/model/ApiResponse/index.dart';
 import 'package:myapp/contants/Assets/index.dart';
 
 class LoginPage extends StatefulWidget {
@@ -22,8 +24,15 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  void _login() {
+  Future<void> _login() async {
     if (_formKey.currentState!.validate()) {
+      final result = await UserApi.login(
+        username: _usernameController.text,
+        password: _passwordController.text,
+      );
+
+      
+
       context.go('/home');
     }
   }
@@ -31,9 +40,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        leading: BackButton(onPressed: () => context.pop()),
-      ),
+      appBar: AppBar(leading: BackButton(onPressed: () => context.pop())),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(

@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:myapp/api/model/ApiResponse/index.dart';
 
 class MusicApi {
   static final Dio _dio = Dio();
@@ -43,6 +44,25 @@ class UserApi {
   static final Dio _dio = Dio(
     BaseOptions(baseUrl: "http://localhost:8080/api/auth/"),
   );
+
+  static Future<String?> login({
+    required String username,
+    required String password,
+  }) async {
+    final formData = FormData.fromMap({
+      "username": username,
+      "password": password,
+    });
+    final response = await _dio.post("/login", data: formData);
+
+    final result = ApiResponse.fromJson(response.data);
+    if (result.code == 0) {
+      String? token = result.data?['token'];
+      return token;
+    } else {
+      return null;
+    }
+  }
 
   static Future<Response> register({
     required String username,

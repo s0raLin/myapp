@@ -26,10 +26,38 @@ func (s *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
+	var user model.User
+	if err := repository.DB.Where("username = ? ", req.Username).First(&user).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code": 1,
+			"msg":  "用户名或密码错误", //找不到用户
+		})
+		return
+	}
+	if req.Password != user.Password {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code": 1,
+			"msg":  "用户名或密码错误",
+		})
+		return
+	}
+
+	token, err := utils.GenerateToken(user.ID, user.Username)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"code": 1,
+			"msg":  "生成令牌失败",
+		})
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"code": 0,
 		"msg":  "登录成功",
-		"data": gin.H{"token": "jwt.token"},
+		"data": gin.H{"token": token, "user": gin.H{
+			"username": user.Username,
+			"avatar":   user.AvatarURL,
+		}},
 	})
 }
 
