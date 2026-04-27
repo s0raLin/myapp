@@ -26,7 +26,8 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _login() async {
-    if (_formKey.currentState!.validate()) {
+    if (!_formKey.currentState!.validate()) return;
+    try {
       final user = await UserApi.login(
         username: _usernameController.text,
         password: _passwordController.text,
@@ -55,6 +56,21 @@ class _LoginPageState extends State<LoginPage> {
           },
         );
       }
+    } catch (e) {
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text("登录出错"),
+          content: Text("发生错误: $e"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('确定'),
+            ),
+          ],
+        ),
+      );
     }
   }
 

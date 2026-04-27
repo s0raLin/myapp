@@ -25,6 +25,12 @@ func (s *AuthHandler) Login(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"code": 1, "msg": err.Error()})
 		return
 	}
+	if req.Username == "" || req.Password == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code": 1,
+			"msg":  "用户名或密码错误",
+		})
+	}
 
 	var user model.User
 	if err := repository.DB.Where("username = ? ", req.Username).First(&user).Error; err != nil {
