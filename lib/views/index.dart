@@ -17,44 +17,45 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  late bool showNavigationDrawer;
+  late int currentIndex;
 
   void onTabChanged(int idx) {
+    currentIndex = idx;
     widget.navigationShell.goBranch(idx);
+    setState(() {});
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    showNavigationDrawer = MediaQuery.of(context).size.width >= 450;
+    currentIndex = widget.navigationShell.currentIndex;
   }
 
   @override
   Widget build(BuildContext context) {
-    const maxWidth = 800;
-    final colorScheme = Theme.of(context).colorScheme;
-    final currentIndex = widget.navigationShell.currentIndex;
-    final backgroundColor = colorScheme.surfaceContainerLow;
+    return showNavigationDrawer
+        ? _buildDrawerScaffold(context)
+        : _buildBottomBarScaffold(context);
+  }
 
+  Widget _buildDrawerScaffold(BuildContext context) {
     return Scaffold(
-      key: _scaffoldKey,
-      backgroundColor: backgroundColor,
-      drawer: const MainDrawer(),
       body: LayoutBuilder(
         builder: (context, constraints) {
-          final bool isLargeScreen = constraints.maxWidth >= maxWidth;
+          // final bool isLargeScreen = constraints.maxWidth >= maxWidth;
 
           return Column(
             children: [
               Expanded(
                 child: Row(
                   children: [
-                    if (isLargeScreen) ...[
-                      SideBar(currentIndex: currentIndex, onTap: onTabChanged),
-                      const VerticalDivider(thickness: 1, width: 1),
-                    ],
+                    SideBar(currentIndex: currentIndex, onTap: onTabChanged),
+                    const VerticalDivider(thickness: 1, width: 1),
+
                     //主内容区
-                    Expanded(
-                      child: Column(
-                        children: [
-                          Header(scaffoldKey: _scaffoldKey),
-                          Expanded(child: widget.navigationShell),
-                        ],
-                      ),
-                    ),
+                    Expanded(child: widget.navigationShell),
                   ],
                 ),
               ),
@@ -63,11 +64,36 @@ class _MainPageState extends State<MainPage> {
           );
         },
       ),
+    );
+  }
+
+  Widget _buildBottomBarScaffold(BuildContext context) {
+    return Scaffold(
+      key: _scaffoldKey,
+      drawer: const MainDrawer(),
+      body: Column(
+        children: [
+          Expanded(
+            child: Row(
+              children: [
+                //主内容区
+                Expanded(
+                  child: Column(
+                    children: [
+                      Header(scaffoldKey: _scaffoldKey),
+                      Expanded(child: widget.navigationShell),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          NowPlayingBar(),
+        ],
+      ),
+
       bottomNavigationBar: LayoutBuilder(
         builder: (context, constraints) {
-          if (constraints.maxWidth >= maxWidth) {
-            return const SizedBox.shrink();
-          }
           return BottomBar(currentIndex: currentIndex, onTap: onTabChanged);
         },
       ),

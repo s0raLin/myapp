@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:myapp/router/IndexRouter/index.dart';
 
 class SideBar extends StatefulWidget {
@@ -16,6 +17,12 @@ class _SideBarState extends State<SideBar> {
 
   @override
   Widget build(BuildContext context) {
+    // 获取当前路由路径
+    final String currentLocation = GoRouterState.of(context).uri.toString();
+    // 判断是否在设置页面（根据你的路由路径调整）
+    final bool isSettingsPage =
+        currentLocation == '/settings' ||
+        currentLocation.startsWith('/settings');
     return NavigationRail(
       extended: false,
       selectedIndex: widget.currentIndex,
@@ -24,9 +31,7 @@ class _SideBarState extends State<SideBar> {
       // 顶部标题栏
       leading: FloatingActionButton(
         elevation: 0,
-        onPressed: () {
-
-        },
+        onPressed: () {},
         child: const Icon(Icons.search),
       ),
 
@@ -41,6 +46,23 @@ class _SideBarState extends State<SideBar> {
       }).toList(),
 
       labelType: NavigationRailLabelType.all,
+
+      trailing: Expanded(
+        child: Align(
+          alignment: Alignment.bottomCenter,
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 16.0),
+            child: IconButton.outlined(
+              icon: const Icon(Icons.settings_outlined),
+              onPressed: () {
+                setState(() {
+                  context.push("/settings");
+                });
+              },
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
