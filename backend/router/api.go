@@ -8,6 +8,7 @@ import (
 
 func Setup(r *gin.Engine) *gin.Engine {
 	authHandler := handler.NewAuthHandler()
+	musicHandler := handler.NewMusicHandler()
 
 	//限制上传大小
 	r.MaxMultipartMemory = 8 << 20 // 8MB
@@ -24,6 +25,12 @@ func Setup(r *gin.Engine) *gin.Engine {
 	}
 
 	// 需要鉴权的路由
-	// ...
+	sandBox := r.Group("/api")
+	{
+		music := sandBox.Group("/music")
+		{
+			music.POST("", musicHandler.AddMusic)
+		}
+	}
 	return r
 }

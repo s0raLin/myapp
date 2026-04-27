@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:myapp/api/Client/index.dart';
 import 'package:myapp/providers/MusicProvider/index.dart';
 import 'package:provider/provider.dart';
 
@@ -36,7 +37,14 @@ class _MusicPageState extends State<MusicPage> {
   Widget _buildLeft() {
     return RefreshIndicator(
       onRefresh: () async {},
-      child: const Center(child: Text("收藏")),
+      child: Center(
+        child: TextButton(
+          onPressed: () {
+            MusicApi.pickAndUploadMusic();
+          },
+          child: const Text("上传"),
+        ),
+      ),
     );
   }
 
