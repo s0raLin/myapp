@@ -81,7 +81,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	user.Username = req.Username
 	user.Password = req.Password
 	user.Email = req.Email
@@ -96,7 +96,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	avatarURL, err := utils.OSSUpload(avatar, avatar.Filename)
+	avatarURL, err := utils.UploadFileToOSS(avatar, "avatar/"+avatar.Filename)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"code": 1,

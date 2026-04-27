@@ -23,15 +23,9 @@ Go SDK V2 客户端初始化配置说明：
    - 如需采用 HTTP 协议，请在指定域名时指定为 HTTP
 */
 
-func OSSUpload(file *multipart.FileHeader, fileName string) (string, error) {
+func OSSUpload(file multipart.File, fileName string) (string, error) {
 	bucketName := "cangli"
 	region := "cn-beijing"
-
-	f, err := file.Open()
-	if err != nil {
-		return "", fmt.Errorf("无法读取用户上传的文件内容: %v", err)
-	}
-	defer f.Close()
 
 	//拼接生成新的文件名(路径+UUID+后缀)
 	objectKey := fmt.Sprintf("miku_music/%s", fileName)
@@ -51,7 +45,7 @@ func OSSUpload(file *multipart.FileHeader, fileName string) (string, error) {
 	request := &oss.PutObjectRequest{
 		Bucket: oss.Ptr(bucketName), // 存储空间名称
 		Key:    oss.Ptr(objectKey),  // 对象名称
-		Body:   f,                   // 要上传的字符串内容
+		Body:   file,                // 要上传的字符串内容
 	}
 
 	// 发送上传对象的请求
@@ -68,5 +62,17 @@ func OSSUpload(file *multipart.FileHeader, fileName string) (string, error) {
 
 	//"https://" + bucketName + ".oss-" + endpoint + "/" + path, nil
 	fileURL := fmt.Sprintf("https://%s.oss-%s.aliyuncs.com/%s", bucketName, region, objectKey)
+	return fileURL, nil
+}
+
+func UploadFileToOSS(fileHeader *multipart.FileHeader, path string) (string, error) {
+	file, err := fileHeader.Open()
+	if err != nil {
+		return "", err
+	}
+	fileURL, err := OSSUpload(file, path)
+	if err != nil {
+		return "", err
+	}
 	return fileURL, nil
 }
