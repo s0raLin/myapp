@@ -109,7 +109,6 @@ final _routes = [
   GoRoute(path: "/splash", builder: (context, state) => SplashPage()),
   GoRoute(path: "/login", builder: (context, state) => LoginPage()),
   GoRoute(path: "/register", builder: (context, state) => RegisterPage()),
-
   GoRoute(
     path: "/music-detail",
     pageBuilder: (context, state) {
