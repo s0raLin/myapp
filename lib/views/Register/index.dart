@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:myapp/api/Client/index.dart';
 
-
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
 
@@ -62,9 +61,7 @@ class _RegisterPageState extends State<RegisterPage> {
         avatarBytes: avatarBytes,
       );
 
-      if (response.statusCode == 200) {
-
-      }
+      if (response.statusCode == 200) {}
 
       context.pop();
     }

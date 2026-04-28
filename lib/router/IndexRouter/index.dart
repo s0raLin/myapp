@@ -3,13 +3,14 @@ import 'package:go_router/go_router.dart';
 import 'package:myapp/contants/Assets/index.dart';
 import 'package:myapp/model/Music/index.dart';
 import 'package:myapp/providers/ThemeProvider/index.dart';
-import 'package:myapp/views/Files/index.dart';
+import 'package:myapp/views/User/Files/index.dart';
 import 'package:myapp/views/Home/index.dart';
 import 'package:myapp/views/Login/index.dart';
-import 'package:myapp/views/Login/register.dart';
-import 'package:myapp/views/Music/album_detail.dart';
+import 'package:myapp/views/Register/index.dart';
+import 'package:myapp/views/User/Files/AlumDetail/index.dart';
 import 'package:myapp/views/Music/index.dart';
-import 'package:myapp/views/Music/music_detail.dart';
+import 'package:myapp/views/MusicDetail/index.dart';
+import 'package:myapp/views/User/Recent/index.dart';
 import 'package:myapp/views/NotFound/index.dart';
 import 'package:myapp/views/Settings/index.dart';
 import 'package:myapp/views/Splash/index.dart';
@@ -63,6 +64,31 @@ final List<AppNavItem> navItems = [
     i: ImageIcon(AssetImage(MyAssets.user)),
     icon: Icons.person,
     label: "我的",
+    routes: [
+      GoRoute(
+        name: "recent",
+        path: "/recent", //访问路径为/profile/recent
+        builder: (context, state) => const RecentlyPlayedPage(),
+      ),
+      GoRoute(
+        name: "files",
+        path: "/files",
+        builder: (context, state) {
+          return const FilesPage();
+        },
+        routes: [
+          GoRoute(
+            path: "/album-detail",
+            builder: (context, state) {
+              final data = state.extra as Map<String, dynamic>;
+              final String albumName = data['albumName'] as String;
+              final List<MusicInfo> songs = data['songs'] as List<MusicInfo>;
+              return AlbumDetailPage(albumName: albumName, songs: songs);
+            },
+          ),
+        ],
+      ),
+    ],
   ),
 ];
 
@@ -83,15 +109,7 @@ final _routes = [
   GoRoute(path: "/splash", builder: (context, state) => SplashPage()),
   GoRoute(path: "/login", builder: (context, state) => LoginPage()),
   GoRoute(path: "/register", builder: (context, state) => RegisterPage()),
-  GoRoute(
-    path: "/album-detail",
-    builder: (context, state) {
-      final data = state.extra as Map<String, dynamic>;
-      final String albumName = data['albumName'] as String;
-      final List<MusicInfo> songs = data['songs'] as List<MusicInfo>;
-      return AlbumDetailPage(albumName: albumName, songs: songs);
-    },
-  ),
+
   GoRoute(
     path: "/music-detail",
     pageBuilder: (context, state) {
@@ -114,21 +132,7 @@ final _routes = [
       );
     },
   ),
-  GoRoute(
-    name: "files",
-    path: "/files",
-    builder: (context, state) {
-      // AppNavItem(
-      //   name: "files",
-      //   path: "/files",
-      //   page: FilesPage(),
-      //   i: ImageIcon(AssetImage(MyAssets.folder)),
-      //   icon: Icons.folder,
-      //   label: "文件",
-      // ),
-      return FilesPage();
-    },
-  ),
+
   GoRoute(
     name: "settings",
     path: "/settings",

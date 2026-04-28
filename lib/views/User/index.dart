@@ -43,6 +43,7 @@ class _UserProfilePageState extends State<UserProfilePage>
               ),
             ],
           ),
+          const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
           // 2. 用户信息卡片区域
           SliverToBoxAdapter(
@@ -51,19 +52,26 @@ class _UserProfilePageState extends State<UserProfilePage>
               child: const M3UserCard(),
             ),
           ),
+          const SliverToBoxAdapter(child: SizedBox(height: 24)),
 
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Wrap(
-                spacing: 12.0, // 水平间距
+                alignment: WrapAlignment.start, //靠左对齐
+                spacing: 16.0, // 水平间距
                 runSpacing: 12.0, // 垂直间距（如果换行的话）
                 children: [
                   _PlaylistQuickCard(onTap: () {}, title: "喜欢"),
-                  _PlaylistQuickCard(onTap: () {}, title: "最近"),
                   _PlaylistQuickCard(
                     onTap: () {
-                      context.push("/files");
+                      context.push("/user/recent");
+                    },
+                    title: "最近",
+                  ),
+                  _PlaylistQuickCard(
+                    onTap: () {
+                      context.push("/user/files");
                     },
                     title: "本地",
                   ),
@@ -71,13 +79,14 @@ class _UserProfilePageState extends State<UserProfilePage>
               ),
             ),
           ),
-
+          const SliverToBoxAdapter(child: SizedBox(height: 24)),
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Column(
                 children: [
-                  TabBar.secondary(
+                  TabBar(
+                    tabAlignment: TabAlignment.start,
                     controller: _tabController,
                     isScrollable: true, //允许自适应宽度
                     tabs: const [
@@ -86,53 +95,43 @@ class _UserProfilePageState extends State<UserProfilePage>
                     ],
                   ),
                   SizedBox(
-                    height: 140,
+                    height: 100,
                     child: TabBarView(
                       controller: _tabController,
                       children: [
-                        Card(
-                          margin: const EdgeInsets.all(16.0),
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal, //设置为横向滚动
-                            itemCount: 10,
-                            itemBuilder: (context, index) {
-                              return Container(
-                                width: 100,
-                                margin: const EdgeInsets.symmetric(
-                                  horizontal: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.primaryContainer,
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: Center(child: Text("111")),
-                              );
-                            },
-                          ),
+                        ListView.builder(
+                          scrollDirection: Axis.horizontal, //设置为横向滚动
+                          itemCount: 10,
+                          itemBuilder: (context, index) {
+                            return Container(
+                              width: 100,
+                              margin: const EdgeInsets.symmetric(horizontal: 4),
+                              decoration: BoxDecoration(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.primaryContainer,
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Center(child: Text("111")),
+                            );
+                          },
                         ),
-                        Card(
-                          margin: const EdgeInsets.all(16.0),
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal, //设置为横向滚动
-                            itemCount: 10,
-                            itemBuilder: (context, index) {
-                              return Container(
-                                width: 100,
-                                margin: const EdgeInsets.symmetric(
-                                  horizontal: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.primaryContainer,
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: Center(child: Text("222")),
-                              );
-                            },
-                          ),
+                        ListView.builder(
+                          scrollDirection: Axis.horizontal, //设置为横向滚动
+                          itemCount: 10,
+                          itemBuilder: (context, index) {
+                            return Container(
+                              width: 100,
+                              margin: const EdgeInsets.symmetric(horizontal: 4),
+                              decoration: BoxDecoration(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.primaryContainer,
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Center(child: Text("222")),
+                            );
+                          },
                         ),
                       ],
                     ),
@@ -177,7 +176,7 @@ class _PlaylistQuickCard extends StatelessWidget {
             children: [
               AspectRatio(
                 aspectRatio: 1 / 1,
-                child: Container(
+                child: Ink(
                   color: Theme.of(context).colorScheme.surfaceContainerHighest,
                   child: Center(
                     child: imageUrl != null && imageUrl!.isNotEmpty
