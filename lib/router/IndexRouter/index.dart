@@ -16,6 +16,7 @@ import 'package:myapp/views/Settings/index.dart';
 import 'package:myapp/views/Splash/index.dart';
 import 'package:myapp/views/User/index.dart';
 import 'package:myapp/views/index.dart';
+import 'package:myapp/views/About/index.dart';
 import 'package:provider/provider.dart';
 
 class AppNavItem {
@@ -56,7 +57,6 @@ final List<AppNavItem> navItems = [
     icon: Icons.music_note,
     label: "音乐",
   ),
-
   AppNavItem(
     name: "user",
     path: "/user",
@@ -110,6 +110,11 @@ final _routes = [
   GoRoute(path: "/login", builder: (context, state) => LoginPage()),
   GoRoute(path: "/register", builder: (context, state) => RegisterPage()),
   GoRoute(
+    name: "about",
+    path: "/about",
+    builder: (context, state) => const AboutPage(),
+  ),
+  GoRoute(
     path: "/music-detail",
     pageBuilder: (context, state) {
       return CustomTransitionPage(
@@ -131,7 +136,6 @@ final _routes = [
       );
     },
   ),
-
   GoRoute(
     name: "settings",
     path: "/settings",
@@ -155,7 +159,6 @@ final _routes = [
       );
     },
   ),
-
   StatefulShellRoute.indexedStack(
     builder: (context, state, navigationShell) =>
         MainPage(navigationShell: navigationShell),
@@ -186,3 +189,4 @@ class IndexRouter extends StatelessWidget {
     );
   }
 }
+
