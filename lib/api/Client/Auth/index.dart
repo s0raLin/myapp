@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
 import 'package:myapp/api/model/ApiResponse/index.dart';
 import 'package:myapp/api/model/User/index.dart';
 
@@ -30,6 +31,7 @@ class UserApi {
       storage.write(key: "jwt_key", value: token);
 
       final user = User.fromJson(result.data?["user"]);
+      user.token = token;
       return user;
     } else {
       return null;

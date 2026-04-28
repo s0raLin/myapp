@@ -38,10 +38,12 @@ class _LoginPageState extends State<LoginPage> {
         password: _passwordController.text,
       );
 
-      if (!mounted) return;
-
       if (user != null) {
-        context.read<UserProvider>().updateUserInfo(user);
+        if (!mounted) return;
+
+        await context.read<UserProvider>().updateUserInfo(user);
+
+        if (!mounted) return;
         context.go('/home');
       }
     } on DioException catch (e) {

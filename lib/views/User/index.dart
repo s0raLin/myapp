@@ -7,7 +7,22 @@ class UserProfilePage extends StatefulWidget {
   State<UserProfilePage> createState() => _UserProfilePageState();
 }
 
-class _UserProfilePageState extends State<UserProfilePage> {
+class _UserProfilePageState extends State<UserProfilePage>
+    with TickerProviderStateMixin {
+  late final TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -36,6 +51,40 @@ class _UserProfilePageState extends State<UserProfilePage> {
             ),
           ),
 
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: SizedBox(
+                height: 400,
+                child: Column(
+                  children: [
+                    TabBar.secondary(
+                      controller: _tabController,
+                      tabs: const [
+                        Tab(text: "自建歌单"),
+                        Tab(text: "收藏歌单"),
+                      ],
+                    ),
+                    Expanded(
+                      child: TabBarView(
+                        controller: _tabController,
+                        children: const [
+                          Card(
+                            margin: EdgeInsets.all(16.0),
+                            child: Center(child: Text("111")),
+                          ),
+                          Card(
+                            margin: EdgeInsets.all(16.0),
+                            child: Center(child: Text("222")),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
           // 底部留白
           const SliverToBoxAdapter(child: SizedBox(height: 40)),
         ],

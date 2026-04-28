@@ -186,7 +186,7 @@ class _FilesPageState extends State<FilesPage> {
                                     child: Container(
                                       color: Theme.of(
                                         context,
-                                      ).colorScheme.surfaceVariant,
+                                      ).colorScheme.surfaceContainerHighest,
                                       child: Center(
                                         child: cover != null && cover.isNotEmpty
                                             ? Image.memory(
