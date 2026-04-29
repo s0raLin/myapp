@@ -30,9 +30,11 @@ class MusicApi {
       "artist": music.artist,
       "album": music.album,
       "duration": music.duration.inSeconds.toString(),
-      "cover": music.coverBytes != null
-          ? base64Encode(music.coverBytes!)
-          : null,
+      if (music.coverBytes != null)
+        "cover": MultipartFile.fromBytes(
+          music.coverBytes!,
+          filename: "cover.jpg",
+        ),
     });
 
     final response = await _dio.post(
