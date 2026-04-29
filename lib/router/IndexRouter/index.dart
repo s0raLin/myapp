@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:myapp/contants/Assets/index.dart';
 import 'package:myapp/model/Music/index.dart';
+import 'package:myapp/model/Playlist/index.dart';
 import 'package:myapp/providers/ThemeProvider/index.dart';
 import 'package:myapp/views/User/Files/index.dart';
 import 'package:myapp/views/Home/index.dart';
@@ -13,6 +14,8 @@ import 'package:myapp/views/User/Recent/index.dart';
 import 'package:myapp/views/NotFound/index.dart';
 import 'package:myapp/views/Settings/index.dart';
 import 'package:myapp/views/Splash/index.dart';
+import 'package:myapp/views/User/Favorites/index.dart';
+import 'package:myapp/views/User/PlaylistDetail/index.dart';
 import 'package:myapp/views/User/index.dart';
 import 'package:myapp/views/index.dart';
 import 'package:myapp/views/About/index.dart';
@@ -86,6 +89,19 @@ final List<AppNavItem> navItems = [
             },
           ),
         ],
+      ),
+      GoRoute(
+        name: "favorites",
+        path: "/favorites",
+        builder: (context, state) => const FavoritesPage(),
+      ),
+      GoRoute(
+        name: "playlist",
+        path: "/playlist/:id",
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return PlaylistDetailPage(playlistId: id);
+        },
       ),
     ],
   ),

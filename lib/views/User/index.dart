@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:myapp/model/Playlist/index.dart';
+import 'package:myapp/providers/MusicProvider/index.dart';
+import 'package:provider/provider.dart';
 
 class UserProfilePage extends StatefulWidget {
   const UserProfilePage({super.key});
@@ -51,6 +54,7 @@ class _UserProfilePageState extends State<UserProfilePage>
           ),
           const SliverToBoxAdapter(child: SizedBox(height: 24)),
 
+          // 3. 快捷入口
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -59,7 +63,7 @@ class _UserProfilePageState extends State<UserProfilePage>
                 runSpacing: 12.0,
                 children: [
                   _PlaylistQuickCard(
-                    onTap: () {},
+                    onTap: () => context.push("/user/favorites"),
                     title: "喜欢",
                     icon: Icons.favorite_rounded,
                   ),
@@ -78,71 +82,320 @@ class _UserProfilePageState extends State<UserProfilePage>
             ),
           ),
           const SliverToBoxAdapter(child: SizedBox(height: 24)),
+
+          // 4. 歌单管理区域
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  TabBar(
-                    tabAlignment: TabAlignment.start,
-                    controller: _tabController,
-                    isScrollable: true, //允许自适应宽度
-                    tabs: const [
-                      Tab(text: "自建歌单"),
-                      Tab(text: "收藏歌单"),
+                  const Text(
+                    "我的歌单",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 12),
+                  // 新建歌单按钮 + 进入音乐库链接
+                  Row(
+                    children: [
+                      FilledButton.icon(
+                        onPressed: () => _showCreatePlaylistDialog(context),
+                        icon: const Icon(Icons.add_rounded, size: 18),
+                        label: const Text("新建歌单"),
+                      ),
+                      const SizedBox(width: 12),
+                      TextButton.icon(
+                        onPressed: () => context.push("/music"),
+                        icon: const Icon(Icons.library_music_rounded, size: 18),
+                        label: const Text("音乐库"),
+                      ),
                     ],
                   ),
-                  SizedBox(
-                    height: 100,
-                    child: TabBarView(
-                      controller: _tabController,
-                      children: [
-                        ListView.builder(
-                          scrollDirection: Axis.horizontal, //设置为横向滚动
-                          itemCount: 10,
-                          itemBuilder: (context, index) {
-                            return Container(
-                              width: 100,
-                              margin: const EdgeInsets.symmetric(horizontal: 4),
-                              decoration: BoxDecoration(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.surfaceContainerHighest,
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Center(child: Text("111")),
-                            );
-                          },
-                        ),
-                        ListView.builder(
-                          scrollDirection: Axis.horizontal, //设置为横向滚动
-                          itemCount: 10,
-                          itemBuilder: (context, index) {
-                            return Container(
-                              width: 100,
-                              margin: const EdgeInsets.symmetric(horizontal: 4),
-                              decoration: BoxDecoration(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.surfaceContainerHighest,
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Center(child: Text("222")),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
+                  const SizedBox(height: 16),
+                  // 歌单列表
+                  Consumer<MusicProvider>(
+                    builder: (context, musicProvider, _) {
+                      final userPlaylists = musicProvider.userPlaylists;
+                      if (userPlaylists.isEmpty) {
+                        return const Center(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(vertical: 32),
+                            child: Text(
+                              "还没有创建歌单\n点击上方「新建歌单」按钮创建",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: Colors.black45),
+                            ),
+                          ),
+                        );
+                      }
+                      return GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              childAspectRatio: 1.1,
+                              crossAxisSpacing: 12,
+                              mainAxisSpacing: 12,
+                            ),
+                        itemCount: userPlaylists.length,
+                        itemBuilder: (context, index) {
+                          final playlist = userPlaylists[index];
+                          return _UserPlaylistCard(
+                            playlist: playlist,
+                            songCount: playlist.songIds.length,
+                            onTap: () {
+                              context.push("/user/playlist/${playlist.id}");
+                            },
+                            onMoreTap: () {
+                              _showPlaylistOptions(
+                                context,
+                                playlist,
+                                musicProvider,
+                              );
+                            },
+                          );
+                        },
+                      );
+                    },
                   ),
                 ],
               ),
             ),
           ),
-          // 底部留白
           const SliverToBoxAdapter(child: SizedBox(height: 40)),
         ],
       ),
     );
+  }
+}
+
+// --- User Playlist Card (for grid) ---
+class _UserPlaylistCard extends StatelessWidget {
+  final Playlist playlist;
+  final int songCount;
+  final VoidCallback onTap;
+  final VoidCallback onMoreTap;
+
+  const _UserPlaylistCard({
+    required this.playlist,
+    required this.songCount,
+    required this.onTap,
+    required this.onMoreTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: InkWell(
+        onTap: onTap,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Container(
+                width: double.infinity,
+                color: colorScheme.surfaceContainerHighest,
+                child: Stack(
+                  children: [
+                    Center(
+                      child:
+                          playlist.coverBytes != null &&
+                              playlist.coverBytes!.isNotEmpty
+                          ? Image.memory(
+                              playlist.coverBytes!,
+                              fit: BoxFit.cover,
+                            )
+                          : Icon(
+                              Icons.playlist_play_rounded,
+                              size: 48,
+                              color: colorScheme.primary,
+                            ),
+                    ),
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: onMoreTap,
+                          borderRadius: BorderRadius.circular(12),
+                          child: Padding(
+                            padding: const EdgeInsets.all(4.0),
+                            child: Icon(
+                              Icons.more_vert_rounded,
+                              size: 18,
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    playlist.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    "$songCount 首",
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// --- Playlist management helpers ---
+Future<void> _showPlaylistOptions(
+  BuildContext context,
+  Playlist playlist,
+  MusicProvider provider,
+) async {
+  await showModalBottomSheet(
+    context: context,
+    builder: (context) => SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (!playlist.isSystem) ...[
+            ListTile(
+              leading: const Icon(Icons.edit_outlined),
+              title: const Text("重命名"),
+              onTap: () {
+                Navigator.pop(context);
+                _showRenameDialog(context, playlist, provider);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete_outlined),
+              title: const Text("删除"),
+              onTap: () {
+                Navigator.pop(context);
+                _showDeleteConfirmDialog(context, playlist, provider);
+              },
+            ),
+          ] else
+            ListTile(
+              leading: const Icon(Icons.info_outlined),
+              title: const Text("系统歌单"),
+              onTap: () => Navigator.pop(context),
+            ),
+        ],
+      ),
+    ),
+  );
+}
+
+Future<void> _showRenameDialog(
+  BuildContext context,
+  Playlist playlist,
+  MusicProvider provider,
+) async {
+  final controller = TextEditingController(text: playlist.name);
+  final newName = await showDialog<String>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text("重命名歌单"),
+      content: TextField(
+        controller: controller,
+        autofocus: true,
+        decoration: const InputDecoration(hintText: "歌单名称"),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text("取消"),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, controller.text.trim()),
+          child: const Text("确定"),
+        ),
+      ],
+    ),
+  );
+  if (newName != null && newName.isNotEmpty) {
+    provider.renamePlaylist(playlist.id, newName);
+  }
+}
+
+Future<void> _showDeleteConfirmDialog(
+  BuildContext context,
+  Playlist playlist,
+  MusicProvider provider,
+) async {
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text("删除歌单"),
+      content: Text("确定要删除「${playlist.name}」吗？"),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text("取消"),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, true),
+          child: const Text("删除"),
+        ),
+      ],
+    ),
+  );
+  if (confirmed == true) {
+    provider.deletePlaylist(playlist.id);
+  }
+}
+
+Future<void> _showCreatePlaylistDialog(BuildContext context) async {
+  final controller = TextEditingController();
+  final name = await showDialog<String>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text("新建歌单"),
+      content: TextField(
+        controller: controller,
+        autofocus: true,
+        decoration: const InputDecoration(hintText: "歌单名称"),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text("取消"),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, controller.text.trim()),
+          child: const Text("创建"),
+        ),
+      ],
+    ),
+  );
+  if (name != null && name.isNotEmpty) {
+    context.read<MusicProvider>().createPlaylist(name);
   }
 }
 
@@ -157,18 +410,14 @@ class M3UserCard extends StatelessWidget {
 
     return Card(
       elevation: 0,
-      // 使用 secondaryContainer 让背景色更出挑，或者使用 surfaceContainerHighest 保持稳重
       color: colorScheme.surfaceContainer,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24), // 增加圆角更具 M3 感
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       child: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
           children: [
             Row(
               children: [
-                // 头像
                 CircleAvatar(
                   radius: 36,
                   backgroundColor: colorScheme.primary,
@@ -255,7 +504,6 @@ class _PlaylistQuickCard extends StatelessWidget {
   final IconData icon;
   final Uint8List? coverBytes;
   final VoidCallback? onTap;
-  // 增加一个枚举或索引来决定使用哪种主题色，或者统一使用 primary
 
   const _PlaylistQuickCard({
     super.key,
@@ -269,13 +517,9 @@ class _PlaylistQuickCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    // 统一使用主题色：如果没有传 customColor，则默认使用 primary
-    // 也可以这里固定使用 colorScheme.primary
-
     return SizedBox(
       width: 105,
       child: Card.filled(
-        // 背景使用极其清淡的主题色，保持 M3 的通透感
         color: colorScheme.secondaryContainer,
         clipBehavior: Clip.antiAlias,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -300,7 +544,7 @@ class _PlaylistQuickCard extends StatelessWidget {
                   title,
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
-                    color: colorScheme.onSecondaryContainer, // 使用通用的文字颜色
+                    color: colorScheme.onSecondaryContainer,
                     fontSize: 13,
                   ),
                 ),

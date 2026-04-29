@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:myapp/model/Music/index.dart';
 import 'package:myapp/providers/MusicProvider/index.dart';
 import 'package:provider/provider.dart';
@@ -14,11 +15,10 @@ class MusicDetailPage extends StatefulWidget {
 }
 
 class _MusicDetailPageState extends State<MusicDetailPage> {
-  // 窄屏模式下，是否强制显示歌词
   bool _showLyricsOnMobile = false;
+
   @override
   Widget build(BuildContext context) {
-    // 用 select 只监听必要字段，避免无关变化触发重建
     final music = context.select<MusicProvider, MusicInfo?>(
       (p) => p.currentMusic,
     );
@@ -37,7 +37,11 @@ class _MusicDetailPageState extends State<MusicDetailPage> {
     final isWide = MediaQuery.sizeOf(context).width > 700;
     final colorScheme = Theme.of(context).colorScheme;
 
-    final mainContent = _MainContent(music: music, isLiked: isLiked);
+    final mainContent = _MainContent(
+      music: music,
+      isLiked: isLiked,
+      onAddToPlaylist: () => _showAddToPlaylistSheet(context, music),
+    );
     final Widget mobileContent;
     if (_showLyricsOnMobile) {
       mobileContent = GestureDetector(
@@ -53,6 +57,7 @@ class _MusicDetailPageState extends State<MusicDetailPage> {
         onCoverTap: () => setState(() {
           _showLyricsOnMobile = true;
         }),
+        onAddToPlaylist: () => _showAddToPlaylistSheet(context, music),
       );
     }
 
@@ -106,6 +111,97 @@ class _MusicDetailPageState extends State<MusicDetailPage> {
       ),
     );
   }
+
+  Future<void> _showAddToPlaylistSheet(
+      BuildContext context, MusicInfo song) async {
+    final musicProvider = context.read<MusicProvider>();
+    final userPlaylists = musicProvider.userPlaylists;
+
+    if (userPlaylists.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("还没有可用的歌单，请先创建歌单"),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    await showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: Text(
+                "添加到歌单",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+            ),
+            const Divider(height: 1),
+            Flexible(
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: userPlaylists.length,
+                itemBuilder: (context, index) {
+                  final playlist = userPlaylists[index];
+                  final alreadyIn = playlist.songIds.contains(song.id);
+                  return ListTile(
+                    enabled: !alreadyIn,
+                    leading: CircleAvatar(
+                      radius: 16,
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      child: playlist.coverBytes != null &&
+                              playlist.coverBytes!.isNotEmpty
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(16),
+                              child: Image.memory(
+                                playlist.coverBytes!,
+                                width: 28,
+                                height: 28,
+                                fit: BoxFit.cover,
+                              ),
+                            )
+                          : null,
+                    ),
+                    title: Text(
+                      playlist.name,
+                      style: TextStyle(
+                        color: alreadyIn
+                            ? Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withOpacity(0.5)
+                            : null,
+                      ),
+                    ),
+                    trailing: alreadyIn
+                        ? const Icon(Icons.check_rounded,
+                            color: Colors.green, size: 18)
+                        : null,
+                    onTap: alreadyIn
+                        ? null
+                        : () {
+                            musicProvider.addToPlaylist(playlist.id, song);
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text("已添加到「${playlist.name}」"),
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                          },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 // ─── 主内容区（避免在顶层 watch 全量 provider） ─────────────────────────────────
@@ -113,12 +209,14 @@ class _MusicDetailPageState extends State<MusicDetailPage> {
 class _MainContent extends StatelessWidget {
   final MusicInfo music;
   final bool isLiked;
-  final VoidCallback? onCoverTap; //新增回调
+  final VoidCallback? onCoverTap;
+  final VoidCallback? onAddToPlaylist;
 
   const _MainContent({
     required this.music,
     required this.isLiked,
     this.onCoverTap,
+    this.onAddToPlaylist,
   });
 
   @override
@@ -130,7 +228,7 @@ class _MainContent extends StatelessWidget {
         const SizedBox(height: 20),
         Expanded(
           child: GestureDetector(
-            onTap: onCoverTap, //点击封面触发
+            onTap: onCoverTap,
             child: _AlbumCover(
               title: music.title,
               coverBytes: music.coverBytes,
@@ -142,6 +240,7 @@ class _MainContent extends StatelessWidget {
           music: music,
           isLiked: isLiked,
           onToggleLike: () => musicProvider.toggleFav(music),
+          onAddToPlaylist: onAddToPlaylist,
         ),
         const SizedBox(height: 24),
         _PlayerConsole(music: music),
@@ -178,7 +277,6 @@ class _AlbumCover extends StatelessWidget {
                   : Icon(
                       Icons.music_note_rounded,
                       size: size * 0.3,
-                      // withOpacity 已弃用，改用 withValues
                       color: theme.colorScheme.primary.withValues(alpha: 0.5),
                     ),
             ),
@@ -193,11 +291,13 @@ class _SongMeta extends StatelessWidget {
   final MusicInfo music;
   final bool isLiked;
   final VoidCallback onToggleLike;
+  final VoidCallback? onAddToPlaylist;
 
   const _SongMeta({
     required this.music,
     required this.isLiked,
     required this.onToggleLike,
+    this.onAddToPlaylist,
   });
 
   @override
@@ -232,16 +332,34 @@ class _SongMeta extends StatelessWidget {
           onPressed: onToggleLike,
           icon: Icon(
             isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-            color: isLiked ? colorScheme.primary : colorScheme.onSurfaceVariant,
+            color:
+                isLiked ? colorScheme.primary : colorScheme.onSurfaceVariant,
             size: 28,
           ),
         ),
+        if (onAddToPlaylist != null)
+          PopupMenuButton<String>(
+            icon: Icon(
+              Icons.more_vert_rounded,
+              color: colorScheme.onSurfaceVariant,
+              size: 24,
+            ),
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: "add_to_playlist",
+                child: Text("添加到歌单"),
+              ),
+            ],
+            onSelected: (value) {
+              if (value == "add_to_playlist") {
+                onAddToPlaylist!();
+              }
+            },
+          ),
       ],
     );
   }
 }
-
-// ─── 播放控制台 ──────────────────────────────────────────────────────────────────
 
 class _PlayerConsole extends StatelessWidget {
   final MusicInfo music;
@@ -255,23 +373,21 @@ class _PlayerConsole extends StatelessWidget {
     return StreamBuilder<PositionData>(
       stream: musicProvider.positionDataStream,
       builder: (context, snapshot) {
-        final data =
-            snapshot.data ??
+        final data = snapshot.data ??
             PositionData(Duration.zero, Duration.zero, Duration.zero);
         final total = data.duration.inMilliseconds.toDouble();
         final pos = data.position.inMilliseconds.toDouble().clamp(
-          0.0,
-          total > 0 ? total : 0.0,
-        );
+              0.0,
+              total > 0 ? total : 0.0,
+            );
 
         return Column(
           children: [
-            // Slider 单独提取避免整列重建
             _ProgressSlider(
               pos: pos,
               total: total,
-              onChanged: (v) =>
-                  musicProvider.player.seek(Duration(milliseconds: v.toInt())),
+              onChanged: (v) => musicProvider.player
+                  .seek(Duration(milliseconds: v.toInt())),
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -281,7 +397,6 @@ class _PlayerConsole extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-            // 播放/暂停按钮单独 StreamBuilder，减少重建范围
             _PlaybackControls(musicProvider: musicProvider),
           ],
         );
@@ -290,9 +405,9 @@ class _PlayerConsole extends StatelessWidget {
   }
 
   static Widget _durationText(Duration d, ColorScheme scheme) => Text(
-    '${d.inMinutes}:${(d.inSeconds % 60).toString().padLeft(2, '0')}',
-    style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
-  );
+        '${d.inMinutes}:${(d.inSeconds % 60).toString().padLeft(2, '0')}',
+        style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
+      );
 }
 
 class _ProgressSlider extends StatelessWidget {
@@ -309,7 +424,8 @@ class _ProgressSlider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SliderTheme(
-      data: SliderThemeData(year2023: false, overlayColor: Colors.transparent),
+      data: const SliderThemeData(
+          year2023: false, overlayColor: Colors.transparent),
       child: Slider(
         max: total > 0 ? total : 1.0,
         value: pos,
@@ -319,7 +435,6 @@ class _ProgressSlider extends StatelessWidget {
   }
 }
 
-// 仅监听 playingStream，不依赖 MusicProvider 其他状态
 class _PlaybackControls extends StatelessWidget {
   final MusicProvider musicProvider;
 
@@ -329,181 +444,175 @@ class _PlaybackControls extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return StreamBuilder<bool>(
-      stream: musicProvider.player.playingStream,
-      builder: (context, snap) {
-        final isPlaying = snap.data ?? false;
+    return StreamBuilder<ProcessingState>(
+      stream: musicProvider.player.processingStateStream,
+      builder: (context, snapshot) {
+        final processingState = snapshot.data ?? ProcessingState.idle;
+        final playing = musicProvider.player.playing;
 
         return Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // TODO: 接入 shuffle 逻辑
             IconButton(
-              onPressed: () {},
-              icon: const Icon(Icons.shuffle_rounded),
+              onPressed: musicProvider.togglePlayMode,
+              icon: Icon(_getModeIcon(musicProvider.playMode)),
+              color: colorScheme.onSurfaceVariant,
+              tooltip: "播放模式",
             ),
-            IconButton(
+            const SizedBox(width: 16),
+            // Previous
+            IconButton.filled(
               onPressed: musicProvider.playPrev,
-              icon: const Icon(Icons.skip_previous_rounded, size: 42),
-            ),
-            GestureDetector(
-              onTap: musicProvider.togglePlay,
-              child: CircleAvatar(
-                radius: 36,
-                backgroundColor: colorScheme.primaryContainer,
-                child: Icon(
-                  isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                  size: 40,
-                  color: colorScheme.onPrimaryContainer,
-                ),
+              icon: const Icon(Icons.skip_previous_rounded),
+              style: FilledButton.styleFrom(
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
+                shape: const CircleBorder(),
+                fixedSize: const Size(56, 56),
               ),
             ),
-            IconButton(
-              onPressed: musicProvider.playNext,
-              icon: const Icon(Icons.skip_next_rounded, size: 42),
+            const SizedBox(width: 16),
+            // Play/Pause
+            IconButton.filled(
+              onPressed: musicProvider.togglePlay,
+              icon: Icon(
+                playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
+              ),
+              style: FilledButton.styleFrom(
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
+                shape: const CircleBorder(),
+                fixedSize: const Size(64, 64),
+              ),
             ),
-            // TODO: 接入 repeat 逻辑
-            IconButton(
-              onPressed: () {},
-              icon: const Icon(Icons.repeat_rounded),
+            const SizedBox(width: 16),
+            // Next
+            IconButton.filled(
+              onPressed: musicProvider.playNext,
+              icon: const Icon(Icons.skip_next_rounded),
+              style: FilledButton.styleFrom(
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
+                shape: const CircleBorder(),
+                fixedSize: const Size(56, 56),
+              ),
+            ),
+            const SizedBox(width: 16),
+            // Volume
+            StreamBuilder<double>(
+              stream: musicProvider.player.volumeStream,
+              builder: (context, snapshot) {
+                final volume = snapshot.data ?? musicProvider.volume;
+                return IconButton(
+                  onPressed: () async {
+                    // Toggle mute/unmute
+                    final newVol = volume > 0 ? 0.0 : 1.0;
+                    await musicProvider.setVolume(newVol);
+                  },
+                  icon: Icon(_getVolumeIcon(volume)),
+                  color: colorScheme.onSurfaceVariant,
+                );
+              },
             ),
           ],
         );
       },
     );
   }
+
+  IconData _getModeIcon(PlayMode mode) {
+    switch (mode) {
+      case PlayMode.sequence:
+        return Icons.repeat_rounded;
+      case PlayMode.shuffle:
+        return Icons.shuffle_rounded;
+      case PlayMode.repeat:
+        return Icons.repeat_one_rounded;
+    }
+  }
+
+  IconData _getVolumeIcon(double volume) {
+    if (volume == 0) return Icons.volume_off_rounded;
+    if (volume < 0.5) return Icons.volume_down_rounded;
+    return Icons.volume_up_rounded;
+  }
 }
 
-// ─── 歌词区 ──────────────────────────────────────────────────────────────────────
-
-class _LyricsSection extends StatefulWidget {
+class _LyricsSection extends StatelessWidget {
   final List<Map<String, dynamic>> lyrics;
+
   const _LyricsSection({required this.lyrics});
 
   @override
-  State<_LyricsSection> createState() => _LyricsSectionState();
-}
-
-class _LyricsSectionState extends State<_LyricsSection> {
-  final ItemScrollController _itemScrollController = ItemScrollController();
-  int _lastIndex = -1;
-
-  // 修复：分离"首次定位"和"滚动动画"逻辑
-  void _scrollToCurrent(int index, {bool animate = true}) {
-    if (!_itemScrollController.isAttached) return;
-    if (index == _lastIndex) return;
-    _lastIndex = index;
-
-    if (animate) {
-      _itemScrollController.scrollTo(
-        index: index,
-        duration: const Duration(milliseconds: 400),
-        curve: Curves.easeOutCubic,
-        alignment: 0.45,
-      );
-    } else {
-      // 首次进入页面时直接跳转，不做动画，避免从顶部滑下来的违和感
-      _itemScrollController.jumpTo(index: index, alignment: 0.45);
-    }
-  }
-
-  // 修复：抽取计算逻辑，避免边界错误
-  int _calcCurrentIndex(Duration position) {
-    if (widget.lyrics.isEmpty) return 0;
-
-    // 找到第一个时间 > position 的歌词
-    final nextIndex = widget.lyrics.indexWhere(
-      (l) => (l['time'] as Duration) > position,
-    );
-
-    if (nextIndex <= 0) {
-      // nextIndex == -1：position 超过所有歌词时间，显示最后一句
-      // nextIndex == 0：position 在第一句之前，显示第一句
-      return nextIndex == -1 ? widget.lyrics.length - 1 : 0;
-    }
-
-    return nextIndex - 1;
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final musicProvider = context.read<MusicProvider>();
+    if (lyrics.isEmpty) {
+      return const Center(
+        child: Text(
+          "暂无歌词",
+          style: TextStyle(fontSize: 16, color: Colors.black38),
+        ),
+      );
+    }
+
+    final controller = ItemScrollController();
     final colorScheme = Theme.of(context).colorScheme;
 
-    if (widget.lyrics.isEmpty) {
-      return const Center(child: Text('歌詞が見つかりません'));
-    }
-
     return StreamBuilder<PositionData>(
-      stream: musicProvider.positionDataStream,
+      stream: context.read<MusicProvider>().positionDataStream,
       builder: (context, snapshot) {
         final position = snapshot.data?.position ?? Duration.zero;
-        final currentIndex = _calcCurrentIndex(position);
 
+        // Find current lyric index
+        var currentIndex = 0;
+        for (var i = 0; i < lyrics.length; i++) {
+          final time = lyrics[i]['time'] as Duration;
+          if (position >= time) {
+            currentIndex = i;
+          } else {
+            break;
+          }
+        }
+
+        // Scroll to current lyric
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) return;
-          // 修复：首次滚动（_lastIndex == -1）用 jump，后续用 animate
-          _scrollToCurrent(currentIndex, animate: _lastIndex != -1);
+          if (controller.isAttached) {
+            controller.scrollTo(
+                index: currentIndex,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut);
+          }
         });
 
-        return ShaderMask(
-          shaderCallback: (rect) {
-            return const LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Colors.transparent,
-                Colors.black,
-                Colors.black,
-                Colors.transparent,
-              ],
-              stops: [0.0, 0.2, 0.8, 1.0],
-            ).createShader(rect);
-          },
-          blendMode: BlendMode.dstIn,
-          child: ScrollablePositionedList.builder(
-            itemCount: widget.lyrics.length,
-            itemScrollController: _itemScrollController,
-            physics: const BouncingScrollPhysics(),
-            itemBuilder: (context, i) {
-              final isCurrent = i == currentIndex;
-              final lyric = widget.lyrics[i];
-              return GestureDetector(
-                onTap: () {
-                  final targetTime = lyric['time'] as Duration;
-                  musicProvider.player.seek(targetTime);
-                },
-                behavior: HitTestBehavior.opaque,
-                child: AnimatedScale(
-                  scale: isCurrent ? 1.1 : 1.0,
-                  duration: const Duration(milliseconds: 300),
-                  child: AnimatedOpacity(
-                    opacity: isCurrent ? 1.0 : 0.3,
-                    duration: const Duration(milliseconds: 300),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 20,
-                        horizontal: 24,
-                      ),
-                      child: Text(
-                        lyric['text'] as String,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: isCurrent
-                              ? FontWeight.bold
-                              : FontWeight.w500,
-                          color: isCurrent
-                              ? colorScheme.primary
-                              : colorScheme.onSurface,
-                        ),
-                      ),
-                    ),
+        return ScrollablePositionedList.builder(
+          itemScrollController: controller,
+          itemCount: lyrics.length,
+          itemBuilder: (context, index) {
+            final item = lyrics[index];
+            final time = item['time'] as Duration;
+            final text = item['text'] as String;
+            final isActive = index == currentIndex;
+
+            return GestureDetector(
+              onTap: () {
+                context.read<MusicProvider>().player.seek(time);
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                alignment: Alignment.center,
+                child: Text(
+                  text,
+                  style: TextStyle(
+                    fontSize: isActive ? 20 : 16,
+                    fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                    color: isActive
+                        ? colorScheme.primary
+                        : colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
+                  textAlign: TextAlign.center,
                 ),
-              );
-            },
-          ),
+              ),
+            );
+          },
         );
       },
     );

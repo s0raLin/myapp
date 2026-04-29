@@ -1,10 +1,11 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:myapp/model/Music/index.dart';
-
+import 'package:myapp/model/Playlist/index.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -45,6 +46,26 @@ class MusicProvider extends ChangeNotifier {
 
   final List<MusicInfo> _favList = [];
   List<MusicInfo> get favList => _favList;
+
+  // Playlist management
+  final String _playlistsKey = "user_playlists";
+  final List<Playlist> _playlists = [];
+  List<Playlist> get playlists => _playlists;
+
+  // System playlist IDs
+  static const String _favoritesPlaylistId = "system_favorites";
+  static const String _recentPlaylistId = "system_recent";
+
+  String get favoritesPlaylistId => _favoritesPlaylistId;
+
+  List<Playlist> get userPlaylists =>
+      _playlists.where((p) => !p.isSystem).toList();
+
+  List<Playlist> get systemPlaylists =>
+      _playlists.where((p) => p.isSystem).toList();
+
+  Playlist? get favoritesPlaylist =>
+      _playlists.firstWhere((p) => p.id == _favoritesPlaylistId);
 
   final List<Map<String, dynamic>> _currentLyrics = [];
   List<Map<String, dynamic>> get currentLyrics => _currentLyrics;
@@ -90,6 +111,8 @@ class MusicProvider extends ChangeNotifier {
   Future<void> _saveFavList() async {
     final pfs = await SharedPreferences.getInstance();
     await pfs.setStringList("fav_list", _favList.map((m) => m.id).toList());
+    // Sync with favorites system playlist
+    _syncFavoritesPlaylist();
   }
 
   Future<void> _saveHistory() async {
@@ -128,6 +151,161 @@ class MusicProvider extends ChangeNotifier {
         .whereType<MusicInfo>()
         .toList();
     notifyListeners();
+  }
+
+  // Playlist persistence
+  Future<void> _loadPlaylists() async {
+    final pfs = await SharedPreferences.getInstance();
+    final playlistStrings = pfs.getStringList(_playlistsKey) ?? [];
+
+    _playlists.clear();
+    for (final str in playlistStrings) {
+      try {
+        final playlist = Playlist.fromSerializedString(str);
+        _playlists.add(playlist);
+      } catch (e) {
+        // Skip invalid playlists
+      }
+    }
+
+    // Ensure system playlists exist
+    _ensureSystemPlaylists();
+    notifyListeners();
+  }
+
+  Future<void> _savePlaylists() async {
+    final pfs = await SharedPreferences.getInstance();
+    await pfs.setStringList(
+        _playlistsKey, _playlists.map((p) => p.toSerializedString()).toList());
+  }
+
+  void _ensureSystemPlaylists() {
+    // Favorites system playlist
+    if (!_playlists.any((p) => p.id == _favoritesPlaylistId)) {
+      _playlists.add(Playlist(
+        id: _favoritesPlaylistId,
+        name: "我喜欢",
+        description: "收藏的歌曲",
+        isSystem: true,
+        songIds: [],
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ));
+    }
+    // Recent system playlist
+    if (!_playlists.any((p) => p.id == _recentPlaylistId)) {
+      _playlists.add(Playlist(
+        id: _recentPlaylistId,
+        name: "最近播放",
+        description: "最近播放的歌曲",
+        isSystem: true,
+        songIds: [],
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ));
+    }
+  }
+
+  void _syncFavoritesPlaylist() {
+    final favPlaylist = _playlists.firstWhere(
+      (p) => p.id == _favoritesPlaylistId,
+    );
+    final index = _playlists.indexOf(favPlaylist);
+    _playlists[index] = favPlaylist.copyWith(
+      songIds: _favList.map((m) => m.id).toList(),
+      updatedAt: DateTime.now(),
+    );
+  }
+
+  // Playlist CRUD operations
+  String createPlaylist(String name, {String? description}) {
+    final id = "user_${DateTime.now().microsecondsSinceEpoch}";
+    final playlist = Playlist(
+      id: id,
+      name: name,
+      description: description,
+      isSystem: false,
+      songIds: [],
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+    _playlists.add(playlist);
+    _savePlaylists();
+    notifyListeners();
+    return id;
+  }
+
+  void deletePlaylist(String id) {
+    if (id == _favoritesPlaylistId) return; // Can't delete system playlists
+    _playlists.removeWhere((p) => p.id == id);
+    _savePlaylists();
+    notifyListeners();
+  }
+
+  void renamePlaylist(String id, String newName) {
+    final index = _playlists.indexWhere((p) => p.id == id);
+    if (index != -1) {
+      _playlists[index] = _playlists[index].copyWith(
+        name: newName,
+        updatedAt: DateTime.now(),
+      );
+      _savePlaylists();
+      notifyListeners();
+    }
+  }
+
+  void addToPlaylist(String playlistId, MusicInfo music) {
+    final index = _playlists.indexWhere((p) => p.id == playlistId);
+    if (index != -1) {
+      final playlist = _playlists[index];
+      if (!playlist.songIds.contains(music.id)) {
+        _playlists[index] = playlist.copyWith(
+          songIds: [...playlist.songIds, music.id],
+          updatedAt: DateTime.now(),
+        );
+        _savePlaylists();
+        notifyListeners();
+      }
+    }
+  }
+
+  void removeFromPlaylist(String playlistId, String musicId) {
+    final index = _playlists.indexWhere((p) => p.id == playlistId);
+    if (index != -1) {
+      final playlist = _playlists[index];
+      final newSongIds = playlist.songIds.where((id) => id != musicId).toList();
+      _playlists[index] = playlist.copyWith(
+        songIds: newSongIds,
+        updatedAt: DateTime.now(),
+      );
+      _savePlaylists();
+      notifyListeners();
+    }
+  }
+
+  // Resolve playlist songs from library
+  List<MusicInfo> getPlaylistSongs(String playlistId) {
+    final playlist = _playlists.firstWhere((p) => p.id == playlistId);
+    if (playlist.isSystem) {
+      if (playlistId == _favoritesPlaylistId) {
+        return _favList;
+      }
+      if (playlistId == _recentPlaylistId) {
+        return _history;
+      }
+    }
+    return playlist.songIds
+        .map((id) => _library.firstWhereOrNull((m) => m.id == id))
+        .whereType<MusicInfo>()
+        .toList();
+  }
+
+  Playlist? getPlaylistById(String id) {
+    try {
+      return _playlists.firstWhere((p) => p.id == id);
+    } catch (_) {
+      return null;
+    }
   }
 
   bool isInQueue(String id) => _queue.any((m) => m.id == id);
@@ -300,6 +478,7 @@ class MusicProvider extends ChangeNotifier {
 
   MusicProvider() {
     _loadHistory(); //初始化时加载历史
+    _loadPlaylists(); //初始化时加载歌单
     _stateSubscription = player.processingStateStream.listen((state) {
       if (state == ProcessingState.completed) _playNext();
     });
