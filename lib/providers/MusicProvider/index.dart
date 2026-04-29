@@ -67,7 +67,7 @@ class MusicProvider extends ChangeNotifier {
   Playlist? get favoritesPlaylist =>
       _playlists.firstWhere((p) => p.id == _favoritesPlaylistId);
 
-  final List<Map<String, dynamic>> _currentLyrics = [];
+  List<Map<String, dynamic>> _currentLyrics = [];
   List<Map<String, dynamic>> get currentLyrics => _currentLyrics;
 
   List<Map<String, dynamic>> _parseLrc(String? lrcContent) {
@@ -417,8 +417,9 @@ class MusicProvider extends ChangeNotifier {
 
     // 处理歌词逻辑
     final music = _queue[index];
-    _currentLyrics.clear(); //清空上一首
-    _currentLyrics.addAll(_parseLrc(music.lyrics));
+    // IMPORTANT: Always replace with a new list instance.
+    // This ensures Provider selectors (e.g. context.select) detect the change.
+    _currentLyrics = _parseLrc(music.lyrics);
 
     notifyListeners(); //确保UI收到歌词更新通知
 

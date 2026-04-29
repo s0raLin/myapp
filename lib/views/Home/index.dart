@@ -37,38 +37,74 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final history = context.read<MusicProvider>().history;
     final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
+      backgroundColor: colorScheme.surface,
       body: CustomScrollView(
         slivers: [
-          // ── Flutter 原生 CarouselView ──────────────────────────────────────
+          SliverAppBar(
+            pinned: true,
+            title: const Text('发现'),
+            centerTitle: false,
+            actions: [
+              IconButton(
+                tooltip: '搜索',
+                onPressed: () {},
+                icon: const Icon(Icons.search_rounded),
+              ),
+            ],
+          ),
+          // ── 轮播图区域 ──────────────────────────────────────
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.only(top: 16),
+              padding: const EdgeInsets.only(top: 12, left: 16, right: 16),
               child: LayoutBuilder(
                 builder: (context, constraints) {
-                  final maxCarouselWidth = constraints.maxWidth > 1800
-                      ? 1700.0
+                  // 根据屏幕宽度动态调整宽高比和最大宽度
+                  final double maxWidth = constraints.maxWidth > 1400
+                      ? 1200 // 超宽屏限制最大宽度
                       : constraints.maxWidth;
-                  final aspectRatio = constraints.maxWidth > 900 ? 21 / 9 : 16 / 9;
+
+                  final double aspectRatio = constraints.maxWidth > 1100
+                      ? 16 /
+                            7.5 // 桌面端：让它更接近正方形一些，不那么长
+                      : constraints.maxWidth > 800
+                      ? 16 / 8.2
+                      : 16 / 9; // 手机端保持 16:9
+
                   return Center(
                     child: ConstrainedBox(
-                      constraints: BoxConstraints(maxWidth: maxCarouselWidth),
+                      constraints: BoxConstraints(
+                        maxWidth: maxWidth,
+                        maxHeight: 380, // 给一个较高的上限，避免过低
+                      ),
                       child: AspectRatio(
                         aspectRatio: aspectRatio,
-                        child: CarouselView.weighted(
-                          itemSnapping: true,
-                          controller: controller,
-                          flexWeights: const <int>[1, 7, 1],
-                          padding: EdgeInsets.zero,
-                          onTap: (index) => controller.animateToItem(
-                            index,
-                            duration: const Duration(milliseconds: 600),
-                            curve: Curves.elasticOut,
+                        child: Card.filled(
+                          clipBehavior: Clip.antiAlias,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(24),
                           ),
-                          children: ImageInfo.values
-                              .map((image) => HeroLayoutCard(imageInfo: image))
-                              .toList(),
+                          child: CarouselView.weighted(
+                            itemSnapping: true,
+                            controller: controller,
+                            flexWeights: const <int>[1, 7, 1],
+                            padding: EdgeInsets.zero,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            onTap: (index) => controller.animateToItem(
+                              index,
+                              duration: const Duration(milliseconds: 650),
+                              curve: Curves.easeOutCubic,
+                            ),
+                            children: ImageInfo.values
+                                .map(
+                                  (image) => HeroLayoutCard(imageInfo: image),
+                                )
+                                .toList(),
+                          ),
                         ),
                       ),
                     ),
@@ -84,11 +120,14 @@ class _HomePageState extends State<HomePage> {
               padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
               child: Row(
                 children: [
-                  Text(
-                    '歌曲推荐',
-                    style: textTheme.headlineSmall,
+                  Expanded(
+                    child: Text(
+                      '歌曲推荐',
+                      style: textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
-                  const SizedBox(width: 10),
                   FilledButton.icon(
                     onPressed: () {},
                     icon: const Icon(Icons.play_arrow_rounded, size: 18),
@@ -104,19 +143,33 @@ class _HomePageState extends State<HomePage> {
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             sliver: ListTileTheme(
               data: ListTileThemeData(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
               child: SliverList.separated(
                 itemCount: history.length,
                 itemBuilder: (context, index) {
+                  final item = history[index];
                   return Card(
+                    color: colorScheme.surfaceContainerLow,
                     child: ListTile(
                       onTap: () => context.push("/music/$index"),
-                      leading: const Icon(Icons.library_music, size: 42),
-                      title: Text(history[index].title),
+                      leading: CircleAvatar(
+                        radius: 22,
+                        backgroundColor: colorScheme.secondaryContainer,
+                        foregroundColor: colorScheme.onSecondaryContainer,
+                        child: const Icon(Icons.library_music_rounded),
+                      ),
+                      title: Text(item.title),
                       subtitle: Text(
-                        '${history[index].artist} · ${history[index].album}',
+                        '${item.artist} · ${item.album}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       horizontalTitleGap: 4,
                       trailing: const Icon(Icons.chevron_right),
@@ -127,6 +180,7 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
+          const SliverToBoxAdapter(child: SizedBox(height: 8)),
         ],
       ),
     );
@@ -141,6 +195,7 @@ class HeroLayoutCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -159,7 +214,10 @@ class HeroLayoutCard extends StatelessWidget {
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [Colors.transparent, Colors.black.withValues(alpha: 0.45)],
+              colors: [
+                Colors.transparent,
+                colorScheme.scrim.withValues(alpha: 0.55),
+              ],
             ),
           ),
         ),

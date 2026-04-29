@@ -15,7 +15,19 @@ class MusicDetailPage extends StatefulWidget {
 }
 
 class _MusicDetailPageState extends State<MusicDetailPage> {
-  bool _showLyricsOnMobile = false;
+  late final PageController _mobilePageController;
+
+  @override
+  void initState() {
+    super.initState();
+    _mobilePageController = PageController();
+  }
+
+  @override
+  void dispose() {
+    _mobilePageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,26 +52,9 @@ class _MusicDetailPageState extends State<MusicDetailPage> {
     final mainContent = _MainContent(
       music: music,
       isLiked: isLiked,
+      onCoverTap: () => _showSongInfoSheet(context),
       onAddToPlaylist: () => _showAddToPlaylistSheet(context, music),
     );
-    final Widget mobileContent;
-    if (_showLyricsOnMobile) {
-      mobileContent = GestureDetector(
-        onTap: () => setState(() {
-          _showLyricsOnMobile = false;
-        }),
-        child: _LyricsSection(lyrics: lyrics),
-      );
-    } else {
-      mobileContent = _MainContent(
-        music: music,
-        isLiked: isLiked,
-        onCoverTap: () => setState(() {
-          _showLyricsOnMobile = true;
-        }),
-        onAddToPlaylist: () => _showAddToPlaylistSheet(context, music),
-      );
-    }
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
@@ -74,11 +69,13 @@ class _MusicDetailPageState extends State<MusicDetailPage> {
                   Expanded(flex: 4, child: _LyricsSection(lyrics: lyrics)),
                 ],
               )
-            : AnimatedSwitcher(
-                duration: const Duration(milliseconds: 400),
-                transitionBuilder: (child, animation) =>
-                    FadeTransition(opacity: animation, child: child),
-                child: mobileContent,
+            : PageView(
+                controller: _mobilePageController,
+                physics: const PageScrollPhysics(),
+                children: [
+                  mainContent,
+                  _LyricsSection(lyrics: lyrics),
+                ],
               ),
       ),
     );
@@ -173,7 +170,7 @@ class _MusicDetailPageState extends State<MusicDetailPage> {
                             ? Theme.of(context)
                                 .colorScheme
                                 .onSurface
-                                .withOpacity(0.5)
+                                .withValues(alpha: 0.5)
                             : null,
                       ),
                     ),
@@ -198,6 +195,99 @@ class _MusicDetailPageState extends State<MusicDetailPage> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showSongInfoSheet(BuildContext context) async {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final mp = context.read<MusicProvider>();
+    final music = mp.currentMusic;
+    if (music == null) return;
+
+    await showModalBottomSheet(
+      context: context,
+      showDragHandle: true,
+      backgroundColor: cs.surfaceContainer,
+      builder: (context) => SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 6, 16, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: SizedBox(
+                      width: 56,
+                      height: 56,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: cs.surfaceContainerHighest,
+                        ),
+                        child: music.coverBytes?.isNotEmpty == true
+                            ? Image.memory(music.coverBytes!, fit: BoxFit.cover)
+                            : Icon(
+                                Icons.music_note_rounded,
+                                color: cs.primary.withValues(alpha: 0.6),
+                              ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          music.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: tt.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '${music.artist} · ${music.album}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: tt.bodyMedium?.copyWith(
+                            color: cs.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _RoundIconButton(
+                    tooltip: '上一首',
+                    icon: Icons.skip_previous_rounded,
+                    onPressed: () {
+                      mp.playPrev();
+                    },
+                  ),
+                  const SizedBox(width: 14),
+                  _RoundIconButton(
+                    tooltip: '下一首',
+                    icon: Icons.skip_next_rounded,
+                    onPressed: () {
+                      mp.playNext();
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -423,9 +513,13 @@ class _ProgressSlider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return SliderTheme(
-      data: const SliderThemeData(
-          year2023: false, overlayColor: Colors.transparent),
+      data: SliderTheme.of(context).copyWith(
+        overlayColor: Colors.transparent,
+        activeTrackColor: cs.primary,
+        inactiveTrackColor: cs.surfaceContainerHighest,
+      ),
       child: Slider(
         max: total > 0 ? total : 1.0,
         value: pos,
@@ -447,7 +541,6 @@ class _PlaybackControls extends StatelessWidget {
     return StreamBuilder<ProcessingState>(
       stream: musicProvider.player.processingStateStream,
       builder: (context, snapshot) {
-        final processingState = snapshot.data ?? ProcessingState.idle;
         final playing = musicProvider.player.playing;
 
         return Row(
@@ -461,15 +554,10 @@ class _PlaybackControls extends StatelessWidget {
             ),
             const SizedBox(width: 16),
             // Previous
-            IconButton.filled(
+            _RoundIconButton(
+              tooltip: '上一首',
+              icon: Icons.skip_previous_rounded,
               onPressed: musicProvider.playPrev,
-              icon: const Icon(Icons.skip_previous_rounded),
-              style: FilledButton.styleFrom(
-                backgroundColor: colorScheme.primary,
-                foregroundColor: colorScheme.onPrimary,
-                shape: const CircleBorder(),
-                fixedSize: const Size(56, 56),
-              ),
             ),
             const SizedBox(width: 16),
             // Play/Pause
@@ -487,33 +575,14 @@ class _PlaybackControls extends StatelessWidget {
             ),
             const SizedBox(width: 16),
             // Next
-            IconButton.filled(
+            _RoundIconButton(
+              tooltip: '下一首',
+              icon: Icons.skip_next_rounded,
               onPressed: musicProvider.playNext,
-              icon: const Icon(Icons.skip_next_rounded),
-              style: FilledButton.styleFrom(
-                backgroundColor: colorScheme.primary,
-                foregroundColor: colorScheme.onPrimary,
-                shape: const CircleBorder(),
-                fixedSize: const Size(56, 56),
-              ),
             ),
             const SizedBox(width: 16),
             // Volume
-            StreamBuilder<double>(
-              stream: musicProvider.player.volumeStream,
-              builder: (context, snapshot) {
-                final volume = snapshot.data ?? musicProvider.volume;
-                return IconButton(
-                  onPressed: () async {
-                    // Toggle mute/unmute
-                    final newVol = volume > 0 ? 0.0 : 1.0;
-                    await musicProvider.setVolume(newVol);
-                  },
-                  icon: Icon(_getVolumeIcon(volume)),
-                  color: colorScheme.onSurfaceVariant,
-                );
-              },
-            ),
+            _VolumeButton(musicProvider: musicProvider),
           ],
         );
       },
@@ -530,32 +599,43 @@ class _PlaybackControls extends StatelessWidget {
         return Icons.repeat_one_rounded;
     }
   }
-
-  IconData _getVolumeIcon(double volume) {
-    if (volume == 0) return Icons.volume_off_rounded;
-    if (volume < 0.5) return Icons.volume_down_rounded;
-    return Icons.volume_up_rounded;
-  }
 }
 
-class _LyricsSection extends StatelessWidget {
+class _LyricsSection extends StatefulWidget {
   final List<Map<String, dynamic>> lyrics;
 
   const _LyricsSection({required this.lyrics});
 
   @override
+  State<_LyricsSection> createState() => _LyricsSectionState();
+}
+
+class _LyricsSectionState extends State<_LyricsSection> {
+  final ItemScrollController _scrollController = ItemScrollController();
+  int _lastAutoScrollIndex = -1;
+  int _currentLyricsHash = 0;
+
+  @override
   Widget build(BuildContext context) {
+    final lyrics = widget.lyrics;
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
     if (lyrics.isEmpty) {
-      return const Center(
+      return Center(
         child: Text(
           "暂无歌词",
-          style: TextStyle(fontSize: 16, color: Colors.black38),
+          style: tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant),
         ),
       );
     }
 
-    final controller = ItemScrollController();
-    final colorScheme = Theme.of(context).colorScheme;
+    // If lyrics source changes (e.g., switch track), reset auto-scroll state.
+    final nextHash = Object.hashAll(lyrics.map((e) => e['time']));
+    if (nextHash != _currentLyricsHash) {
+      _currentLyricsHash = nextHash;
+      _lastAutoScrollIndex = -1;
+    }
 
     return StreamBuilder<PositionData>(
       stream: context.read<MusicProvider>().positionDataStream,
@@ -573,46 +653,217 @@ class _LyricsSection extends StatelessWidget {
           }
         }
 
-        // Scroll to current lyric
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (controller.isAttached) {
-            controller.scrollTo(
+        // Auto scroll only when index changes. This avoids "bounce" near end.
+        if (currentIndex != _lastAutoScrollIndex) {
+          _lastAutoScrollIndex = currentIndex;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            if (_scrollController.isAttached) {
+              // Near the end, alignment can cause repeated clamping/jitter.
+              // Use a smaller alignment so the list doesn't fight the boundary.
+              final isNearEnd = currentIndex >= lyrics.length - 3;
+              _scrollController.scrollTo(
                 index: currentIndex,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeOut);
-          }
-        });
+                alignment: isNearEnd ? 0.1 : 0.35,
+                duration: Duration(milliseconds: isNearEnd ? 340 : 260),
+                curve: Curves.easeOutCubic,
+              );
+            }
+          });
+        }
 
-        return ScrollablePositionedList.builder(
-          itemScrollController: controller,
-          itemCount: lyrics.length,
-          itemBuilder: (context, index) {
-            final item = lyrics[index];
-            final time = item['time'] as Duration;
-            final text = item['text'] as String;
-            final isActive = index == currentIndex;
+        return Stack(
+          children: [
+            ScrollablePositionedList.builder(
+              itemScrollController: _scrollController,
+              itemCount: lyrics.length,
+              padding: const EdgeInsets.symmetric(vertical: 56),
+              itemBuilder: (context, index) {
+                final item = lyrics[index];
+                final time = item['time'] as Duration;
+                final text = item['text'] as String;
+                final isActive = index == currentIndex;
 
-            return GestureDetector(
-              onTap: () {
-                context.read<MusicProvider>().player.seek(time);
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-                alignment: Alignment.center,
-                child: Text(
-                  text,
-                  style: TextStyle(
-                    fontSize: isActive ? 20 : 16,
-                    fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-                    color: isActive
-                        ? colorScheme.primary
-                        : colorScheme.onSurface.withValues(alpha: 0.6),
+                final baseStyle = tt.bodyLarge?.copyWith(
+                  height: 1.35,
+                  color: cs.onSurfaceVariant,
+                  fontWeight: FontWeight.w500,
+                );
+                final activeStyle = tt.titleMedium?.copyWith(
+                  height: 1.35,
+                  color: cs.primary,
+                  fontWeight: FontWeight.w800,
+                );
+
+                return InkWell(
+                  onTap: () => context.read<MusicProvider>().player.seek(time),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 22,
+                    ),
+                    child: AnimatedDefaultTextStyle(
+                      duration: const Duration(milliseconds: 180),
+                      curve: Curves.easeOut,
+                      style: isActive
+                          ? (activeStyle ?? const TextStyle())
+                          : (baseStyle ?? const TextStyle()),
+                      child: Text(
+                        text.isEmpty ? ' ' : text,
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
                   ),
-                  textAlign: TextAlign.center,
+                );
+              },
+            ),
+            // Top fade
+            IgnorePointer(
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: Container(
+                  height: 56,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        cs.surface,
+                        cs.surface.withValues(alpha: 0.0),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-            );
-          },
+            ),
+            // Bottom fade
+            IgnorePointer(
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: Container(
+                  height: 64,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
+                      colors: [
+                        cs.surface,
+                        cs.surface.withValues(alpha: 0.0),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _RoundIconButton extends StatelessWidget {
+  final IconData icon;
+  final String? tooltip;
+  final VoidCallback? onPressed;
+
+  const _RoundIconButton({
+    required this.icon,
+    this.tooltip,
+    this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return IconButton(
+      tooltip: tooltip,
+      onPressed: onPressed,
+      icon: Icon(icon),
+      style: IconButton.styleFrom(
+        foregroundColor: cs.onSurfaceVariant,
+        backgroundColor: Colors.transparent,
+        shape: const CircleBorder(),
+        padding: const EdgeInsets.all(14),
+      ),
+    );
+  }
+}
+
+class _VolumeButton extends StatefulWidget {
+  final MusicProvider musicProvider;
+  const _VolumeButton({required this.musicProvider});
+
+  @override
+  State<_VolumeButton> createState() => _VolumeButtonState();
+}
+
+class _VolumeButtonState extends State<_VolumeButton> {
+  final MenuController _menuController = MenuController();
+  double _lastNonZeroVolume = 1.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return StreamBuilder<double>(
+      stream: widget.musicProvider.player.volumeStream,
+      builder: (context, snapshot) {
+        final volume = snapshot.data ?? widget.musicProvider.volume;
+        if (volume > 0) _lastNonZeroVolume = volume;
+
+        IconData icon;
+        if (volume == 0) {
+          icon = Icons.volume_off_rounded;
+        } else if (volume < 0.5) {
+          icon = Icons.volume_down_rounded;
+        } else {
+          icon = Icons.volume_up_rounded;
+        }
+
+        return MenuAnchor(
+          controller: _menuController,
+          alignmentOffset: const Offset(-8, -6),
+          menuChildren: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              child: SizedBox(
+                height: 160,
+                child: RotatedBox(
+                  quarterTurns: -1,
+                  child: SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      trackHeight: 6,
+                      thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+                      overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
+                      inactiveTrackColor: cs.surfaceContainerHighest,
+                      activeTrackColor: cs.primary,
+                    ),
+                    child: Slider(
+                      value: volume.clamp(0.0, 1.0),
+                      onChanged: (v) => widget.musicProvider.setVolume(v),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+          child: IconButton(
+            tooltip: _menuController.isOpen ? '静音' : '音量',
+            onPressed: () async {
+              if (_menuController.isOpen) {
+                final newVol = volume == 0 ? _lastNonZeroVolume.clamp(0.0, 1.0) : 0.0;
+                await widget.musicProvider.setVolume(newVol);
+                return;
+              }
+              _menuController.open();
+            },
+            icon: Icon(icon),
+            style: IconButton.styleFrom(
+              foregroundColor: cs.onSurfaceVariant,
+              backgroundColor: Colors.transparent,
+              shape: const CircleBorder(),
+            ),
+          ),
         );
       },
     );

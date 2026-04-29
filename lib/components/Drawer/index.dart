@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:myapp/contants/Assets/index.dart';
+
 import 'package:myapp/providers/UserProvider/index.dart';
 import 'package:provider/provider.dart';
 
@@ -80,10 +80,13 @@ class _MainDrawerState extends State<MainDrawer> {
               // 头像
               CircleAvatar(
                 radius: 36,
-                backgroundColor: colorScheme.primaryContainer,
-                backgroundImage: (isLoggedIn && user.avatarURL!.isNotEmpty)
-                    ? NetworkImage(user.avatarURL!)
-                    : AssetImage(MyAssets.avatar) as ImageProvider,
+                backgroundColor: colorScheme.primary,
+                child: CircleAvatar(
+                  radius: 34,
+                  backgroundColor: colorScheme.surfaceContainerHighest,
+                  foregroundColor: colorScheme.onSurfaceVariant,
+                  child: const Icon(Icons.person_rounded, size: 34),
+                ),
               ),
               const SizedBox(width: 16),
               // 用户名：显式设置颜色为 onSurface 确保可见

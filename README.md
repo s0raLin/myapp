@@ -32,6 +32,7 @@ MikuMusic 是一个基于 Flutter 3.41.6 开发的跨平台音乐播放器，深
 - 🌐 **跨平台**支持 (Android/iOS/Linux/Windows)
 - 📦 **模块化**架构设计
 - ⚡ **响应式**状态管理
+- 📚 **配色与主题规范**：见 `docs/m3-color-guidelines.md`
 
 ---
 

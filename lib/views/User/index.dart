@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:myapp/model/Playlist/index.dart';
 import 'package:myapp/providers/MusicProvider/index.dart';
@@ -12,29 +11,17 @@ class UserProfilePage extends StatefulWidget {
   State<UserProfilePage> createState() => _UserProfilePageState();
 }
 
-class _UserProfilePageState extends State<UserProfilePage>
-    with TickerProviderStateMixin {
-  late final TabController _tabController;
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
-
+class _UserProfilePageState extends State<UserProfilePage> {
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
       body: CustomScrollView(
         slivers: [
           // 1. 沉浸式顶部栏
           SliverAppBar(
+            pinned: true,
             title: const Text("个人主页"),
             actions: [
               IconButton(
@@ -42,6 +29,14 @@ class _UserProfilePageState extends State<UserProfilePage>
                 icon: const Icon(Icons.share_outlined),
               ),
             ],
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(1),
+              child: Divider(
+                height: 1,
+                thickness: 1,
+                color: colorScheme.outlineVariant.withValues(alpha: 0.6),
+              ),
+            ),
           ),
           const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
@@ -90,9 +85,11 @@ class _UserProfilePageState extends State<UserProfilePage>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     "我的歌单",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                    style: textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   // 新建歌单按钮 + 进入音乐库链接
@@ -117,13 +114,37 @@ class _UserProfilePageState extends State<UserProfilePage>
                     builder: (context, musicProvider, _) {
                       final userPlaylists = musicProvider.userPlaylists;
                       if (userPlaylists.isEmpty) {
-                        return const Center(
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(vertical: 32),
-                            child: Text(
-                              "还没有创建歌单\n点击上方「新建歌单」按钮创建",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(color: Colors.black45),
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 28),
+                          child: Card.filled(
+                            color: colorScheme.surfaceContainerLow,
+                            clipBehavior: Clip.antiAlias,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(18),
+                              child: Row(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 22,
+                                    backgroundColor:
+                                        colorScheme.secondaryContainer,
+                                    foregroundColor:
+                                        colorScheme.onSecondaryContainer,
+                                    child: const Icon(Icons.queue_music_rounded),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      "还没有创建歌单\n点击上方「新建歌单」按钮创建",
+                                      style: textTheme.bodyMedium?.copyWith(
+                                        color: colorScheme.onSurfaceVariant,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         );
@@ -132,11 +153,11 @@ class _UserProfilePageState extends State<UserProfilePage>
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              childAspectRatio: 1.1,
-                              crossAxisSpacing: 12,
-                              mainAxisSpacing: 12,
+                            const SliverGridDelegateWithMaxCrossAxisExtent(
+                              maxCrossAxisExtent: 220, // ← 关键：限制每个卡片最大宽度为 220
+                              childAspectRatio: 0.88, // 高度比宽度稍高一点，看起来更舒服
+                              crossAxisSpacing: 16,
+                              mainAxisSpacing: 16,
                             ),
                         itemCount: userPlaylists.length,
                         itemBuilder: (context, index) {
@@ -187,11 +208,13 @@ class _UserPlaylistCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
 
     return Card(
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
+        onLongPress: onMoreTap,
         onTap: onTap,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -223,12 +246,12 @@ class _UserPlaylistCard extends StatelessWidget {
                         color: Colors.transparent,
                         child: InkWell(
                           onTap: onMoreTap,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(50),
                           child: Padding(
                             padding: const EdgeInsets.all(4.0),
                             child: Icon(
                               Icons.more_vert_rounded,
-                              size: 18,
+                              size: 28,
                               color: colorScheme.onSurfaceVariant,
                             ),
                           ),
@@ -248,16 +271,14 @@ class _UserPlaylistCard extends StatelessWidget {
                     playlist.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
+                    style: textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     "$songCount 首",
                     style: TextStyle(
-                      fontSize: 12,
                       color: colorScheme.onSurfaceVariant,
                     ),
                   ),
@@ -339,6 +360,7 @@ Future<void> _showRenameDialog(
       ],
     ),
   );
+  if (!context.mounted) return;
   if (newName != null && newName.isNotEmpty) {
     provider.renamePlaylist(playlist.id, newName);
   }
@@ -366,6 +388,7 @@ Future<void> _showDeleteConfirmDialog(
       ],
     ),
   );
+  if (!context.mounted) return;
   if (confirmed == true) {
     provider.deletePlaylist(playlist.id);
   }
@@ -394,6 +417,7 @@ Future<void> _showCreatePlaylistDialog(BuildContext context) async {
       ],
     ),
   );
+  if (!context.mounted) return;
   if (name != null && name.isNotEmpty) {
     context.read<MusicProvider>().createPlaylist(name);
   }
@@ -421,11 +445,11 @@ class M3UserCard extends StatelessWidget {
                 CircleAvatar(
                   radius: 36,
                   backgroundColor: colorScheme.primary,
-                  child: const CircleAvatar(
+                  child: CircleAvatar(
                     radius: 34,
-                    backgroundImage: NetworkImage(
-                      'https://placeholder.com/150',
-                    ),
+                    backgroundColor: colorScheme.surfaceContainerHighest,
+                    foregroundColor: colorScheme.onSurfaceVariant,
+                    child: const Icon(Icons.person_rounded, size: 34),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -452,10 +476,6 @@ class M3UserCard extends StatelessWidget {
                 ),
                 FilledButton(
                   onPressed: () {},
-                  style: FilledButton.styleFrom(
-                    backgroundColor: colorScheme.primary,
-                    foregroundColor: colorScheme.onPrimary,
-                  ),
                   child: const Text("编辑"),
                 ),
               ],
@@ -502,20 +522,18 @@ class M3UserCard extends StatelessWidget {
 class _PlaylistQuickCard extends StatelessWidget {
   final String title;
   final IconData icon;
-  final Uint8List? coverBytes;
   final VoidCallback? onTap;
 
   const _PlaylistQuickCard({
-    super.key,
     required this.title,
     required this.icon,
     this.onTap,
-    this.coverBytes,
   });
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
 
     return SizedBox(
       width: 105,
@@ -529,23 +547,19 @@ class _PlaylistQuickCard extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 16),
             child: Column(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: colorScheme.secondaryContainer,
-                    shape: BoxShape.circle,
-                  ),
-                  child: coverBytes != null && coverBytes!.isNotEmpty
-                      ? Image.memory(coverBytes!)
-                      : Icon(icon),
+                CircleAvatar(
+                  radius: 22,
+                  backgroundColor: colorScheme.onSecondaryContainer
+                      .withValues(alpha: 0.10),
+                  foregroundColor: colorScheme.onSecondaryContainer,
+                  child: Icon(icon),
                 ),
                 const SizedBox(height: 10),
                 Text(
                   title,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
+                  style: textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
                     color: colorScheme.onSecondaryContainer,
-                    fontSize: 13,
                   ),
                 ),
               ],
