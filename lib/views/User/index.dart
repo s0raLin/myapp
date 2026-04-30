@@ -44,7 +44,10 @@ class _UserProfilePageState extends State<UserProfilePage> {
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: const M3UserCard(),
+              child: const M3UserCard(
+                username: "苍璃 s0raLin",
+                description: "Coding with Music & Arch Linux",
+              ),
             ),
           ),
           const SliverToBoxAdapter(child: SizedBox(height: 24)),
@@ -132,7 +135,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                         colorScheme.secondaryContainer,
                                     foregroundColor:
                                         colorScheme.onSecondaryContainer,
-                                    child: const Icon(Icons.queue_music_rounded),
+                                    child: const Icon(
+                                      Icons.queue_music_rounded,
+                                    ),
                                   ),
                                   const SizedBox(width: 12),
                                   Expanded(
@@ -278,9 +283,7 @@ class _UserPlaylistCard extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     "$songCount 首",
-                    style: TextStyle(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
+                    style: TextStyle(color: colorScheme.onSurfaceVariant),
                   ),
                 ],
               ),
@@ -425,7 +428,13 @@ Future<void> _showCreatePlaylistDialog(BuildContext context) async {
 
 // --- 优化后的用户信息卡片 ---
 class M3UserCard extends StatelessWidget {
-  const M3UserCard({super.key});
+  final String username;
+  final String description;
+  const M3UserCard({
+    super.key,
+    required this.username,
+    required this.description,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -458,7 +467,7 @@ class M3UserCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "苍璃 s0raLin",
+                        username,
                         style: textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: colorScheme.onSurface,
@@ -466,7 +475,7 @@ class M3UserCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        "Coding with Music & Arch Linux",
+                        description,
                         style: textTheme.bodyMedium?.copyWith(
                           color: colorScheme.onSurfaceVariant,
                         ),
@@ -474,10 +483,7 @@ class M3UserCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                FilledButton(
-                  onPressed: () {},
-                  child: const Text("编辑"),
-                ),
+                FilledButton(onPressed: () {}, child: const Text("编辑")),
               ],
             ),
             Padding(
@@ -549,8 +555,9 @@ class _PlaylistQuickCard extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 22,
-                  backgroundColor: colorScheme.onSecondaryContainer
-                      .withValues(alpha: 0.10),
+                  backgroundColor: colorScheme.onSecondaryContainer.withValues(
+                    alpha: 0.10,
+                  ),
                   foregroundColor: colorScheme.onSecondaryContainer,
                   child: Icon(icon),
                 ),

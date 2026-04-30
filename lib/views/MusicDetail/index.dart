@@ -521,6 +521,7 @@ class _ProgressSlider extends StatelessWidget {
         inactiveTrackColor: cs.surfaceContainerHighest,
       ),
       child: Slider(
+        year2023: false,
         max: total > 0 ? total : 1.0,
         value: pos,
         onChanged: onChanged,
