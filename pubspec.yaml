@@ -33,14 +33,16 @@ dependencies:
   scrollable_positioned_list: ^0.3.8
   dio: ^5.9.2
   flutter_secure_storage: ^10.0.0
-  package_info_plus: ^8.0.0
+  package_info_plus: ^9.0.1
   metadata_god: ^1.1.0
   material_color_utilities: ^0.13.0
+  lottie: ^3.3.3
+  url_launcher: ^6.3.2
 
 dependency_overrides:
   # 强制锁定版本，消除 2.11.1 与 2.12.0 的冲突
   flutter_rust_bridge: 2.11.1
-  
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -53,6 +55,7 @@ flutter:
     - lib/assets/
     - lib/assets/images/
     - assets/background/
+    - assets/Equalizer.json
 
   fonts:
     - family: NiShiKiFont

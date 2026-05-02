@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:myapp/model/Music/index.dart';
 import 'package:myapp/model/Playlist/index.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -26,6 +27,22 @@ class MusicProvider extends ChangeNotifier {
   //私有播放器实例
   final AudioPlayer player = AudioPlayer();
   StreamSubscription? _stateSubscription; //持有的监听器句柄
+
+  PackageInfo? _appInfo;
+  PackageInfo? get appInfo => _appInfo;
+  String get appVersion => _appInfo?.version ?? "加载中...";
+  String get buildNumber => _appInfo?.buildNumber ?? "";
+
+  Future<void> _loadAppInfo() async {
+    _appInfo = await PackageInfo.fromPlatform();
+    notifyListeners(); //初始化完成,通知UI刷新
+  }
+
+  // Future<void> _initPackageInfo() async {
+  //   final info = await PackageInfo.fromPlatform();
+  //   _version = info.version;
+  //   _buildNumber = info.buildNumber;
+  // }
 
   // 音量控制
   double _volume = 1.0;
@@ -176,33 +193,39 @@ class MusicProvider extends ChangeNotifier {
   Future<void> _savePlaylists() async {
     final pfs = await SharedPreferences.getInstance();
     await pfs.setStringList(
-        _playlistsKey, _playlists.map((p) => p.toSerializedString()).toList());
+      _playlistsKey,
+      _playlists.map((p) => p.toSerializedString()).toList(),
+    );
   }
 
   void _ensureSystemPlaylists() {
     // Favorites system playlist
     if (!_playlists.any((p) => p.id == _favoritesPlaylistId)) {
-      _playlists.add(Playlist(
-        id: _favoritesPlaylistId,
-        name: "我喜欢",
-        description: "收藏的歌曲",
-        isSystem: true,
-        songIds: [],
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ));
+      _playlists.add(
+        Playlist(
+          id: _favoritesPlaylistId,
+          name: "我喜欢",
+          description: "收藏的歌曲",
+          isSystem: true,
+          songIds: [],
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        ),
+      );
     }
     // Recent system playlist
     if (!_playlists.any((p) => p.id == _recentPlaylistId)) {
-      _playlists.add(Playlist(
-        id: _recentPlaylistId,
-        name: "最近播放",
-        description: "最近播放的歌曲",
-        isSystem: true,
-        songIds: [],
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ));
+      _playlists.add(
+        Playlist(
+          id: _recentPlaylistId,
+          name: "最近播放",
+          description: "最近播放的歌曲",
+          isSystem: true,
+          songIds: [],
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        ),
+      );
     }
   }
 
@@ -480,6 +503,7 @@ class MusicProvider extends ChangeNotifier {
   MusicProvider() {
     _loadHistory(); //初始化时加载历史
     _loadPlaylists(); //初始化时加载歌单
+    _loadAppInfo(); //初始化应用信息
     _stateSubscription = player.processingStateStream.listen((state) {
       if (state == ProcessingState.completed) _playNext();
     });

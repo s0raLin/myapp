@@ -7,6 +7,8 @@ class MyAssets {
   static const String folder = "assets/icons/folder.png";
   static const String user = "assets/icons/user.png";
 
+  static const String equalizer = "assets/Equalizer.json";
+
 
 
   static const String background = "assets/background/AdachiRei.jpg";

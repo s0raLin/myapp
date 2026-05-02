@@ -2,6 +2,8 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lottie/lottie.dart';
+import 'package:myapp/contants/Assets/index.dart';
 import 'package:myapp/model/Music/index.dart';
 import 'package:myapp/providers/MusicProvider/index.dart';
 import 'package:provider/provider.dart';
@@ -310,7 +312,6 @@ class _ProgressBar extends StatelessWidget {
 
 /// 音量控制
 class _VolumeControllerWidget extends StatelessWidget {
-
   const _VolumeControllerWidget({super.key});
 
   @override
@@ -368,21 +369,65 @@ class _QueueActions extends StatelessWidget {
     required this.onPlayPause,
   });
 
+  void _showModalBottomSheet(BuildContext context) {
+    final musicProvider = context.read<MusicProvider>();
+    final queue = musicProvider.queue;
+    final currentMusic = musicProvider.currentMusic;
+    final isPlaying = musicProvider.player.playing;
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ), //设置圆角
+      builder: (context) {
+        return SizedBox(
+          height: 200,
+          child: ListView.builder(
+            itemCount: queue.length,
+            itemBuilder: (context, index) {
+              final music = queue[index];
+              final coverBytes = music.coverBytes;
+              final artist = music.artist;
+              final album = music.album;
+              final isCurrent = currentMusic?.id == music.id;
+              return ListTile(
+                onTap: () {
+                  musicProvider.playByIndex(index);
+                },
+                leading: isCurrent
+                    ? Lottie.asset(MyAssets.equalizer, width: 24, height: 24, animate: isPlaying)
+                    : (coverBytes != null && coverBytes.isNotEmpty
+                          ? SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(6),
+                                child: Image.memory(
+                                  music.coverBytes!,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            )
+                          : Icon(Icons.music_note_rounded)),
+                title: Text(music.title),
+                subtitle: Text('$artist ${album != null ? "· $album" : ""}'),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+    // final cs = Theme.of(context).colorScheme;
     final isPlaying = context.select<MusicProvider, bool>(
       (p) => p.player.playing,
     );
-    final queue = context.select<MusicProvider, List<MusicInfo>>(
-      (p) => p.queue,
-    );
 
-    final currentMusic = context.select<MusicProvider, MusicInfo?>(
-      (p) => p.currentMusic,
-    );
-
-    final mp = context.read<MusicProvider>();
+    // final mp = context.read<MusicProvider>();
 
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -393,70 +438,83 @@ class _QueueActions extends StatelessWidget {
             onPressed: onPlayPause,
           ),
         // 点击弹出播放队列菜单
-        MenuAnchor(
-          menuChildren: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                children: [
-                  const Text(
-                    '播放队列',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    '${queue.length} 首',
-                    style: TextStyle(color: cs.outline),
-                  ),
-                ],
-              ),
-            ),
-            const Divider(height: 1),
-            SizedBox(
-              height: 300,
-              width: 260,
-              child: ListView(
-                children: queue.asMap().entries.map((entry) {
-                  final music = entry.value;
-                  final isCurrent = currentMusic?.id == music.id;
-                  return MenuItemButton(
-                    onPressed: () => mp.playByIndex(entry.key),
-                    leadingIcon: isCurrent
-                        ? const Icon(Icons.play_arrow_rounded, size: 24)
-                        : (music.coverBytes != null &&
-                                  music.coverBytes!.isNotEmpty
-                              ? SizedBox(
-                                  width: 24,
-                                  height: 24,
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(6),
-                                    child: Image.memory(
-                                      music.coverBytes!,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
-                                )
-                              : const Icon(Icons.music_note_rounded, size: 24)),
-                    child: Text(
-                      music.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-          ],
-          builder: (context, controller, child) {
-            return _MiniIconButton(
-              icon: Icons.queue_music_rounded,
-              onPressed: () =>
-                  controller.isOpen ? controller.close() : controller.open(),
-            );
-          },
+        // MenuAnchor(
+        //   menuChildren: [
+        //     Padding(
+        //       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        //       child: Row(
+        //         children: [
+        //           const Text(
+        //             '播放队列',
+        //             style: TextStyle(fontWeight: FontWeight.bold),
+        //           ),
+        //           const SizedBox(width: 8),
+        //           Text(
+        //             '${queue.length} 首',
+        //             style: TextStyle(color: cs.outline),
+        //           ),
+        //         ],
+        //       ),
+        //     ),
+        //     const Divider(height: 1),
+        //     SizedBox(
+        //       height: 300,
+        //       width: 260,
+        //       child: ListView(
+        //         children: queue.asMap().entries.map((entry) {
+        //           final music = entry.value;
+        //           final isCurrent = currentMusic?.id == music.id;
+        //           return MenuItemButton(
+        //             onPressed: () => mp.playByIndex(entry.key),
+        //             leadingIcon: isCurrent
+        //                 ? const Icon(Icons.play_arrow_rounded, size: 24)
+        //                 : (music.coverBytes != null &&
+        //                           music.coverBytes!.isNotEmpty
+        //                       ? SizedBox(
+        //                           width: 24,
+        //                           height: 24,
+        //                           child: ClipRRect(
+        //                             borderRadius: BorderRadius.circular(6),
+        //                             child: Image.memory(
+        //                               music.coverBytes!,
+        //                               fit: BoxFit.cover,
+        //                             ),
+        //                           ),
+        //                         )
+        //                       : const Icon(Icons.music_note_rounded, size: 24)),
+        //             child: Text(
+        //               music.title,
+        //               maxLines: 1,
+        //               overflow: TextOverflow.ellipsis,
+        //             ),
+        //           );
+        //         }).toList(),
+        //       ),
+        //     ),
+        //   ],
+        //   builder: (context, controller, child) {
+        //     return _MiniIconButton(
+        //       icon: Icons.queue_music_rounded,
+        //       onPressed: () =>
+        //           controller.isOpen ? controller.close() : controller.open(),
+        //     );
+        //   },
+        // ),
+        _MiniIconButton(
+          icon: Icons.queue_music_rounded,
+          onPressed: () => _showModalBottomSheet(context),
         ),
       ],
     );
+  }
+}
+
+class ModalBottomSheet extends StatelessWidget {
+  const ModalBottomSheet({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container();
   }
 }
 

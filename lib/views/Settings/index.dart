@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:myapp/providers/MusicProvider/index.dart';
 import 'package:myapp/providers/ThemeProvider/index.dart';
 import 'package:provider/provider.dart';
 
@@ -22,6 +23,11 @@ class SettingsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
     final textTheme = Theme.of(context).textTheme;
+    // final mp = context.read<MusicProvider>();
+    final version = context.select<MusicProvider, String>((p) => p.appVersion);
+    final buildNumber = context.select<MusicProvider, String>(
+      (p) => p.buildNumber,
+    );
 
     return Scaffold(
       appBar: AppBar(title: const Text("设置"), centerTitle: true),
@@ -88,7 +94,8 @@ class SettingsPage extends StatelessWidget {
                             return _ThemeSeedButton(
                               color: color,
                               isSelected:
-                                  themeProvider.seedColor.value == color.value,
+                                  themeProvider.seedColor.toARGB32() ==
+                                  color.toARGB32(),
                               onTap: () => themeProvider.setSeedColor(color),
                             );
                           }).toList(),
@@ -110,7 +117,7 @@ class SettingsPage extends StatelessWidget {
                 ListTile(
                   leading: const Icon(Icons.info_outline_rounded),
                   title: const Text("软件版本"),
-                  trailing: const Text("v1.0.0 (Build 2026)"),
+                  trailing: Text("$version (Build $buildNumber)"),
                   onTap: () {
                     // 可以跳转到 AboutPage
                     context.pushNamed('about');

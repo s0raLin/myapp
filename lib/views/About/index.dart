@@ -1,30 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:package_info_plus/package_info_plus.dart';
+import 'package:myapp/providers/MusicProvider/index.dart';
+import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
-class AboutPage extends StatefulWidget {
+class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
 
-  @override
-  State<AboutPage> createState() => _AboutPageState();
-}
-
-class _AboutPageState extends State<AboutPage> {
-  String _version = '1.0.0';
-  String _buildNumber = '1';
-
-  @override
-  void initState() {
-    super.initState();
-    _initPackageInfo();
-  }
-
-  Future<void> _initPackageInfo() async {
-    final info = await PackageInfo.fromPlatform();
-    setState(() {
-      _version = info.version;
-      _buildNumber = info.buildNumber;
-    });
+  // 统一跳转方法
+  Future<void> _launchUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      throw Exception('无法打开链接 $url');
+    }
   }
 
   @override
@@ -32,138 +20,108 @@ class _AboutPageState extends State<AboutPage> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
+    // 监听版本数据
+    final version = context.select<MusicProvider, String>((p) => p.appVersion);
+    final buildNumber = context.select<MusicProvider, String>(
+      (p) => p.buildNumber,
+    );
+
     return Scaffold(
       body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
         slivers: [
-          // 1. M3 标志性大标题栏
+          // M3 风格大标题栏
           SliverAppBar.large(
             leading: IconButton(
               icon: const Icon(Icons.arrow_back),
               onPressed: () => context.pop(),
             ),
             title: const Text('关于'),
+            centerTitle: true,
           ),
 
           SliverToBoxAdapter(
-            child: Column(
-              children: [
-                // 2. Logo 区域优化：更微妙的投影和比例
-                const SizedBox(height: 16),
-                Center(
-                  child: Column(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          color: colorScheme.primaryContainer.withOpacity(0.4),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.music_note_rounded, // 建议使用应用 Logo
-                          size: 64,
-                          color: colorScheme.primary,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      Text(
-                        'MikuMusic',
-                        style: theme.textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 2,
-                          color: colorScheme.onSurface,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Version $_version ($_buildNumber)',
-                        style: theme.textTheme.labelMedium?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 32),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                children: [
+                  // Logo 部分使用更具现代感的容器
+                  const SizedBox(height: 20),
+                  _buildAnimatedHero(colorScheme, theme, version, buildNumber),
 
-                // 3. 描述卡片：使用 Filled 卡片风格
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Card.filled(
-                    color: colorScheme.surfaceContainerHigh,
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        children: [
-                          Text(
-                            '基于 Flutter 的跨平台音乐播放器',
-                            textAlign: TextAlign.center,
-                            style: theme.textTheme.bodyLarge?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          const Text('🎵 | ✨ | 🌐 | ⚡'),
-                        ],
+                  const SizedBox(height: 32),
+
+                  // 描述卡片：使用更轻量化的设计
+                  _buildDescriptionCard(colorScheme, theme),
+
+                  const SizedBox(height: 24),
+
+                  // 功能特性：分组显示
+                  _buildSectionTitle(context, '应用特性'),
+                  _buildFeatureGrid(colorScheme, theme),
+
+                  const SizedBox(height: 24),
+
+                  // 链接列表：合并为一个圆角列表组
+                  _buildSectionTitle(context, '更多信息'),
+                  Card(
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(24),
+                      side: BorderSide(
+                        color: colorScheme.outlineVariant,
+                        width: 0.8,
                       ),
                     ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // 4. 功能特性与技术栈：使用 Outlined 卡片更符合 M3 规范
-                _buildSectionCard(
-                  context,
-                  title: '功能特性',
-                  items: [
-                    '🎨 Material 3 动态颜色主题',
-                    '🔊 高性能音频引擎',
-                    '📂 本地音乐管理',
-                    '🎼 歌词同步显示',
-                  ],
-                ),
-                const SizedBox(height: 16),
-
-                // 5. 链接信息：使用统一的 Surface Container 和 ListTile
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Card.outlined(
                     clipBehavior: Clip.antiAlias,
                     child: Column(
                       children: [
-                        _buildInfoTile(
+                        _buildLinkTile(
                           context,
                           icon: Icons.code_rounded,
-                          label: '项目仓库',
-                          value: 'github.com/s0raLin/miku_music',
+                          title: '源代码仓库',
+                          subtitle: 'GitHub / s0raLin / miku_music',
+                          url: 'https://github.com/s0raLin/miku_music',
                         ),
-                        const Divider(height: 1, indent: 56),
-                        _buildInfoTile(
+                        _buildDivider(colorScheme),
+                        _buildLinkTile(
                           context,
                           icon: Icons.history_rounded,
-                          label: '更新日志',
-                          value: '查看 CHANGELOG.md',
+                          title: '版本动态',
+                          subtitle: '查看更新日志 (Changelog)',
+                          url: 'https://github.com/s0raLin/miku_music/releases',
                         ),
-                        const Divider(height: 1, indent: 56),
-                        _buildInfoTile(
+                        _buildDivider(colorScheme),
+                        _buildLinkTile(
                           context,
-                          icon: Icons.description_rounded,
-                          label: '开源协议',
-                          value: 'MIT License',
+                          icon: Icons.policy_outlined,
+                          title: '开源协议',
+                          subtitle: 'MIT License',
+                          url: 'https://opensource.org/licenses/MIT',
                         ),
                       ],
                     ),
                   ),
-                ),
 
-                const SizedBox(height: 48),
-                Text(
-                  'Made with ❤️ by 蒼璃',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant.withOpacity(0.5),
+                  const SizedBox(height: 60),
+
+                  // 页脚签名
+                  Opacity(
+                    opacity: 0.6,
+                    child: Column(
+                      children: [
+                        const Text('聆听万物，遇见初音'),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Made with ❤️ by 蒼璃',
+                          style: theme.textTheme.labelSmall,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 32),
-              ],
+                  const SizedBox(height: 40),
+                ],
+              ),
             ),
           ),
         ],
@@ -171,69 +129,148 @@ class _AboutPageState extends State<AboutPage> {
     );
   }
 
-  // 统一的板块卡片构建
-  Widget _buildSectionCard(
-    BuildContext context, {
-    required String title,
-    required List<String> items,
-  }) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Card.outlined(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  color: theme.colorScheme.primary,
-                ),
-              ),
-              const SizedBox(height: 12),
-              ...items.map(
-                (item) => Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.check_circle_outline_rounded,
-                        size: 16,
-                        color: theme.colorScheme.primary.withOpacity(0.7),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(item, style: theme.textTheme.bodyMedium),
-                    ],
-                  ),
-                ),
+  // 构建 Hero 动画区域
+  Widget _buildAnimatedHero(
+    ColorScheme cs,
+    ThemeData theme,
+    String v,
+    String b,
+  ) {
+    return Column(
+      children: [
+        Container(
+          height: 120,
+          width: 120,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [cs.primary, cs.tertiary],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(32),
+            boxShadow: [
+              BoxShadow(
+                color: cs.primary.withValues(alpha: 0.2),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
               ),
             ],
           ),
+          child: const Icon(
+            Icons.music_note_rounded,
+            size: 60,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(height: 24),
+        Text(
+          'MikuMusic',
+          style: theme.textTheme.headlineMedium?.copyWith(
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          decoration: BoxDecoration(
+            color: cs.secondaryContainer,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Text(
+            'v$v ($b)',
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: cs.onSecondaryContainer,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDescriptionCard(ColorScheme cs, ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
+      ),
+      child: Text(
+        '这是一个专注于纯粹听歌体验的跨平台播放器。基于 Flutter 构建，追求 Material 3 设计美学。',
+        textAlign: TextAlign.center,
+        style: theme.textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(BuildContext context, String title) {
+    return Container(
+      alignment: Alignment.centerLeft,
+      padding: const EdgeInsets.only(left: 8, bottom: 12),
+      child: Text(
+        title,
+        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+          color: Theme.of(context).colorScheme.primary,
+          fontWeight: FontWeight.bold,
         ),
       ),
     );
   }
 
-  // 使用 ListTile 实现项目信息，自带点击效果和标准布局
-  Widget _buildInfoTile(
+  Widget _buildFeatureGrid(ColorScheme cs, ThemeData theme) {
+    final features = [
+      {'icon': Icons.palette_outlined, 'label': '动态主题'},
+      {'icon': Icons.bolt_outlined, 'label': '快速响应'},
+      {'icon': Icons.library_music_outlined, 'label': '本地管理'},
+      {'icon': Icons.lyrics_outlined, 'label': '同步歌词'},
+    ];
+
+    return ListView(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      children: features.map((f) {
+        return ListTile(
+          // decoration: BoxDecoration(
+          //   color: cs.surfaceContainer,
+          //   borderRadius: BorderRadius.circular(16),
+          // ),
+          leading: Icon(f['icon'] as IconData, size: 18, color: cs.primary),
+          title: Text(f['label'] as String, style: theme.textTheme.labelLarge),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildLinkTile(
     BuildContext context, {
     required IconData icon,
-    required String label,
-    required String value,
+    required String title,
+    required String subtitle,
+    required String url,
   }) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final cs = Theme.of(context).colorScheme;
     return ListTile(
-      leading: Icon(icon, color: colorScheme.primary),
-      title: Text(
-        label,
-        style: Theme.of(
-          context,
-        ).textTheme.labelMedium?.copyWith(color: colorScheme.onSurfaceVariant),
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: cs.primary.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(icon, color: cs.primary, size: 20),
       ),
-      subtitle: Text(value, style: Theme.of(context).textTheme.bodyLarge),
-      onTap: () {}, // 可以在这里添加链接跳转
+      title: Text(title, style: Theme.of(context).textTheme.bodyLarge),
+      subtitle: Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
+      trailing: const Icon(Icons.open_in_new_rounded, size: 16),
+      onTap: () => _launchUrl(url),
+    );
+  }
+
+  Widget _buildDivider(ColorScheme cs) {
+    return Divider(
+      height: 1,
+      indent: 64,
+      endIndent: 20,
+      color: cs.outlineVariant.withValues(alpha: 0.3),
     );
   }
 }

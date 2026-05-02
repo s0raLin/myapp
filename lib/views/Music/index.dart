@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:myapp/api/Client/index.dart';
@@ -212,7 +212,7 @@ class _MusicPageState extends State<MusicPage> {
           : ListView.separated(
               padding: const EdgeInsets.all(12),
               itemCount: queue.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 6),
+              separatorBuilder: (_, _) => const SizedBox(height: 6),
               itemBuilder: (context, index) {
                 final music = queue[index];
                 final isCurrent = music.id == musicProvider.currentMusic?.id;
