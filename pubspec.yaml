@@ -39,6 +39,7 @@ dependencies:
   lottie: ^3.3.3
   url_launcher: ^6.3.2
   photo_manager: ^3.9.0
+  flutter_launcher_icons: ^0.14.4
 
 dependency_overrides:
   # 强制锁定版本，消除 2.11.1 与 2.12.0 的冲突
@@ -52,14 +53,36 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
+    - assets/app_icon.png
     - assets/
     - assets/icons/
-    - lib/assets/
-    - lib/assets/images/
     - assets/background/
     - assets/Equalizer.json
 
   fonts:
     - family: NiShiKiFont
       fonts:
-        - asset: lib/assets/fonts/nishiki-teki.ttf
+        - asset: assets/fonts/nishiki-teki.ttf
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/app_icon.png" # 确保你的 Miku 图标在这个路径
+  min_sdk_android: 21 # 选填
+
+  # 特别注意：Linux 支持
+  web:
+    generate: true
+    image_path: "assets/app_icon.png"
+
+  windows:
+    generate: true
+    image_path: "assets/app_icon.png"
+
+  macos:
+    generate: true
+    image_path: "assets/app_icon.png"
+
+  linux:
+    generate: true
+    image_path: "assets/app_icon.png"

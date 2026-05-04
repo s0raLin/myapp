@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:myapp/contants/Assets/index.dart';
 
 import 'package:myapp/providers/UserProvider/index.dart';
 import 'package:provider/provider.dart';
@@ -79,13 +80,14 @@ class _MainDrawerState extends State<MainDrawer> {
             children: [
               // 头像
               CircleAvatar(
-                radius: 36,
-                backgroundColor: colorScheme.primary,
+                radius: 36, // 这里可以适当减小 radius，因为没有了内部的 padding
+                backgroundColor: colorScheme.surface, // M3 风格，外圈保留一点原色作为边框感
                 child: CircleAvatar(
-                  radius: 34,
-                  backgroundColor: colorScheme.surfaceContainerHighest,
-                  foregroundColor: colorScheme.onSurfaceVariant,
-                  child: const Icon(Icons.person_rounded, size: 34),
+                  radius: 34, // 内部半径，负责展示图片
+                  // 核心：使用 backgroundImage
+                  backgroundImage: const AssetImage(MyAssets.avatar),
+                  // 确保图片完全覆盖且不拉伸 (fit: BoxFit.cover 是默认行为，但在这里明确一下，通常不需要，因为 backgroundImage 自动处理)
+                  backgroundColor: Colors.transparent, // 防止背景色透出
                 ),
               ),
               const SizedBox(width: 16),
