@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.7.0](https://github.com/s0raLin/miku_music/compare/v1.6.0...v1.7.0) (2026-05-04)
+
+
+### Features
+
+* **music:** replace on_audio_query with photo_manager ([acb8e51](https://github.com/s0raLin/miku_music/commit/acb8e5182194953614f27fe8d7638d195f88845d))
+* **ui:** implement playback queue and app versioning ([f1e98e8](https://github.com/s0raLin/miku_music/commit/f1e98e8f5036e89396d1423437d0766b03894c6c))
+
 ## [1.6.0](https://github.com/s0raLin/miku_music/compare/v1.5.0...v1.6.0) (2026-05-02)
 
 
