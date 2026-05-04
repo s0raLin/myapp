@@ -110,8 +110,6 @@ class AboutPage extends StatelessWidget {
                     opacity: 0.6,
                     child: Column(
                       children: [
-                        const Text('聆听万物，遇见初音'),
-                        const SizedBox(height: 8),
                         Text(
                           'Made with ❤️ by 蒼璃',
                           style: theme.textTheme.labelSmall,
@@ -196,7 +194,7 @@ class AboutPage extends StatelessWidget {
         border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
       ),
       child: Text(
-        '这是一个专注于纯粹听歌体验的跨平台播放器。基于 Flutter 构建，追求 Material 3 设计美学。',
+        '一个跨平台播放器。基于 Flutter 构建，使用 Material 3 设计语言。',
         textAlign: TextAlign.center,
         style: theme.textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
       ),
