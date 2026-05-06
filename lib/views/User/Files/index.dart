@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:collection/collection.dart';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
@@ -29,6 +29,11 @@ class _FilesPageState extends State<FilesPage>
 
   StreamSubscription? _scanSubscription;
 
+  // --- 新增：专门用于存储分类结果的缓存变量 ---
+  final Map<String, List<MusicInfo>> _folderGroups = {}; // 按文件夹路径分组
+  final Map<String, List<MusicInfo>> _albumGroups = {}; // 按专辑名分组
+  final Map<String, List<MusicInfo>> _artistGroups = {}; // 按艺术家分组
+
   @override
   void initState() {
     super.initState();
@@ -55,6 +60,14 @@ class _FilesPageState extends State<FilesPage>
         if (s.music != null) {
           setState(() {
             _musicList.add(s.music!);
+            //如果不存在这个 Key，就放进去一个初始值() => []
+            _folderGroups
+                .putIfAbsent(p.dirname(s.music!.id), () => [])
+                .add(s.music!);
+            _albumGroups
+                .putIfAbsent(s.music!.album ?? "未知", () => [])
+                .add(s.music!);
+            _artistGroups.putIfAbsent(s.music!.artist, () => []).add(s.music!);
           });
         }
       },
@@ -142,10 +155,7 @@ class _FilesPageState extends State<FilesPage>
       return const Center(child: Text("请先添加目录"));
     }
 
-    final albums = groupBy(
-      _musicList,
-      (MusicInfo m) => p.dirname(m.id),
-    ).entries.toList();
+    final albums = _folderGroups.entries.toList();
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -258,10 +268,7 @@ class _FilesPageState extends State<FilesPage>
       return const Center(child: Text("请先添加目录"));
     }
 
-    final albums = groupBy(
-      _musicList,
-      (MusicInfo m) => m.album,
-    ).entries.toList();
+    final albums = _albumGroups.entries.toList();
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -340,7 +347,7 @@ class _FilesPageState extends State<FilesPage>
                           Padding(
                             padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
                             child: Text(
-                              albumName ?? "未知专辑",
+                              albumName,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis, // 防止长文本溢出
                               style: Theme.of(context).textTheme.titleSmall
@@ -374,10 +381,7 @@ class _FilesPageState extends State<FilesPage>
       return const Center(child: Text("请先添加目录"));
     }
 
-    final albums = groupBy(
-      _musicList,
-      (MusicInfo m) => m.artist,
-    ).entries.toList();
+    final albums = _artistGroups.entries.toList();
     return LayoutBuilder(
       builder: (context, constraints) {
         final maxExtent = constraints.maxWidth >= 1400

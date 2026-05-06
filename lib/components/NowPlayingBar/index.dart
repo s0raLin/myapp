@@ -396,7 +396,12 @@ class _QueueActions extends StatelessWidget {
                   musicProvider.playByIndex(index);
                 },
                 leading: isCurrent
-                    ? Lottie.asset(MyAssets.equalizer, width: 24, height: 24, animate: isPlaying)
+                    ? Lottie.asset(
+                        MyAssets.equalizer,
+                        width: 24,
+                        height: 24,
+                        animate: isPlaying,
+                      )
                     : (coverBytes != null && coverBytes.isNotEmpty
                           ? SizedBox(
                               width: 24,
