@@ -7,23 +7,22 @@ import 'package:provider/provider.dart';
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
-  // 定义一套更符合 MikuMusic 调性的调色盘
   static final List<Color> _themeColors = [
-    const Color(0xFF6750A4), // 原生紫
-    const Color(0xFF39C5BB), // 初音绿 (Miku Green)
-    const Color(0xFF00B0FF), // 链接蓝
-    const Color(0xFFFF4081), // 赛博粉
-    const Color(0xFF4CAF50), // 护眼绿
-    const Color(0xFFFF9800), // 活力橙
-    const Color(0xFF795548), // 磁带棕
-    const Color(0xFF607D8B), // 工业灰
+    const Color(0xFF6750A4),
+    const Color(0xFF39C5BB),
+    const Color(0xFF00B0FF),
+    const Color(0xFFFF4081),
+    const Color(0xFF4CAF50),
+    const Color(0xFFFF9800),
+    const Color(0xFF795548),
+    const Color(0xFF607D8B),
   ];
 
   @override
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
     final textTheme = Theme.of(context).textTheme;
-    // final mp = context.read<MusicProvider>();
+    final colorScheme = Theme.of(context).colorScheme;
     final version = context.select<MusicProvider, String>((p) => p.appVersion);
     final buildNumber = context.select<MusicProvider, String>(
       (p) => p.buildNumber,
@@ -36,11 +35,9 @@ class SettingsPage extends StatelessWidget {
         children: [
           _buildSectionHeader(context, "外观设置"),
 
-          // 外观配置卡片
           Card(
             child: Column(
               children: [
-                // 亮度模式切换
                 ListTile(
                   leading: const Icon(Icons.brightness_medium_rounded),
                   title: const Text("主题模式"),
@@ -72,7 +69,6 @@ class SettingsPage extends StatelessWidget {
                 ),
                 const Divider(height: 1, indent: 16, endIndent: 16),
 
-                // 主题色选择器
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
@@ -109,6 +105,213 @@ class SettingsPage extends StatelessWidget {
           ),
 
           const SizedBox(height: 16),
+          _buildSectionHeader(context, "播放设置"),
+
+          Card(
+            child: Column(
+              children: [
+                // 音质设置
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.music_note_outlined, size: 20),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text("音质设置", style: textTheme.bodyLarge),
+                            Text(
+                              _getQualityName(themeProvider.audioQuality),
+                              style: textTheme.bodySmall?.copyWith(
+                                color: colorScheme.outline,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      DropdownButton<String>(
+                        value: themeProvider.audioQuality,
+                        items: const [
+                          DropdownMenuItem(value: "low", child: Text("低")),
+                          DropdownMenuItem(value: "normal", child: Text("标准")),
+                          DropdownMenuItem(value: "high", child: Text("高")),
+                        ],
+                        onChanged: (v) {
+                          if (v != null) themeProvider.setAudioQuality(v);
+                        },
+                        underline: Container(),
+                      ),
+                    ],
+                  ),
+                ),
+                const Divider(height: 1, indent: 16, endIndent: 16),
+
+                // 播放列表排序
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.sort_outlined, size: 20),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text("播放列表排序", style: textTheme.bodyLarge),
+                            Text(
+                              _getSortByName(themeProvider.playlistSortBy),
+                              style: textTheme.bodySmall?.copyWith(
+                                color: colorScheme.outline,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      DropdownButton<String>(
+                        value: themeProvider.playlistSortBy,
+                        items: const [
+                          DropdownMenuItem(value: "time", child: Text("添加时间")),
+                          DropdownMenuItem(value: "name", child: Text("名称")),
+                          DropdownMenuItem(value: "random", child: Text("随机")),
+                        ],
+                        onChanged: (v) {
+                          if (v != null) themeProvider.setPlaylistSortBy(v);
+                        },
+                        underline: Container(),
+                      ),
+                    ],
+                  ),
+                ),
+                const Divider(height: 1, indent: 16, endIndent: 16),
+
+                // 最大历史数量
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.history_outlined, size: 20),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text("最大历史记录", style: textTheme.bodyLarge),
+                            Text(
+                              "${themeProvider.maxHistoryCount}条",
+                              style: textTheme.bodySmall?.copyWith(
+                                color: colorScheme.outline,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      DropdownButton<int>(
+                        value: themeProvider.maxHistoryCount,
+                        items: const [
+                          DropdownMenuItem(value: 50, child: Text("50条")),
+                          DropdownMenuItem(value: 100, child: Text("100条")),
+                          DropdownMenuItem(value: 300, child: Text("300条")),
+                          DropdownMenuItem(value: 500, child: Text("500条")),
+                        ],
+                        onChanged: (v) {
+                          if (v != null) themeProvider.setMaxHistoryCount(v);
+                        },
+                        underline: Container(),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 16),
+          _buildSectionHeader(context, "互动功能"),
+
+          Card(
+            child: Column(
+              children: [
+                // 双击播放
+                ListTile(
+                  leading: const Icon(Icons.mouse_outlined, size: 20),
+                  title: const Text("双击列表项快速播放"),
+                  subtitle: Text(
+                    "开启后双击音乐列表项可直接播放",
+                    style: textTheme.bodySmall?.copyWith(
+                      color: colorScheme.outline,
+                    ),
+                  ),
+                  trailing: Switch(
+                    value: themeProvider.doubleTapToPlay,
+                    onChanged: (v) => themeProvider.setDoubleTapToPlay(v),
+                  ),
+                ),
+                const Divider(height: 1, indent: 16, endIndent: 16),
+
+                // 歌词封面
+                ListTile(
+                  leading: const Icon(Icons.image_outlined, size: 20),
+                  title: const Text("显示歌词封面"),
+                  subtitle: Text(
+                    "在播放页面显示专辑封面",
+                    style: textTheme.bodySmall?.copyWith(
+                      color: colorScheme.outline,
+                    ),
+                  ),
+                  trailing: Switch(
+                    value: themeProvider.showLyricCover,
+                    onChanged: (v) => themeProvider.setShowLyricCover(v),
+                  ),
+                ),
+                const Divider(height: 1, indent: 16, endIndent: 16),
+
+                // 启动自动播放
+                ListTile(
+                  leading: const Icon(Icons.play_arrow_outlined, size: 20),
+                  title: const Text("启动时自动播放"),
+                  subtitle: Text(
+                    "应用启动后自动开始播放",
+                    style: textTheme.bodySmall?.copyWith(
+                      color: colorScheme.outline,
+                    ),
+                  ),
+                  trailing: Switch(
+                    value: themeProvider.autoPlayOnStart,
+                    onChanged: (v) => themeProvider.setAutoPlayOnStart(v),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 16),
+          _buildSectionHeader(context, "通知设置"),
+
+          Card(
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.notifications_outlined, size: 20),
+                  title: const Text("通知栏显示详情"),
+                  subtitle: Text(
+                    "在通知栏显示歌曲信息和封面",
+                    style: textTheme.bodySmall?.copyWith(
+                      color: colorScheme.outline,
+                    ),
+                  ),
+                  trailing: Switch(
+                    value: themeProvider.showNotificationDetail,
+                    onChanged: (v) =>
+                        themeProvider.setShowNotificationDetail(v),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 16),
           _buildSectionHeader(context, "关于"),
 
           Card(
@@ -118,10 +321,7 @@ class SettingsPage extends StatelessWidget {
                   leading: const Icon(Icons.info_outline_rounded),
                   title: const Text("软件版本"),
                   trailing: Text("$version (Build $buildNumber)"),
-                  onTap: () {
-                    // 可以跳转到 AboutPage
-                    context.pushNamed('about');
-                  },
+                  onTap: () => context.pushNamed('about'),
                 ),
                 const Divider(height: 1, indent: 16, endIndent: 16),
                 ListTile(
@@ -139,15 +339,13 @@ class SettingsPage extends StatelessWidget {
   }
 
   Widget _buildSectionHeader(BuildContext context, String title) {
-    // 这里使用了 colorScheme
     final colorScheme = Theme.of(context).colorScheme;
-
     return Padding(
       padding: const EdgeInsets.only(left: 8, bottom: 8, top: 16),
       child: Text(
         title,
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-          color: colorScheme.primary, // 使用了变量
+          color: colorScheme.primary,
           fontWeight: FontWeight.bold,
         ),
       ),
@@ -162,6 +360,45 @@ class SettingsPage extends StatelessWidget {
         return "浅色模式";
       case ThemeMode.dark:
         return "深色模式";
+    }
+  }
+
+  String _getDensityName(String density) {
+    switch (density) {
+      case "compact":
+        return "紧凑";
+      case "normal":
+        return "正常";
+      case "loose":
+        return "宽松";
+      default:
+        return "正常";
+    }
+  }
+
+  String _getQualityName(String quality) {
+    switch (quality) {
+      case "low":
+        return "低";
+      case "normal":
+        return "标准";
+      case "high":
+        return "高";
+      default:
+        return "标准";
+    }
+  }
+
+  String _getSortByName(String sortBy) {
+    switch (sortBy) {
+      case "time":
+        return "添加时间";
+      case "name":
+        return "名称";
+      case "random":
+        return "随机";
+      default:
+        return "添加时间";
     }
   }
 }
@@ -189,7 +426,6 @@ class _ThemeSeedButton extends StatelessWidget {
         height: 48,
         decoration: BoxDecoration(
           color: color,
-          // 选中时变成圆角矩形，未选中时是圆形，增加动效感
           borderRadius: BorderRadius.circular(isSelected ? 12 : 24),
           border: isSelected
               ? Border.all(

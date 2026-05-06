@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:myapp/contants/Assets/index.dart';
+import 'package:myapp/providers/ThemeProvider/index.dart';
 import 'package:myapp/router/Extensions/router.dart';
+import 'package:myapp/service/Initialization/index.dart';
+import 'package:provider/provider.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -19,6 +22,8 @@ class _SplashPageState extends State<SplashPage>
   @override
   void initState() {
     super.initState();
+  
+    _startInitialization();
 
     _controller = AnimationController(
       duration: const Duration(milliseconds: 2200),
@@ -50,7 +55,27 @@ class _SplashPageState extends State<SplashPage>
   }
 
   Future<void> _startInitialization() async {
-    await Future.delayed(const Duration(milliseconds: 2300));
+    //开始计时器
+    final stopwatch = Stopwatch()..start();
+
+    try {
+      final settings = await InitializationService.loadInitialSettings();
+
+      // 异步推送到Provider
+      if (mounted) {
+        context.read<ThemeProvider>().updateFromMap(settings);
+      }
+    } catch (e) {
+      debugPrint("初始化失败: $e");
+    }
+
+    //确保动画播放完整
+    final elapsed = stopwatch.elapsedMilliseconds;
+    if (elapsed < 2300) {
+      await Future.delayed(Duration(milliseconds: 2300 - elapsed));
+    }
+
+    //跳转到主页
     if (mounted) {
       context.toHome();
     }

@@ -19,17 +19,48 @@ class NoAnimationPageTransitionsBuilder extends PageTransitionsBuilder {
 }
 
 class ThemeProvider extends ChangeNotifier {
-  ThemeMode _themeMode;
-  Color _seedColor;
+  // 设置默认值，防止在数据加载完成前出现空引用
+  ThemeMode _themeMode = ThemeMode.system;
+  Color _seedColor = const Color(0xFF6750A4);
+  String _listDensity = "normal";
+  String _audioQuality = "normal";
+  bool _showLyricCover = true;
+  bool _autoPlayOnStart = false;
+  bool _showNotificationDetail = true;
+  bool _doubleTapToPlay = true;
+  String _playlistSortBy = "time";
+  int _maxHistoryCount = 100;
 
-  ThemeProvider({
-    ThemeMode initialMode = ThemeMode.system,
-    Color initialColor = const Color(0xFF6750A4),
-  }) : _themeMode = initialMode,
-       _seedColor = initialColor;
+  ThemeProvider();
 
   ThemeMode get themeMode => _themeMode;
   Color get seedColor => _seedColor;
+  String get listDensity => _listDensity;
+  String get audioQuality => _audioQuality;
+  bool get showLyricCover => _showLyricCover;
+  bool get autoPlayOnStart => _autoPlayOnStart;
+  bool get showNotificationDetail => _showNotificationDetail;
+  bool get doubleTapToPlay => _doubleTapToPlay;
+  String get playlistSortBy => _playlistSortBy;
+  int get maxHistoryCount => _maxHistoryCount;
+
+  void updateFromMap(Map<String, dynamic> data) {
+    // 使用 ?? 语法确保如果 Map 里的值缺失，保留当前的默认值
+    _seedColor = data['seedColor'] ?? _seedColor;
+    _themeMode = data['themeMode'] ?? _themeMode;
+    _listDensity = data['listDensity'] ?? _listDensity;
+    _audioQuality = data['audioQuality'] ?? _audioQuality;
+    _showLyricCover = data['showLyricCover'] ?? _showLyricCover;
+    _autoPlayOnStart = data['autoPlayOnStart'] ?? _autoPlayOnStart;
+    _showNotificationDetail =
+        data['showNotificationDetail'] ?? _showNotificationDetail;
+    _doubleTapToPlay = data['doubleTapToPlay'] ?? _doubleTapToPlay;
+    _playlistSortBy = data['playlistSortBy'] ?? _playlistSortBy;
+    _maxHistoryCount = data['maxHistoryCount'] ?? _maxHistoryCount;
+
+    // 关键：通知 UI 刷新样式
+    notifyListeners();
+  }
 
   // --- 逻辑方法 ---
 
@@ -45,9 +76,59 @@ class ThemeProvider extends ChangeNotifier {
     SettingService.setColor(color);
   }
 
+  void setListDensity(String density) {
+    _listDensity = density;
+    notifyListeners();
+    SettingService.setListDensity(density);
+  }
+
+  void setAudioQuality(String quality) {
+    _audioQuality = quality;
+    notifyListeners();
+    SettingService.setAudioQuality(quality);
+  }
+
+  void setShowLyricCover(bool show) {
+    _showLyricCover = show;
+    notifyListeners();
+    SettingService.setShowLyricCover(show);
+  }
+
+  void setAutoPlayOnStart(bool autoPlay) {
+    _autoPlayOnStart = autoPlay;
+    notifyListeners();
+    SettingService.setAutoPlayOnStart(autoPlay);
+  }
+
+  void setShowNotificationDetail(bool show) {
+    _showNotificationDetail = show;
+    notifyListeners();
+    SettingService.setShowNotificationDetail(show);
+  }
+
+  void setDoubleTapToPlay(bool enable) {
+    _doubleTapToPlay = enable;
+    notifyListeners();
+    SettingService.setDoubleTapToPlay(enable);
+  }
+
+  void setPlaylistSortBy(String sortBy) {
+    _playlistSortBy = sortBy;
+    notifyListeners();
+    SettingService.setPlaylistSortBy(sortBy);
+  }
+
+  void setMaxHistoryCount(int count) {
+    _maxHistoryCount = count;
+    notifyListeners();
+    SettingService.setMaxHistoryCount(count);
+  }
+
   // M3 颜色谐波化算法：让自定义颜色（如链接色）适配主题种子色
   Color blend(Color targetColor) {
-    return Color(Blend.harmonize(targetColor.toARGB32(), _seedColor.toARGB32()));
+    return Color(
+      Blend.harmonize(targetColor.toARGB32(), _seedColor.toARGB32()),
+    );
   }
 
   // --- 主题构建 ---
@@ -77,7 +158,7 @@ class ThemeProvider extends ChangeNotifier {
         },
       ),
 
-      // 整合：你的 GoogleFonts
+      // 整合：你的 GoogleFonts，根据字体缩放调整
       textTheme: GoogleFonts.notoSansScTextTheme(baseTheme.textTheme),
 
       // 整合：新代码中更精细的组件样式
@@ -105,6 +186,7 @@ class ThemeProvider extends ChangeNotifier {
       listTileTheme: ListTileThemeData(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         selectedColor: scheme.secondary,
+        dense: _listDensity == "compact",
       ),
 
       tabBarTheme: TabBarThemeData(

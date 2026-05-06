@@ -39,12 +39,6 @@ class MusicProvider extends ChangeNotifier {
     notifyListeners(); //初始化完成,通知UI刷新
   }
 
-  // Future<void> _initPackageInfo() async {
-  //   final info = await PackageInfo.fromPlatform();
-  //   _version = info.version;
-  //   _buildNumber = info.buildNumber;
-  // }
-
   // 音量控制
   double _volume = 1.0;
   double get volume => _volume;
@@ -86,7 +80,7 @@ class MusicProvider extends ChangeNotifier {
       _playlists.firstWhere((p) => p.id == _favoritesPlaylistId);
 
   List<Map<String, dynamic>> _currentLyrics = [];
-  
+
   List<Map<String, dynamic>> get currentLyrics => _currentLyrics;
 
   List<Map<String, dynamic>> _parseLrc(String? lrcContent) {

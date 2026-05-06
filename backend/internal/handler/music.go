@@ -188,3 +188,4 @@ func (s *MusicHandler) ListMusics(c *gin.Context) {
 		"data": musics,
 	})
 }
+
