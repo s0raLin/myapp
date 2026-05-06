@@ -44,16 +44,10 @@ class _HomePageState extends State<HomePage> {
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
+            
             pinned: true,
             title: const Text('发现'),
             centerTitle: false,
-            actions: [
-              IconButton(
-                tooltip: '搜索',
-                onPressed: () {},
-                icon: const Icon(Icons.search_rounded),
-              ),
-            ],
           ),
           // ── 轮播图区域 ──────────────────────────────────────
           SliverToBoxAdapter(

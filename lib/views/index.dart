@@ -5,6 +5,8 @@ import 'package:myapp/components/Drawer/index.dart';
 import 'package:myapp/components/Header/index.dart';
 import 'package:myapp/components/NowPlayingBar/index.dart';
 import 'package:myapp/components/SideBar/index.dart';
+import 'package:myapp/providers/NavProvider/index.dart';
+import 'package:provider/provider.dart';
 
 class MainPage extends StatefulWidget {
   final StatefulNavigationShell navigationShell;
@@ -18,10 +20,8 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   late bool showNavigationDrawer;
-  late int currentIndex;
 
   void onTabChanged(int idx) {
-    currentIndex = idx;
     widget.navigationShell.goBranch(idx);
     setState(() {});
   }
@@ -30,7 +30,6 @@ class _MainPageState extends State<MainPage> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     showNavigationDrawer = MediaQuery.of(context).size.width >= 450;
-    currentIndex = widget.navigationShell.currentIndex;
   }
 
   @override
@@ -41,6 +40,8 @@ class _MainPageState extends State<MainPage> {
   }
 
   Widget _buildDrawerScaffold(BuildContext context) {
+    final nav = context.watch<NavProvider>();
+    final currentIndex = nav.shell?.currentIndex ?? 0;
     return Scaffold(
       body: Column(
         children: [
@@ -51,14 +52,7 @@ class _MainPageState extends State<MainPage> {
                 const VerticalDivider(thickness: 1, width: 1),
 
                 //主内容区
-                Expanded(
-                  child: Column(
-                    children: [
-                      Header(scaffoldKey: _scaffoldKey),
-                      Expanded(child: widget.navigationShell),
-                    ],
-                  ),
-                ),
+                Expanded(child: widget.navigationShell),
               ],
             ),
           ),
@@ -69,6 +63,8 @@ class _MainPageState extends State<MainPage> {
   }
 
   Widget _buildBottomBarScaffold(BuildContext context) {
+    final nav = context.watch<NavProvider>();
+    final currentIndex = nav.shell?.currentIndex ?? 0;
     return Scaffold(
       key: _scaffoldKey,
       drawer: const MainDrawer(),
@@ -78,7 +74,14 @@ class _MainPageState extends State<MainPage> {
             child: Row(
               children: [
                 //主内容区
-                Expanded(child: widget.navigationShell),
+                Expanded(
+                  child: Column(
+                    children: [
+                      Header(scaffoldKey: _scaffoldKey),
+                      Expanded(child: widget.navigationShell),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),

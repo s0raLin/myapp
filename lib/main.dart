@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:just_audio_media_kit/just_audio_media_kit.dart';
 import 'package:myapp/providers/MusicProvider/index.dart';
+import 'package:myapp/providers/NavProvider/index.dart';
 import 'package:myapp/providers/ThemeProvider/index.dart';
 import 'package:myapp/providers/UserProvider/index.dart';
 import 'package:myapp/router/IndexRouter/index.dart';
@@ -44,6 +45,8 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => MusicProvider()),
         //注册用户Provider
         ChangeNotifierProvider(create: (_) => UserProvider()),
+        //注册导航跳转Provider
+        ChangeNotifierProvider(create: (_) => NavProvider()),
       ],
       child: const IndexRouter(),
     ),

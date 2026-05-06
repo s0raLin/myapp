@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:myapp/model/Playlist/index.dart';
 import 'package:myapp/providers/MusicProvider/index.dart';
+import 'package:myapp/providers/NavProvider/index.dart';
 import 'package:provider/provider.dart';
 
 class UserProfilePage extends StatefulWidget {
@@ -16,6 +17,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
+    final nav = context.read<NavProvider>();
     return Scaffold(
       body: CustomScrollView(
         slivers: [
@@ -24,9 +26,38 @@ class _UserProfilePageState extends State<UserProfilePage> {
             pinned: true,
             title: const Text("个人主页"),
             actions: [
-              IconButton(
-                onPressed: () {},
-                icon: const Icon(Icons.share_outlined),
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert), // 纵向三个点
+                onSelected: (value) {
+                  // 处理点击后的逻辑
+                  print("选择了: $value");
+                },
+                itemBuilder: (BuildContext context) => [
+                  const PopupMenuItem(
+                    value: "share",
+                    child: ListTile(
+                      leading: Icon(Icons.share_outlined),
+                      title: Text('分享'),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'edit',
+                    child: ListTile(
+                      leading: Icon(Icons.edit),
+                      title: Text('编辑'),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'delete',
+                    child: ListTile(
+                      leading: Icon(Icons.delete, color: Colors.red),
+                      title: Text('删除', style: TextStyle(color: Colors.red)),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                ],
               ),
             ],
             bottom: PreferredSize(
@@ -105,7 +136,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                       ),
                       const SizedBox(width: 12),
                       TextButton.icon(
-                        onPressed: () => context.push("/music"),
+                        onPressed: () => nav.jumpByPath("/music"),
                         icon: const Icon(Icons.library_music_rounded, size: 18),
                         label: const Text("音乐库"),
                       ),

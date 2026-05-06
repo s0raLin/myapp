@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:myapp/contants/Assets/index.dart';
 import 'package:myapp/model/Music/index.dart';
-import 'package:myapp/model/Playlist/index.dart';
+import 'package:myapp/providers/NavProvider/index.dart';
 import 'package:myapp/providers/ThemeProvider/index.dart';
 import 'package:myapp/views/User/Files/index.dart';
 import 'package:myapp/views/Home/index.dart';
@@ -156,8 +156,14 @@ final _routes = [
     builder: (context, state) => SettingsPage(),
   ),
   StatefulShellRoute.indexedStack(
-    builder: (context, state, navigationShell) =>
-        MainPage(navigationShell: navigationShell),
+    builder: (context, state, navigationShell) {
+      // [关键点] 使用 context.read 获取 Provider 并更新 shell
+      // 使用 addPostFrameCallback 确保在构建完成后更新状态，避免构建冲突
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.read<NavProvider>().updateShell(navigationShell);
+      });
+      return MainPage(navigationShell: navigationShell);
+    },
     branches: _shellBranches,
   ),
 ];
