@@ -86,6 +86,7 @@ class MusicProvider extends ChangeNotifier {
       _playlists.firstWhere((p) => p.id == _favoritesPlaylistId);
 
   List<Map<String, dynamic>> _currentLyrics = [];
+  
   List<Map<String, dynamic>> get currentLyrics => _currentLyrics;
 
   List<Map<String, dynamic>> _parseLrc(String? lrcContent) {
