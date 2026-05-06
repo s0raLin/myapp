@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:myapp/contants/Assets/index.dart';
 import 'package:myapp/model/Music/index.dart';
 import 'package:myapp/providers/MusicProvider/index.dart';
 import 'package:provider/provider.dart';
@@ -677,15 +678,17 @@ class _PlaybackControls extends StatelessWidget {
             // 上一首
             _RoundIconButton(
               tooltip: '上一首',
-              icon: Icons.skip_previous_rounded,
+              image: MyAssets.prev,
               onPressed: musicProvider.playPrev,
             ),
             const SizedBox(width: 12),
             // 播放/暂停
             IconButton.filled(
               onPressed: musicProvider.togglePlay,
-              icon: Icon(
-                playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
+              icon: ImageIcon(
+                playing
+                    ? AssetImage(MyAssets.pause)
+                    : AssetImage(MyAssets.play),
               ),
               style: FilledButton.styleFrom(
                 backgroundColor: colorScheme.primary,
@@ -698,7 +701,7 @@ class _PlaybackControls extends StatelessWidget {
             // 下一首
             _RoundIconButton(
               tooltip: '下一首',
-              icon: Icons.skip_next_rounded,
+              image: MyAssets.next,
               onPressed: musicProvider.playNext,
             ),
             const SizedBox(width: 12),
@@ -725,11 +728,11 @@ class _PlaybackControls extends StatelessWidget {
 // ─── 通用圆形图标按钮 ──────────────────────────────────────────────────────────
 
 class _RoundIconButton extends StatelessWidget {
-  final IconData icon;
+  final String image;
   final String? tooltip;
   final VoidCallback? onPressed;
 
-  const _RoundIconButton({required this.icon, this.tooltip, this.onPressed});
+  const _RoundIconButton({required this.image, this.tooltip, this.onPressed, });
 
   @override
   Widget build(BuildContext context) {
@@ -737,7 +740,7 @@ class _RoundIconButton extends StatelessWidget {
     return IconButton(
       tooltip: tooltip,
       onPressed: onPressed,
-      icon: Icon(icon),
+      icon: ImageIcon(AssetImage(image)),
       style: IconButton.styleFrom(
         foregroundColor: cs.onSurfaceVariant,
         backgroundColor: Colors.transparent,

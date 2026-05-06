@@ -6,6 +6,10 @@ class MyAssets {
   static const String music = "assets/music.png";
   static const String folder = "assets/icons/folder.png";
   static const String user = "assets/user.png";
+  static const String next = "assets/next.png";
+  static const String play = "assets/play.png";
+  static const String pause = "assets/pause.png";
+  static const String prev = "assets/prev.png";
 
   static const String equalizer = "assets/Equalizer.json";
 
