@@ -512,8 +512,8 @@ class MusicProvider extends ChangeNotifier {
   }
 
   Future<void> _loadVolume() async {
-    final prefs = await SharedPreferences.getInstance();
-    _volume = prefs.getDouble('volume') ?? 1.0;
+    final pfs = await SharedPreferences.getInstance();
+    _volume = pfs.getDouble('volume') ?? 1.0;
     player.setVolume(_volume);
     notifyListeners();
   }
@@ -521,8 +521,8 @@ class MusicProvider extends ChangeNotifier {
   Future<void> setVolume(double volume) async {
     _volume = volume.clamp(0.0, 1.0);
     await player.setVolume(_volume);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble('volume', _volume);
+    final pfs = await SharedPreferences.getInstance();
+    await pfs.setDouble('volume', _volume);
     notifyListeners();
   }
 

@@ -42,9 +42,6 @@ class _MusicDetailPageState extends State<MusicDetailPage> {
     final isLiked = context.select<MusicProvider, bool>(
       (p) => p.favList.any((m) => m.id == music.id),
     );
-    final lyrics = context.select<MusicProvider, List<Map<String, dynamic>>>(
-      (p) => p.currentLyrics,
-    );
 
     final isWide = MediaQuery.sizeOf(context).width > 700;
     final colorScheme = Theme.of(context).colorScheme;
@@ -66,16 +63,13 @@ class _MusicDetailPageState extends State<MusicDetailPage> {
                 children: [
                   Expanded(flex: 5, child: mainContent),
                   const VerticalDivider(width: 40, color: Colors.transparent),
-                  Expanded(flex: 4, child: _LyricsSection(lyrics: lyrics)),
+                  Expanded(flex: 4, child: _LyricsSection()),
                 ],
               )
             : PageView(
                 controller: _mobilePageController,
                 physics: const PageScrollPhysics(),
-                children: [
-                  mainContent,
-                  _LyricsSection(lyrics: lyrics),
-                ],
+                children: [mainContent, _LyricsSection()],
               ),
       ),
     );
@@ -110,7 +104,9 @@ class _MusicDetailPageState extends State<MusicDetailPage> {
   }
 
   Future<void> _showAddToPlaylistSheet(
-      BuildContext context, MusicInfo song) async {
+    BuildContext context,
+    MusicInfo song,
+  ) async {
     final musicProvider = context.read<MusicProvider>();
     final userPlaylists = musicProvider.userPlaylists;
 
@@ -150,7 +146,8 @@ class _MusicDetailPageState extends State<MusicDetailPage> {
                     leading: CircleAvatar(
                       radius: 16,
                       backgroundColor: Theme.of(context).colorScheme.primary,
-                      child: playlist.coverBytes != null &&
+                      child:
+                          playlist.coverBytes != null &&
                               playlist.coverBytes!.isNotEmpty
                           ? ClipRRect(
                               borderRadius: BorderRadius.circular(16),
@@ -167,16 +164,18 @@ class _MusicDetailPageState extends State<MusicDetailPage> {
                       playlist.name,
                       style: TextStyle(
                         color: alreadyIn
-                            ? Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withValues(alpha: 0.5)
+                            ? Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withValues(alpha: 0.5)
                             : null,
                       ),
                     ),
                     trailing: alreadyIn
-                        ? const Icon(Icons.check_rounded,
-                            color: Colors.green, size: 18)
+                        ? const Icon(
+                            Icons.check_rounded,
+                            color: Colors.green,
+                            size: 18,
+                          )
                         : null,
                     onTap: alreadyIn
                         ? null
@@ -422,8 +421,7 @@ class _SongMeta extends StatelessWidget {
           onPressed: onToggleLike,
           icon: Icon(
             isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-            color:
-                isLiked ? colorScheme.primary : colorScheme.onSurfaceVariant,
+            color: isLiked ? colorScheme.primary : colorScheme.onSurfaceVariant,
             size: 28,
           ),
         ),
@@ -463,21 +461,22 @@ class _PlayerConsole extends StatelessWidget {
     return StreamBuilder<PositionData>(
       stream: musicProvider.positionDataStream,
       builder: (context, snapshot) {
-        final data = snapshot.data ??
+        final data =
+            snapshot.data ??
             PositionData(Duration.zero, Duration.zero, Duration.zero);
         final total = data.duration.inMilliseconds.toDouble();
         final pos = data.position.inMilliseconds.toDouble().clamp(
-              0.0,
-              total > 0 ? total : 0.0,
-            );
+          0.0,
+          total > 0 ? total : 0.0,
+        );
 
         return Column(
           children: [
             _ProgressSlider(
               pos: pos,
               total: total,
-              onChanged: (v) => musicProvider.player
-                  .seek(Duration(milliseconds: v.toInt())),
+              onChanged: (v) =>
+                  musicProvider.player.seek(Duration(milliseconds: v.toInt())),
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -495,9 +494,9 @@ class _PlayerConsole extends StatelessWidget {
   }
 
   static Widget _durationText(Duration d, ColorScheme scheme) => Text(
-        '${d.inMinutes}:${(d.inSeconds % 60).toString().padLeft(2, '0')}',
-        style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
-      );
+    '${d.inMinutes}:${(d.inSeconds % 60).toString().padLeft(2, '0')}',
+    style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
+  );
 }
 
 class _ProgressSlider extends StatelessWidget {
@@ -603,9 +602,7 @@ class _PlaybackControls extends StatelessWidget {
 }
 
 class _LyricsSection extends StatefulWidget {
-  final List<Map<String, dynamic>> lyrics;
-
-  const _LyricsSection({required this.lyrics});
+  const _LyricsSection();
 
   @override
   State<_LyricsSection> createState() => _LyricsSectionState();
@@ -618,7 +615,9 @@ class _LyricsSectionState extends State<_LyricsSection> {
 
   @override
   Widget build(BuildContext context) {
-    final lyrics = widget.lyrics;
+    final lyrics = context.select<MusicProvider, List<Map<String, dynamic>>>(
+      (p) => p.currentLyrics,
+    );
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
@@ -728,10 +727,7 @@ class _LyricsSectionState extends State<_LyricsSection> {
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
-                      colors: [
-                        cs.surface,
-                        cs.surface.withValues(alpha: 0.0),
-                      ],
+                      colors: [cs.surface, cs.surface.withValues(alpha: 0.0)],
                     ),
                   ),
                 ),
@@ -747,10 +743,7 @@ class _LyricsSectionState extends State<_LyricsSection> {
                     gradient: LinearGradient(
                       begin: Alignment.bottomCenter,
                       end: Alignment.topCenter,
-                      colors: [
-                        cs.surface,
-                        cs.surface.withValues(alpha: 0.0),
-                      ],
+                      colors: [cs.surface, cs.surface.withValues(alpha: 0.0)],
                     ),
                   ),
                 ),
@@ -768,11 +761,7 @@ class _RoundIconButton extends StatelessWidget {
   final String? tooltip;
   final VoidCallback? onPressed;
 
-  const _RoundIconButton({
-    required this.icon,
-    this.tooltip,
-    this.onPressed,
-  });
+  const _RoundIconButton({required this.icon, this.tooltip, this.onPressed});
 
   @override
   Widget build(BuildContext context) {
@@ -834,8 +823,12 @@ class _VolumeButtonState extends State<_VolumeButton> {
                   child: SliderTheme(
                     data: SliderTheme.of(context).copyWith(
                       trackHeight: 6,
-                      thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
-                      overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
+                      thumbShape: const RoundSliderThumbShape(
+                        enabledThumbRadius: 8,
+                      ),
+                      overlayShape: const RoundSliderOverlayShape(
+                        overlayRadius: 14,
+                      ),
                       inactiveTrackColor: cs.surfaceContainerHighest,
                       activeTrackColor: cs.primary,
                     ),
@@ -852,7 +845,9 @@ class _VolumeButtonState extends State<_VolumeButton> {
             tooltip: _menuController.isOpen ? '静音' : '音量',
             onPressed: () async {
               if (_menuController.isOpen) {
-                final newVol = volume == 0 ? _lastNonZeroVolume.clamp(0.0, 1.0) : 0.0;
+                final newVol = volume == 0
+                    ? _lastNonZeroVolume.clamp(0.0, 1.0)
+                    : 0.0;
                 await widget.musicProvider.setVolume(newVol);
                 return;
               }
