@@ -27,6 +27,7 @@ class MusicProvider extends ChangeNotifier {
   //私有播放器实例
   final AudioPlayer player = AudioPlayer();
   StreamSubscription? _stateSubscription; //持有的监听器句柄
+  StreamSubscription? _stateSubscription2;
 
   PackageInfo? _appInfo;
   PackageInfo? get appInfo => _appInfo;
@@ -507,6 +508,9 @@ class MusicProvider extends ChangeNotifier {
     _stateSubscription = player.processingStateStream.listen((state) {
       if (state == ProcessingState.completed) _playNext();
     });
+    _stateSubscription2 = player.playingStream.listen((_) {
+      notifyListeners();
+    }); //监听播放器状态变化并通知 UI
     // 初始化音量
     _loadVolume();
   }
@@ -529,6 +533,7 @@ class MusicProvider extends ChangeNotifier {
   @override
   void dispose() {
     _stateSubscription?.cancel(); //取消监听
+    _stateSubscription2?.cancel();
     player.dispose(); //销毁播放器释放的资源
     super.dispose();
   }

@@ -1,9 +1,10 @@
 import 'dart:typed_data';
 
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lottie/lottie.dart';
 import 'package:myapp/api/Client/index.dart';
+import 'package:myapp/contants/Assets/index.dart';
 import 'package:myapp/model/Playlist/index.dart';
 import 'package:myapp/model/Music/index.dart';
 import 'package:myapp/providers/MusicProvider/index.dart';
@@ -31,7 +32,8 @@ class _MusicPageState extends State<MusicPage> {
                 pinned: true, // 滚动后，bottom 部分（TabBar）是否固定在顶部
                 flexibleSpace: const FlexibleSpaceBar(
                   title: Text("音乐库"),
-                  titlePadding: EdgeInsetsDirectional.only( // 调整标题位置避免重叠
+                  titlePadding: EdgeInsetsDirectional.only(
+                    // 调整标题位置避免重叠
                     start: 16,
                     bottom: 62,
                   ),
@@ -201,6 +203,8 @@ class _MusicPageState extends State<MusicPage> {
     final musicProvider = context.watch<MusicProvider>();
     final queue = musicProvider.queue;
 
+    final isPlaying = musicProvider.player.playing;
+
     return RefreshIndicator(
       onRefresh: () async {},
       child: queue.isEmpty
@@ -216,6 +220,7 @@ class _MusicPageState extends State<MusicPage> {
               itemBuilder: (context, index) {
                 final music = queue[index];
                 final isCurrent = music.id == musicProvider.currentMusic?.id;
+
                 return Card(
                   color: isCurrent
                       ? Theme.of(context).colorScheme.secondaryContainer
@@ -233,7 +238,12 @@ class _MusicPageState extends State<MusicPage> {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: music.coverBytes != null
+                      child: isCurrent
+                          ? Lottie.asset(
+                              MyAssets.equalizer,
+                              animate: isPlaying,
+                            )
+                          : music.coverBytes != null
                           ? Image.memory(music.coverBytes!, fit: BoxFit.cover)
                           : const Icon(Icons.music_note_rounded),
                     ),
