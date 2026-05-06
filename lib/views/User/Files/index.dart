@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:collection/collection.dart';
 import 'package:file_picker/file_picker.dart';
@@ -16,10 +17,15 @@ class FilesPage extends StatefulWidget {
   State<FilesPage> createState() => _FilesPageState();
 }
 
-class _FilesPageState extends State<FilesPage> {
+class _FilesPageState extends State<FilesPage>
+    with AutomaticKeepAliveClientMixin {
   List<String> _paths = [];
 
-  Stream<List<MusicInfo>>? _musicStream;
+  // Stream<List<MusicInfo>>? _musicStream;
+  List<MusicInfo> _musicList = [];
+  bool _isScanning = false;
+
+  StreamSubscription? _scanSubscription;
 
   @override
   void initState() {
@@ -36,11 +42,33 @@ class _FilesPageState extends State<FilesPage> {
 
   // 核心逻辑：将扫描流转换为“累加列表流”
   void _startScan() {
-    List<MusicInfo> acc = [];
-    _musicStream = MusicService.scanDirectories(_paths).map((s) {
-      if (s.music != null) acc.add(s.music!);
-      return List<MusicInfo>.from(acc);
-    }).asBroadcastStream();
+    _scanSubscription?.cancel(); //取消上一次扫描
+    setState(() {
+      _musicList = [];
+      _isScanning = true;
+    });
+
+    _scanSubscription = MusicService.scanDirectories(_paths).listen(
+      (s) {
+        if (s.music != null) {
+          setState(() {
+            _musicList.add(s.music!);
+          });
+        }
+      },
+      onDone: () => setState(() {
+        _isScanning = false;
+      }),
+      onError: (_) => setState(() {
+        _isScanning = false;
+      }),
+    );
+  }
+
+  @override
+  void dispose() {
+    _scanSubscription?.cancel(); //取消上一次扫描
+    super.dispose();
   }
 
   // 弹出选择目录的 Dialog
@@ -103,147 +131,162 @@ class _FilesPageState extends State<FilesPage> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Scaffold(
-      body: RefreshIndicator(
-        edgeOffset: MediaQuery.of(context).padding.top + 56,
-        onRefresh: () async {
-          _startScan();
-        },
-        child: StreamBuilder<List<MusicInfo>>(
-          key: ValueKey(_paths.toString()),
-          stream: _musicStream,
-          builder: (context, snapshot) {
-            final list = snapshot.data ?? [];
-            if (list.isEmpty && _paths.isNotEmpty) {
-              return const Center(child: CircularProgressIndicator());
-            }
+  Widget _buildLeft() {
+    return Center(child: Text("文件夹"));
+  }
 
-            final albums = groupBy(
-              list,
-              (MusicInfo m) => m.album,
-            ).entries.toList();
+  Widget _buildCenter() {
+    if (_isScanning && _musicList.isEmpty && _paths.isNotEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
-            return LayoutBuilder(
-              builder: (context, constraints) {
-                final maxExtent = constraints.maxWidth >= 1400
-                    ? 180.0
-                    : constraints.maxWidth >= 1000
-                    ? 200.0
-                    : 220.0;
-                return CustomScrollView(
-                  slivers: [
-                    SliverAppBar.medium(
-                      scrolledUnderElevation: 2,
-                      title: const Text("库"),
-                    ),
-                    SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
-                      sliver: SliverGrid.builder(
-                        gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                          maxCrossAxisExtent: maxExtent,
-                          mainAxisSpacing: 16,
-                          crossAxisSpacing: 16,
-                          childAspectRatio: 0.8,
-                        ),
-                        itemCount: albums.length,
-                        itemBuilder: (context, i) {
-                          final cover = albums[i].value.first.coverBytes;
-                          final albumName = albums[i].key;
-                          final album = albums[i].value;
+    if (_paths.isEmpty) {
+      return const Center(child: Text("请先添加目录"));
+    }
 
-                          return InkWell(
-                            onTap: () {
-                              context.push(
-                                "/user/files/album-detail",
-                                extra: {"albumName": albumName, "songs": album},
-                              );
-                            },
-                            // 使用 borderRadius 确保水波纹点击效果也符合卡片圆角
-                            borderRadius: BorderRadius.circular(12),
-                            child: Card(
-                              // 1. 显式设置 M3 风格：可以通过 elevation 为 0 并设置颜色来实现 Filled 效果
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(
-                                  12,
-                                ), // M3 默认圆角较大
-                              ),
-                              // 2. 使用 surfaceContainerHighest 或 surfaceVariant 作为背景色
+    final albums = groupBy(
+      _musicList,
+      (MusicInfo m) => m.album,
+    ).entries.toList();
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final maxExtent = constraints.maxWidth >= 1400
+            ? 180.0
+            : constraints.maxWidth >= 1000
+            ? 200.0
+            : 220.0;
+        return CustomScrollView(
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
+              sliver: SliverGrid.builder(
+                gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: maxExtent,
+                  mainAxisSpacing: 16,
+                  crossAxisSpacing: 16,
+                  childAspectRatio: 0.8,
+                ),
+                itemCount: albums.length,
+                itemBuilder: (context, i) {
+                  final cover = albums[i].value.first.coverBytes;
+                  final albumName = albums[i].key;
+                  final album = albums[i].value;
+
+                  return InkWell(
+                    onTap: () {
+                      context.push(
+                        "/user/files/album-detail",
+                        extra: {"albumName": albumName, "songs": album},
+                      );
+                    },
+                    // 使用 borderRadius 确保水波纹点击效果也符合卡片圆角
+                    borderRadius: BorderRadius.circular(12),
+                    child: Card(
+                      // 1. 显式设置 M3 风格：可以通过 elevation 为 0 并设置颜色来实现 Filled 效果
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12), // M3 默认圆角较大
+                      ),
+                      // 2. 使用 surfaceContainerHighest 或 surfaceVariant 作为背景色
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
+                      clipBehavior: Clip.antiAlias,
+                      child: Column(
+                        crossAxisAlignment:
+                            CrossAxisAlignment.start, // 文字左对齐通常更美观
+                        children: [
+                          // 3. 比例固定的图片容器
+                          AspectRatio(
+                            aspectRatio: 1 / 1, // 强制图片为正方形，符合专辑封面逻辑
+                            child: Container(
                               color: Theme.of(
                                 context,
                               ).colorScheme.surfaceContainerHighest,
-                              clipBehavior: Clip.antiAlias,
-                              child: Column(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.start, // 文字左对齐通常更美观
-                                children: [
-                                  // 3. 比例固定的图片容器
-                                  AspectRatio(
-                                    aspectRatio: 1 / 1, // 强制图片为正方形，符合专辑封面逻辑
-                                    child: Container(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.surfaceContainerHighest,
-                                      child: Center(
-                                        child: cover != null && cover.isNotEmpty
-                                            ? Image.memory(
-                                                cover,
-                                                fit: BoxFit.cover,
-                                                width: double.infinity, // 铺满容器
-                                                height: double.infinity,
-                                              )
-                                            : Icon(
-                                                Icons
-                                                    .music_note, // 建议使用 M3 风格图标
-                                                size: 40,
-                                                color: Theme.of(
-                                                  context,
-                                                ).colorScheme.primary,
-                                              ),
+                              child: Center(
+                                child: cover != null && cover.isNotEmpty
+                                    ? Image.memory(
+                                        cover,
+                                        fit: BoxFit.cover,
+                                        width: double.infinity, // 铺满容器
+                                        height: double.infinity,
+                                      )
+                                    : Icon(
+                                        Icons.music_note, // 建议使用 M3 风格图标
+                                        size: 40,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.primary,
                                       ),
-                                    ),
-                                  ),
-                                  // 4. 文字内边距与排版
-                                  Padding(
-                                    padding: const EdgeInsets.fromLTRB(
-                                      12,
-                                      8,
-                                      12,
-                                      12,
-                                    ),
-                                    child: Text(
-                                      albumName ?? "未知专辑",
-                                      maxLines: 1,
-                                      overflow:
-                                          TextOverflow.ellipsis, // 防止长文本溢出
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleSmall
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                            color: Theme.of(
-                                              context,
-                                            ).colorScheme.onSurface,
-                                          ),
-                                    ),
-                                  ),
-                                ],
                               ),
                             ),
-                          );
-                        },
+                          ),
+                          // 4. 文字内边距与排版
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+                            child: Text(
+                              albumName ?? "未知专辑",
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis, // 防止长文本溢出
+                              style: Theme.of(context).textTheme.titleSmall
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurface,
+                                  ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildRight() {
+    return Center(child: Text("艺术家"));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    final colorScheme = Theme.of(context).colorScheme;
+    return Scaffold(
+      body: DefaultTabController(
+        length: 3,
+        child: NestedScrollView(
+          headerSliverBuilder: (context, innerBoxIsScrolled) {
+            return [
+              SliverAppBar(
+                floating: false, // 向上滚动时 AppBar 是否立即显现
+                pinned: true, // 滚动后，bottom 部分（TabBar）是否固定在顶部
+                title: const Text("文件"),
+                bottom: const TabBar(
+                  isScrollable: true,
+                  tabAlignment: TabAlignment.start, // 让 Tab 靠左对齐
+                  tabs: [
+                    Tab(text: "文件夹"),
+                    Tab(text: "专辑"),
+                    Tab(text: "艺术家"),
                   ],
-                );
-              },
-            );
+                ),
+              ),
+            ];
           },
+          body: TabBarView(
+            children: [_buildLeft(), _buildCenter(), _buildRight()],
+          ),
         ),
       ),
+
       floatingActionButton: SpeedDial(
         icon: Icons.menu, // 未展开时的图标
         activeIcon: Icons.close, // 展开时的图标
@@ -295,4 +338,7 @@ class _FilesPageState extends State<FilesPage> {
       ),
     );
   }
+
+  @override
+  bool get wantKeepAlive => true; // 返回 true 以保持状态
 }

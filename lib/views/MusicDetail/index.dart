@@ -618,8 +618,16 @@ class _LyricsSectionState extends State<_LyricsSection> {
     final lyrics = context.select<MusicProvider, List<Map<String, dynamic>>>(
       (p) => p.currentLyrics,
     );
+
+      debugPrint(
+      '_LyricsSection build: lyrics.length=${lyrics.length}, isEmpty=${lyrics.isEmpty}',
+    );
+
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+
+
+
 
     if (lyrics.isEmpty) {
       return Center(
