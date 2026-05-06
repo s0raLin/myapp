@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.8.0](https://github.com/s0raLin/miku_music/compare/v1.7.0...v1.8.0) (2026-05-06)
+
+
+### Features
+
+* **music:** add playback state synchronization and equalizer animation ([4eb658f](https://github.com/s0raLin/miku_music/commit/4eb658fba6f29d1e54c2c4a2a5f96f167172d0bf))
+* **nav:** implement NavProvider for centralized navigation management ([4d83645](https://github.com/s0raLin/miku_music/commit/4d83645321b3c4d02fd39eebc3189e2bfe370a6c))
+* **settings:** implement comprehensive user preferences and initialization service ([2144b34](https://github.com/s0raLin/miku_music/commit/2144b34aff73abaf8b2328b1dfa765cc98e36133))
+* **ui:** add header to main page content area ([8b2c086](https://github.com/s0raLin/miku_music/commit/8b2c0864961da71145e9779a49614296cbc07a3c))
+* **ui:** implement custom playback icons and album grid view ([c9295ba](https://github.com/s0raLin/miku_music/commit/c9295ba413bf12380a43cc25ec428190ed5b2fed))
+
+
+### Performance Improvements
+
+* **files:** implement incremental grouping for music metadata ([d1f2bfc](https://github.com/s0raLin/miku_music/commit/d1f2bfc57b59810eaa726a960cddd8226b24b32b))
+
 ## [1.7.0](https://github.com/s0raLin/miku_music/compare/v1.6.0...v1.7.0) (2026-05-04)
 
 
