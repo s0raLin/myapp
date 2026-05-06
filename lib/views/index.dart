@@ -51,7 +51,14 @@ class _MainPageState extends State<MainPage> {
                 const VerticalDivider(thickness: 1, width: 1),
 
                 //主内容区
-                Expanded(child: widget.navigationShell),
+                Expanded(
+                  child: Column(
+                    children: [
+                      Header(scaffoldKey: _scaffoldKey),
+                      Expanded(child: widget.navigationShell),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
@@ -71,14 +78,7 @@ class _MainPageState extends State<MainPage> {
             child: Row(
               children: [
                 //主内容区
-                Expanded(
-                  child: Column(
-                    children: [
-                      Header(scaffoldKey: _scaffoldKey),
-                      Expanded(child: widget.navigationShell),
-                    ],
-                  ),
-                ),
+                Expanded(child: widget.navigationShell),
               ],
             ),
           ),
