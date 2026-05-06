@@ -42,27 +42,21 @@ class _MainPageState extends State<MainPage> {
 
   Widget _buildDrawerScaffold(BuildContext context) {
     return Scaffold(
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          // final bool isLargeScreen = constraints.maxWidth >= maxWidth;
+      body: Column(
+        children: [
+          Expanded(
+            child: Row(
+              children: [
+                SideBar(currentIndex: currentIndex, onTap: onTabChanged),
+                const VerticalDivider(thickness: 1, width: 1),
 
-          return Column(
-            children: [
-              Expanded(
-                child: Row(
-                  children: [
-                    SideBar(currentIndex: currentIndex, onTap: onTabChanged),
-                    const VerticalDivider(thickness: 1, width: 1),
-
-                    //主内容区
-                    Expanded(child: widget.navigationShell),
-                  ],
-                ),
-              ),
-              NowPlayingBar(),
-            ],
-          );
-        },
+                //主内容区
+                Expanded(child: widget.navigationShell),
+              ],
+            ),
+          ),
+          NowPlayingBar(),
+        ],
       ),
     );
   }
