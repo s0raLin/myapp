@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.0](https://github.com/s0raLin/miku_music/compare/v1.8.0...v1.9.0) (2026-05-07)
+
+
+### Features
+
+* **ui:** implement music dashboard and refactor home carousel ([22c51c0](https://github.com/s0raLin/miku_music/commit/22c51c05465b91eb4c98b925ec5a29772ef44b3d))
+
 ## [1.8.0](https://github.com/s0raLin/miku_music/compare/v1.7.0...v1.8.0) (2026-05-06)
 
 
