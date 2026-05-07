@@ -10,6 +10,7 @@ class MyAssets {
   static const String play = "assets/play.png";
   static const String pause = "assets/pause.png";
   static const String prev = "assets/prev.png";
+  static const String dashboard = "assets/dashboard.png";
 
   static const String equalizer = "assets/Equalizer.json";
 

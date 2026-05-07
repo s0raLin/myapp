@@ -38,13 +38,13 @@ class _HomePageState extends State<HomePage> {
     final history = context.read<MusicProvider>().history;
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
+    final double height = MediaQuery.sizeOf(context).height;
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
-            
             pinned: true,
             title: const Text('发现'),
             centerTitle: false,
@@ -53,57 +53,26 @@ class _HomePageState extends State<HomePage> {
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.only(top: 12, left: 16, right: 16),
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  // 根据屏幕宽度动态调整宽高比和最大宽度
-                  final double maxWidth = constraints.maxWidth > 1400
-                      ? 1200 // 超宽屏限制最大宽度
-                      : constraints.maxWidth;
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: height / 3,
+                  ),
+                  child: CarouselView.weighted(
+                    itemSnapping: true,
+                    controller: controller,
+                    flexWeights: const <int>[1, 7, 1],
 
-                  final double aspectRatio = constraints.maxWidth > 1100
-                      ? 16 /
-                            7.5 // 桌面端：让它更接近正方形一些，不那么长
-                      : constraints.maxWidth > 800
-                      ? 16 / 8.2
-                      : 16 / 9; // 手机端保持 16:9
-
-                  return Center(
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        maxWidth: maxWidth,
-                        maxHeight: 380, // 给一个较高的上限，避免过低
-                      ),
-                      child: AspectRatio(
-                        aspectRatio: aspectRatio,
-                        child: Card.filled(
-                          clipBehavior: Clip.antiAlias,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(24),
-                          ),
-                          child: CarouselView.weighted(
-                            itemSnapping: true,
-                            controller: controller,
-                            flexWeights: const <int>[1, 7, 1],
-                            padding: EdgeInsets.zero,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            onTap: (index) => controller.animateToItem(
-                              index,
-                              duration: const Duration(milliseconds: 650),
-                              curve: Curves.easeOutCubic,
-                            ),
-                            children: ImageInfo.values
-                                .map(
-                                  (image) => HeroLayoutCard(imageInfo: image),
-                                )
-                                .toList(),
-                          ),
-                        ),
-                      ),
+                    onTap: (index) => controller.animateToItem(
+                      index,
+                      duration: const Duration(milliseconds: 650),
+                      curve: Curves.easeOutCubic,
                     ),
-                  );
-                },
+                    children: ImageInfo.values
+                        .map((image) => HeroLayoutCard(imageInfo: image))
+                        .toList(),
+                  ),
+                ),
               ),
             ),
           ),

@@ -4,6 +4,7 @@ import 'package:myapp/contants/Assets/index.dart';
 import 'package:myapp/model/Music/index.dart';
 import 'package:myapp/providers/NavProvider/index.dart';
 import 'package:myapp/providers/ThemeProvider/index.dart';
+import 'package:myapp/views/MusicDashboard/index.dart';
 import 'package:myapp/views/User/Files/index.dart';
 import 'package:myapp/views/Home/index.dart';
 import 'package:myapp/views/Login/index.dart';
@@ -58,6 +59,14 @@ final List<AppNavItem> navItems = [
     i: ImageIcon(AssetImage(MyAssets.music)),
     icon: Icons.music_note,
     label: "音乐",
+  ),
+  AppNavItem(
+    name: "dashboard",
+    path: "/dashboard",
+    page: MusicDashboardPage(),
+    i: ImageIcon(AssetImage(MyAssets.dashboard)),
+    icon: Icons.dashboard,
+    label: "仪表盘",
   ),
   AppNavItem(
     name: "user",
