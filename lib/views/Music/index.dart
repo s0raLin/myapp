@@ -79,7 +79,7 @@ class _MusicPageState extends State<MusicPage> {
             size: 80,
             color: Theme.of(
               context,
-            ).colorScheme.onSurface.withValues(alpha: 0.3),
+            ).colorScheme.onSurface,
           ),
           const SizedBox(height: 24),
           Text(
@@ -87,7 +87,7 @@ class _MusicPageState extends State<MusicPage> {
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               color: Theme.of(
                 context,
-              ).colorScheme.onSurface.withValues(alpha: 0.6),
+              ).colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 8),
@@ -96,7 +96,7 @@ class _MusicPageState extends State<MusicPage> {
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: Theme.of(
                 context,
-              ).colorScheme.onSurface.withValues(alpha: 0.5),
+              ).colorScheme.onSurface,
             ),
             textAlign: TextAlign.center,
           ),
@@ -126,7 +126,7 @@ class _MusicPageState extends State<MusicPage> {
           : ListView.separated(
               padding: const EdgeInsets.all(12),
               itemCount: library.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 6),
+              separatorBuilder: (_, _) => const SizedBox(height: 6),
               itemBuilder: (context, index) {
                 final music = library[index];
                 return _SongTile(

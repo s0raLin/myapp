@@ -40,32 +40,26 @@ class RecentlyPlayedPage extends StatelessWidget {
                           Icon(
                             Icons.history_rounded,
                             size: 80,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withValues(alpha: 0.3),
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
                           const SizedBox(height: 24),
                           Text(
                             "还没有播放记录",
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
+                            style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSurface
-                                      .withValues(alpha: 0.6),
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
                                 ),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             "去音乐库听听歌曲吧",
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSurface
-                                      .withValues(alpha: 0.5),
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
                                 ),
                           ),
                         ],
@@ -96,7 +90,11 @@ class RecentlyPlayedPage extends StatelessWidget {
     );
   }
 
-  void _showContextMenu(BuildContext context, MusicInfo music, MusicProvider provider) {
+  void _showContextMenu(
+    BuildContext context,
+    MusicInfo music,
+    MusicProvider provider,
+  ) {
     showModalBottomSheet(
       context: context,
       builder: (context) => SafeArea(
@@ -117,9 +115,9 @@ class RecentlyPlayedPage extends StatelessWidget {
               onTap: () {
                 Navigator.pop(context);
                 provider.addToQueue(music);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("已添加到下一首")),
-                );
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(const SnackBar(content: Text("已添加到下一首")));
               },
             ),
             ListTile(
@@ -129,9 +127,7 @@ class RecentlyPlayedPage extends StatelessWidget {
                     : Icons.favorite_border_rounded,
               ),
               title: Text(
-                provider.favList.any((m) => m.id == music.id)
-                    ? "取消收藏"
-                    : "收藏",
+                provider.favList.any((m) => m.id == music.id) ? "取消收藏" : "收藏",
               ),
               onTap: () {
                 Navigator.pop(context);
@@ -174,10 +170,7 @@ class _MusicListTile extends StatelessWidget {
           color: colorScheme.surfaceContainerHighest,
           child: coverBytes != null && coverBytes!.isNotEmpty
               ? Image.memory(coverBytes!, fit: BoxFit.cover)
-              : Icon(
-                  Icons.music_note_rounded,
-                  color: colorScheme.primary,
-                ),
+              : Icon(Icons.music_note_rounded, color: colorScheme.primary),
         ),
       ),
       title: Text(
@@ -186,11 +179,7 @@ class _MusicListTile extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         style: const TextStyle(fontWeight: FontWeight.w500),
       ),
-      subtitle: Text(
-        subtitle,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
+      subtitle: Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis),
       trailing: onMoreTap != null
           ? IconButton(
               icon: const Icon(Icons.more_vert_rounded),
