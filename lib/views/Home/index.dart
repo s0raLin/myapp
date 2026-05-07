@@ -35,7 +35,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final history = context.read<MusicProvider>().history;
+    final history = context.watch<MusicProvider>().history;
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
     final double height = MediaQuery.sizeOf(context).height;
@@ -55,9 +55,7 @@ class _HomePageState extends State<HomePage> {
               padding: const EdgeInsets.only(top: 12, left: 16, right: 16),
               child: Center(
                 child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxHeight: height / 3,
-                  ),
+                  constraints: BoxConstraints(maxHeight: height / 3),
                   child: CarouselView.weighted(
                     itemSnapping: true,
                     controller: controller,
@@ -77,7 +75,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
 
-          // ── 歌曲推荐标题栏 ───────────────────────────────────────────────
+          // ── 最近播放标题栏 ───────────────────────────────────────────────
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
@@ -85,65 +83,130 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   Expanded(
                     child: Text(
-                      '歌曲推荐',
+                      '最近播放',
                       style: textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),
-                  FilledButton.icon(
-                    onPressed: () {},
-                    icon: const Icon(Icons.play_arrow_rounded, size: 18),
-                    label: const Text('播放全部'),
+                  TextButton(
+                    onPressed: () => context.push('/user/recent'),
+                    child: const Text('查看更多'),
                   ),
                 ],
               ),
             ),
           ),
 
-          // ── 歌曲列表 ─────────────────────────────────────────────────────
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            sliver: ListTileTheme(
-              data: ListTileThemeData(
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: SliverList.separated(
-                itemCount: history.length,
-                itemBuilder: (context, index) {
-                  final item = history[index];
-                  return Card(
-                    color: colorScheme.surfaceContainerLow,
-                    child: ListTile(
-                      onTap: () => context.push("/music/$index"),
-                      leading: CircleAvatar(
-                        radius: 22,
-                        backgroundColor: colorScheme.secondaryContainer,
-                        foregroundColor: colorScheme.onSecondaryContainer,
-                        child: const Icon(Icons.library_music_rounded),
+          // ── 最近播放横向列表 ─────────────────────────────────────────────────
+          history.isEmpty
+              ? SliverToBoxAdapter(
+                  child: SizedBox(
+                    height: 150,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.history_rounded,
+                            size: 32,
+                            color: colorScheme.onSurfaceVariant.withValues(
+                              alpha: 0.5,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            '暂无播放记录',
+                            style: textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
                       ),
-                      title: Text(item.title),
-                      subtitle: Text(
-                        '${item.artist} · ${item.album}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      horizontalTitleGap: 4,
-                      trailing: const Icon(Icons.chevron_right),
                     ),
-                  );
-                },
-                separatorBuilder: (_, _) => const SizedBox(height: 6),
+                  ),
+                )
+              : SliverToBoxAdapter(
+                  child: SizedBox(
+                    height: 150,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: history.take(6).length,
+                      itemBuilder: (context, index) {
+                        final item = history[index];
+                        return GestureDetector(
+                          onTap: () {
+                            context.read<MusicProvider>().playFromLibrary(item);
+                            context.push('/music-detail', extra: item);
+                          },
+                          child: Container(
+                            width: 100,
+                            margin: EdgeInsets.only(
+                              right: index == history.take(6).length - 1
+                                  ? 0
+                                  : 12,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Container(
+                                    width: 100,
+                                    height: 100,
+                                    color: colorScheme.surfaceContainerHighest,
+                                    child:
+                                        item.coverBytes != null &&
+                                            item.coverBytes!.isNotEmpty
+                                        ? Image.memory(
+                                            item.coverBytes!,
+                                            fit: BoxFit.cover,
+                                          )
+                                        : Icon(
+                                            Icons.music_note_rounded,
+                                            color: colorScheme.primary,
+                                          ),
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  item.title,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: textTheme.bodySmall,
+                                ),
+                                Text(
+                                  item.artist,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: textTheme.bodySmall?.copyWith(
+                                    color: colorScheme.onSurfaceVariant,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+          const SliverToBoxAdapter(child: SizedBox(height: 8)),
+
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+              child: Text(
+                '排行榜',
+                style: textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ),
-          const SliverToBoxAdapter(child: SizedBox(height: 8)),
+          
         ],
       ),
     );

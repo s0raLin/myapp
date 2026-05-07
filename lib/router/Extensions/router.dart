@@ -11,6 +11,7 @@ extension RouterCtx on BuildContext {
   void toLogin() => go("/login");
   void toRegister() => go("/register");
   void toAbout() => go('/about');
+  void toRecent() => go('/user/recent');
   
   Future<void> logout(BuildContext context) async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
