@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:myapp/providers/MusicProvider/index.dart';
 import 'package:myapp/providers/ThemeProvider/index.dart';
+import 'package:myapp/theme/seed_color.dart';
 import 'package:provider/provider.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
   static final List<Color> _themeColors = [
-    const Color(0xFF6750A4),
+    kAppDefaultSeedColor,
     const Color(0xFF39C5BB),
     const Color(0xFF00B0FF),
     const Color(0xFFFF4081),
@@ -416,6 +417,11 @@ class _ThemeSeedButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final checkIconColor = color.computeLuminance() > 0.5
+        ? cs.inverseSurface
+        : cs.onInverseSurface;
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
@@ -429,7 +435,7 @@ class _ThemeSeedButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(isSelected ? 12 : 24),
           border: isSelected
               ? Border.all(
-                  color: Theme.of(context).colorScheme.primaryContainer,
+                  color: cs.primaryContainer,
                   width: 4,
                   strokeAlign: BorderSide.strokeAlignOutside,
                 )
@@ -445,12 +451,7 @@ class _ThemeSeedButton extends StatelessWidget {
               : [],
         ),
         child: isSelected
-            ? Icon(
-                Icons.check_rounded,
-                color: color.computeLuminance() > 0.5
-                    ? Colors.black87
-                    : Colors.white,
-              )
+            ? Icon(Icons.check_rounded, color: checkIconColor)
             : null,
       ),
     );

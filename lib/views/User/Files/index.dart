@@ -521,7 +521,7 @@ class _FilesPageState extends State<FilesPage>
         activeIcon: Icons.close, // 展开时的图标
         backgroundColor: colorScheme.primaryContainer,
         foregroundColor: colorScheme.onPrimaryContainer,
-        overlayColor: Colors.black, // 展开时的背景遮罩色
+        overlayColor: colorScheme.scrim,
         overlayOpacity: 0.5,
         spacing: 12, // 子按钮之间的间距
         children: [

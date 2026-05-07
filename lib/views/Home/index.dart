@@ -224,12 +224,16 @@ class HeroLayoutCard extends StatelessWidget {
             children: [
               Text(
                 imageInfo.title,
-                style: textTheme.headlineMedium?.copyWith(color: Colors.white),
+                style: textTheme.headlineMedium?.copyWith(
+                  color: colorScheme.onInverseSurface,
+                ),
               ),
               const SizedBox(height: 10),
               Text(
                 imageInfo.subtitle,
-                style: textTheme.bodyMedium?.copyWith(color: Colors.white),
+                style: textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onInverseSurface,
+                ),
               ),
             ],
           ),

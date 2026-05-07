@@ -49,11 +49,14 @@ class _UserProfilePageState extends State<UserProfilePage> {
                       contentPadding: EdgeInsets.zero,
                     ),
                   ),
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'delete',
                     child: ListTile(
-                      leading: Icon(Icons.delete, color: Colors.red),
-                      title: Text('删除', style: TextStyle(color: Colors.red)),
+                      leading: Icon(Icons.delete, color: colorScheme.error),
+                      title: Text(
+                        '删除',
+                        style: TextStyle(color: colorScheme.error),
+                      ),
                       contentPadding: EdgeInsets.zero,
                     ),
                   ),

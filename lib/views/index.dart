@@ -89,10 +89,9 @@ class _MainPageState extends State<MainPage> {
         ],
       ),
 
-      bottomNavigationBar: LayoutBuilder(
-        builder: (context, constraints) {
-          return BottomBar(currentIndex: currentIndex, onTap: onTabChanged);
-        },
+      bottomNavigationBar: BottomBar(
+        currentIndex: currentIndex,
+        onTap: onTabChanged,
       ),
     );
   }

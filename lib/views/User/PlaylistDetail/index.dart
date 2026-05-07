@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:go_router/go_router.dart';
 import 'package:myapp/model/Music/index.dart';
 import 'package:myapp/model/Playlist/index.dart';
@@ -152,12 +153,16 @@ class _PlaylistDetailPageState extends State<PlaylistDetailPage> {
                 itemBuilder: (context, index) {
                   final p = userPlaylists[index];
                   final alreadyIn = p.songIds.contains(song.id);
+                  final cs = Theme.of(context).colorScheme;
                   return ListTile(
                     enabled: !alreadyIn,
                     leading: const Icon(Icons.playlist_add_rounded),
                     title: Text(p.name),
                     trailing: alreadyIn
-                        ? const Icon(Icons.check_circle, color: Colors.green)
+                        ? Icon(
+                            Icons.check_circle,
+                            color: cs.secondary,
+                          )
                         : null,
                     onTap: () {
                       musicProvider.addToPlaylist(p.id, song);
@@ -170,6 +175,31 @@ class _PlaylistDetailPageState extends State<PlaylistDetailPage> {
           ],
         ),
       ),
+    );
+  }
+
+  Future<void> _showConfirmSyncDialog(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("上传确认"),
+          content: const Text("是否上传到云端?"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(), //关闭弹窗
+              child: Text("取消", style: TextStyle(color: colorScheme.outline)),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text("确认"),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -230,7 +260,7 @@ class _PlaylistDetailPageState extends State<PlaylistDetailPage> {
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          colorScheme.primaryContainer.withOpacity(0.6),
+                          colorScheme.primaryContainer.withValues(alpha: 0.6),
                           colorScheme.surface,
                         ],
                       ),
@@ -359,6 +389,55 @@ class _PlaylistDetailPageState extends State<PlaylistDetailPage> {
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
       ),
+      floatingActionButton: SpeedDial(
+        icon: Icons.menu, // 未展开时的图标
+        activeIcon: Icons.close, // 展开时的图标
+        backgroundColor: colorScheme.primaryContainer,
+        foregroundColor: colorScheme.onPrimaryContainer,
+        overlayColor: colorScheme.scrim,
+        overlayOpacity: 0.5,
+        spacing: 12, // 子按钮之间的间距
+        children: [
+          SpeedDialChild(
+            // child: const Icon(Icons.folder_open),
+            backgroundColor: colorScheme.secondaryContainer,
+            labelWidget: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 10.0,
+              ),
+              decoration: BoxDecoration(
+                // Stadium 形状的关键：使用 StadiumBorder 或者设置很大的圆角
+                borderRadius: BorderRadius.circular(28.0),
+                color: Theme.of(context).colorScheme.secondaryContainer,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min, // 紧凑
+                mainAxisAlignment: MainAxisAlignment.center, // 内容居中
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.folder_open,
+                    size: 20,
+                    color: Theme.of(context).colorScheme.onSecondaryContainer,
+                  ),
+                  const SizedBox(width: 8.0),
+                  Text(
+                    '上传',
+                    style: TextStyle(
+                      fontSize: 14.0,
+                      fontWeight: FontWeight.w500,
+                      // 关键：标签的字体颜色
+                      color: Theme.of(context).colorScheme.onSecondaryContainer,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            onTap: () => _showConfirmSyncDialog(context),
+          ),
+        ],
+      ),
     );
   }
 
@@ -375,7 +454,7 @@ class _PlaylistDetailPageState extends State<PlaylistDetailPage> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black12,
+            color: colorScheme.shadow.withValues(alpha: 0.12),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
@@ -408,12 +487,14 @@ class _PlaylistDetailPageState extends State<PlaylistDetailPage> {
             Icon(
               Icons.library_music_outlined,
               size: 64,
-              color: colorScheme.outlineVariant,
+              color: colorScheme.onSurfaceVariant,
             ),
             const SizedBox(height: 16),
             Text(
               isFavorites ? "还没有收藏" : "空空如也",
-              style: theme.textTheme.bodyLarge,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),

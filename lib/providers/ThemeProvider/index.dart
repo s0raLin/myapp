@@ -164,8 +164,9 @@ class ThemeProvider extends ChangeNotifier {
       // 整合：新代码中更精细的组件样式
       appBarTheme: AppBarTheme(
         scrolledUnderElevation: 0,
-        backgroundColor: scheme.surface,
+        backgroundColor: scheme.surfaceContainerLow,
         foregroundColor: scheme.onSurface,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
       ),
 
@@ -177,8 +178,10 @@ class ThemeProvider extends ChangeNotifier {
 
       navigationBarTheme: NavigationBarThemeData(
         height: 68,
+        backgroundColor: scheme.surfaceContainerHigh,
         indicatorColor: scheme.secondaryContainer,
         labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
+        surfaceTintColor: Colors.transparent,
       ),
 
       drawerTheme: DrawerThemeData(backgroundColor: scheme.surface),

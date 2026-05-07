@@ -154,10 +154,10 @@ class AboutPage extends StatelessWidget {
               ),
             ],
           ),
-          child: const Icon(
+          child: Icon(
             Icons.music_note_rounded,
             size: 60,
-            color: Colors.white,
+            color: cs.onPrimary,
           ),
         ),
         const SizedBox(height: 24),
