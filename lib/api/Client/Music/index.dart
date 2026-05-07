@@ -1,9 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:myapp/service/Music/index.dart';
+import 'package:myapp/utils/Http/index.dart';
 
 class MusicApi {
-  static final Dio _dio = Dio();
 
   static Future<void> pickAndUploadMusic() async {
     final result = await FilePicker.pickFiles(
@@ -35,9 +35,9 @@ class MusicApi {
         ),
     });
 
-    final response = await _dio.post(
-      "http://localhost:8080/api/music",
-      data: formData,
+    final response = await HttpUtils().postForm(
+      "/api/music",
+      formData: formData,
       onSendProgress: (int sent, int total) {
         // 这里可以计算进度：(sent / total * 100).toStringAsFixed(0)%
         print("上传进度: ${(sent / total * 100).round()}%");
@@ -49,5 +49,9 @@ class MusicApi {
     } else {
       print("上传失败");
     }
+  }
+
+  static Future listMusic() async {
+    
   }
 }

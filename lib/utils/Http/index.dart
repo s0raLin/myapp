@@ -1,0 +1,90 @@
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
+
+class HttpUtils {
+  static const String _baseUrl = "http://localhost:8080";
+
+  static final HttpUtils _instance = HttpUtils._internal();
+  late final Dio _dio;
+
+  factory HttpUtils() => _instance;
+
+  HttpUtils._internal() {
+    BaseOptions options = BaseOptions(
+      baseUrl: _baseUrl,
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 10),
+    );
+
+    _dio = Dio(options);
+
+    // 3. 添加拦截器
+    _dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) {
+          // 在这里可以统一添加 Token 等
+          // options.headers['Authorization'] = 'Bearer your_token';
+          return handler.next(options);
+        },
+        onResponse: (response, handler) {
+          // 对响应数据做统一处理
+          return handler.next(response);
+        },
+        onError: (DioException e, handler) {
+          // 集中式错误处理
+          _handleError(e);
+          return handler.next(e);
+        },
+      ),
+    );
+
+    // 如果是调试模式，打印日志
+    if (kDebugMode) {
+      _dio.interceptors.add(
+        LogInterceptor(requestBody: true, responseBody: true),
+      );
+    }
+  }
+
+  // 4. 封装常用请求方法
+  Future<Response> get(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+  }) async {
+    return await _dio.get(path, queryParameters: queryParameters);
+  }
+
+  Future<Response> post(String path, {dynamic data}) async {
+    return await _dio.post(path, data: data);
+  }
+
+  // 专门用于表单/文件上传
+  Future<Response> postForm(
+    String path, {
+    // Map<String, dynamic> data,
+    required FormData formData,
+    ProgressCallback? onSendProgress,
+  }) async {
+    // 自动转换 Map 为 FormData
+    // final formData = FormData.fromMap(data);
+    return await _dio.post(
+      path,
+      data: formData,
+      onSendProgress: onSendProgress, // 方便外面显示上传百分比
+    );
+  }
+
+  // 错误处理逻辑
+  void _handleError(DioException e) {
+    switch (e.type) {
+      case DioExceptionType.connectionTimeout:
+        debugPrint("连接超时");
+        break;
+      case DioExceptionType.badResponse:
+        debugPrint("服务器响应错误: ${e.response?.statusCode}");
+        break;
+      default:
+        debugPrint("未知网络错误: ${e.message}");
+    }
+  }
+}

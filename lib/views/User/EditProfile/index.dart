@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:myapp/api/model/User/index.dart';
+import 'package:myapp/api/Model/User/index.dart';
 import 'package:myapp/providers/UserProvider/index.dart';
 import 'package:provider/provider.dart';
 

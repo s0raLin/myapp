@@ -28,12 +28,12 @@ class _UserProfilePageState extends State<UserProfilePage> {
             actions: [
               PopupMenuButton<String>(
                 icon: const Icon(Icons.more_vert), // 纵向三个点
-onSelected: (value) {
-                   if (value == "edit") {
-                     context.push("/user/edit-profile");
-                   }
-                   print("选择了: $value");
-                 },
+                onSelected: (value) {
+                  if (value == "edit") {
+                    context.push("/user/edit-profile");
+                  }
+                  print("选择了: $value");
+                },
                 itemBuilder: (BuildContext context) => [
                   const PopupMenuItem(
                     value: "share",
@@ -110,6 +110,11 @@ onSelected: (value) {
                     onTap: () => context.push("/user/files"),
                     title: "本地",
                     icon: Icons.folder_special_rounded,
+                  ),
+                  _PlaylistQuickCard(
+                    onTap: () => context.push("/user/network"),
+                    title: "网络",
+                    icon: Icons.cloud_queue,
                   ),
                 ],
               ),
@@ -520,9 +525,9 @@ class M3UserCard extends StatelessWidget {
                   ),
                 ),
                 FilledButton(
-                   onPressed: () => context.push("/user/edit-profile"),
-                   child: const Text("编辑"),
-                 ),
+                  onPressed: () => context.push("/user/edit-profile"),
+                  child: const Text("编辑"),
+                ),
               ],
             ),
             Padding(

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:myapp/api/model/User/index.dart';
+import 'package:myapp/api/Model/User/index.dart';
 
 class UserProvider extends ChangeNotifier {
   final jwtKey = "jwt_key";

@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:myapp/contants/Theme/index.dart';
 import 'package:myapp/providers/MusicProvider/index.dart';
 import 'package:myapp/providers/ThemeProvider/index.dart';
-import 'package:myapp/theme/seed_color.dart';
 import 'package:provider/provider.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
   static final List<Color> _themeColors = [
-    kAppDefaultSeedColor,
+    MyTheme.kAppDefaultSeedColor,
     const Color(0xFF39C5BB),
     const Color(0xFF00B0FF),
     const Color(0xFFFF4081),

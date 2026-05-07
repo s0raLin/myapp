@@ -3,14 +3,12 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-import 'package:myapp/api/model/ApiResponse/index.dart';
-import 'package:myapp/api/model/User/index.dart';
+import 'package:myapp/api/Model/ApiResponse/index.dart';
+import 'package:myapp/api/Model/User/index.dart';
+import 'package:myapp/utils/Http/index.dart';
 
 class UserApi {
-  static final Dio _dio = Dio(
-    BaseOptions(baseUrl: "http://localhost:8080/api/auth/"),
-  );
-
+  static final base = "/api/auth";
   static Future<User?> login({
     required String username,
     required String password,
@@ -19,8 +17,8 @@ class UserApi {
     //   "username": username,
     //   "password": password,
     // });
-    final response = await _dio.post(
-      "/login",
+    final response = await HttpUtils().post(
+      "$base/login",
       data: {"username": username, "password": password},
     );
 
@@ -55,9 +53,9 @@ class UserApi {
         ),
     });
 
-    final response = await _dio.post(
-      "/register",
-      data: formData,
+    final response = await HttpUtils().postForm(
+      "$base/register",
+      formData: formData,
       onSendProgress: (sent, total) {
         print("上传进度: ${(sent / total * 100).toStringAsFixed(0)}");
       },
