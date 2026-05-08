@@ -38,7 +38,10 @@ class _HomePageState extends State<HomePage> {
     final history = context.watch<MusicProvider>().history;
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
-    final double height = MediaQuery.sizeOf(context).height;
+
+
+    final double carouselHeight = (MediaQuery.sizeOf(context).width * 0.5)
+        .clamp(160.0, 220.0); // 最小160，最大220
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
@@ -55,7 +58,7 @@ class _HomePageState extends State<HomePage> {
               padding: const EdgeInsets.only(top: 12, left: 16, right: 16),
               child: Center(
                 child: ConstrainedBox(
-                  constraints: BoxConstraints(maxHeight: height / 3),
+                  constraints: BoxConstraints(maxHeight: carouselHeight),
                   child: CarouselView.weighted(
                     itemSnapping: true,
                     controller: controller,
@@ -206,7 +209,6 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
-          
         ],
       ),
     );

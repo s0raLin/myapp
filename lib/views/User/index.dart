@@ -81,8 +81,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: const M3UserCard(
-                username: "苍璃 s0raLin",
-                description: "Coding with Music & Arch Linux",
+                username: "蒼璃 s0raLin",
+                description: "用户中心与收藏",
               ),
             ),
           ),

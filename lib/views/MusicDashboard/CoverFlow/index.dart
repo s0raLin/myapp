@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:myapp/contants/Assets/index.dart';
+import 'package:myapp/model/Music/index.dart';
+import 'package:myapp/providers/MusicProvider/index.dart';
+import 'package:provider/provider.dart';
 
 class CoverFlowPage extends StatefulWidget {
   const CoverFlowPage({super.key});
@@ -39,7 +44,7 @@ class _CoverFlowPageState extends State<CoverFlowPage> {
     _pageController = PageController(viewportFraction: fraction);
     _pageController.addListener(() {
       setState(() {
-        _currentPage = _pageController.page!;
+        _currentPage = _pageController.page ?? 0.0;
       });
     });
   }
@@ -55,6 +60,9 @@ class _CoverFlowPageState extends State<CoverFlowPage> {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
+    final mp = context.read<MusicProvider>();
+    final queue = mp.queue;
+
     return Scaffold(
       // 使用 M3 标准的表面颜色
       backgroundColor: colorScheme.surface,
@@ -63,42 +71,61 @@ class _CoverFlowPageState extends State<CoverFlowPage> {
         backgroundColor: Colors.transparent,
         scrolledUnderElevation: 0,
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(
-              height: _idealCardWidth + 80, // 预留文字空间
-              child: PageView.builder(
-                controller: _pageController,
-                clipBehavior: Clip.none, // 允许左右卡片超出边界显示，增加紧凑感
-                itemCount: _musicData.length,
-                itemBuilder: (context, index) {
-                  double relativePosition = index - _currentPage;
-                  return _buildM3Card(
-                    index,
-                    relativePosition,
-                    colorScheme,
-                    textTheme,
-                  );
-                },
+      body: queue.isEmpty
+          ? _buildEmptyState(colorScheme, textTheme)
+          : Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    height: _idealCardWidth + 80, // 预留文字空间
+                    child: PageView.builder(
+                      controller: _pageController,
+                      clipBehavior: Clip.none, // 允许左右卡片超出边界显示，增加紧凑感
+                      itemCount: queue.length,
+                      itemBuilder: (context, index) {
+                        double relativePosition = index - _currentPage;
+                        final music = queue[index];
+                        return _buildM3Card(
+                          music,
+                          relativePosition,
+                          context,
+                          onTap: () {
+                            context.push('/music-detail');
+                            mp.playByIndex(index);
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
+    );
+  }
+
+  Widget _buildEmptyState(ColorScheme colorScheme, TextTheme textTheme) {
+    return Center(
+      child: Text(
+        "队列为空",
+        style: textTheme.bodyLarge?.copyWith(
+          color: colorScheme.onSurfaceVariant,
         ),
       ),
     );
   }
 
   Widget _buildM3Card(
-    int index,
+    MusicInfo music,
     double relativePosition,
-    ColorScheme colorScheme,
-    TextTheme textTheme,
-  ) {
+    BuildContext context, {
+    required VoidCallback onTap,
+  }) {
     // 变换逻辑：侧边卡片稍微缩小并旋转
     final double scale = (1 - (relativePosition.abs() * 0.15)).clamp(0.0, 1.0);
     final double rotation = (relativePosition * 0.2).clamp(-1.0, 1.0);
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
 
     return Center(
       child: Container(
@@ -123,15 +150,22 @@ class _CoverFlowPageState extends State<CoverFlowPage> {
                 ),
               ),
               color: colorScheme.surfaceContainerHigh,
-              child: AspectRatio(
-                aspectRatio: 1,
-                child: Image.network(
-                  _musicData[index]['cover']!,
-                  fit: BoxFit.cover,
-                  filterQuality: FilterQuality.medium, // 兼顾性能与清晰度
+              child: InkWell(
+                onTap: onTap,
+                child: AspectRatio(
+                  aspectRatio: 1,
+                  child:
+                      music.coverBytes != null && music.coverBytes!.isNotEmpty
+                      ? Image.memory(
+                          music.coverBytes!,
+                          fit: BoxFit.cover,
+                          filterQuality: FilterQuality.medium, // 兼顾性能与清晰度
+                        )
+                      : Icon(Icons.music_note_rounded),
                 ),
               ),
             ),
+
             const SizedBox(height: 16),
             // 文字部分：使用 FittedBox 解决越界，使用 M3 字体样式
             SizedBox(
@@ -139,7 +173,7 @@ class _CoverFlowPageState extends State<CoverFlowPage> {
               child: FittedBox(
                 fit: BoxFit.scaleDown,
                 child: Text(
-                  _musicData[index]['title']!,
+                  music.title,
                   style: textTheme.titleLarge?.copyWith(
                     color: colorScheme.onSurface,
                     fontWeight: FontWeight.w600,

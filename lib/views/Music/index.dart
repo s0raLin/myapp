@@ -182,7 +182,6 @@ class _MusicPageState extends State<MusicPage> {
                       orElse: () => songs.first,
                     )
                     .coverBytes;
-
                 return _AlbumCard(
                   albumName: albumName,
                   songCount: songs.length,
@@ -291,7 +290,7 @@ class _MusicPageState extends State<MusicPage> {
               _PlaylistCard(
                 playlist: favorites,
                 songCount: musicProvider.favList.length,
-                onTap: () => context.push("/favorites"),
+                onTap: () => context.push("/user/playlist/favorites"),
               ),
             const SizedBox(height: 16),
             Row(
@@ -324,7 +323,7 @@ class _MusicPageState extends State<MusicPage> {
                             playlist: playlist,
                             songCount: playlist.songIds.length,
                             onTap: () =>
-                                context.push("/playlist/${playlist.id}"),
+                                context.push("/user/playlist/${playlist.id}"),
                           ),
                         )
                         .toList(),
