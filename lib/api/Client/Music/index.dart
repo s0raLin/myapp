@@ -1,10 +1,10 @@
 import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:myapp/api/Model/Music/index.dart';
 import 'package:myapp/service/Music/index.dart';
 import 'package:myapp/utils/Http/index.dart';
 
 class MusicApi {
-
   static Future<void> pickAndUploadMusic() async {
     final result = await FilePicker.pickFiles(
       type: FileType.custom, //使用自定义模式
@@ -51,7 +51,20 @@ class MusicApi {
     }
   }
 
-  static Future listMusic() async {
-    
+  static Future<List<Music>> listMusic() async {
+    final response = await HttpUtils().get("/api/music");
+
+    if (response.statusCode == 200) {
+      print("获取成功: ${response.data}");
+
+      List dataList = response.data["data"];
+      List<Music> musics = dataList
+          .map((item) => Music.fromJson(item))
+          .toList();
+      return musics;
+    } else {
+      print("获取失败");
+      return [];
+    }
   }
 }

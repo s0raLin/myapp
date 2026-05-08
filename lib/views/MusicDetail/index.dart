@@ -125,7 +125,7 @@ class _WideLayout extends StatelessWidget {
   final MusicInfo music;
   final bool isLiked;
 
-  const _WideLayout({required this.music, required this.isLiked, super.key});
+  const _WideLayout({required this.music, required this.isLiked});
 
   @override
   Widget build(BuildContext context) {
@@ -154,7 +154,6 @@ class _NarrowLayout extends StatelessWidget {
     required this.music,
     required this.isLiked,
     required this.tabController,
-    super.key,
   });
 
   @override
@@ -180,7 +179,6 @@ class _CoverTabContent extends StatelessWidget {
   const _CoverTabContent({
     required this.music,
     required this.isLiked,
-    super.key,
   });
 
   @override
@@ -230,7 +228,7 @@ class _AlbumCover extends StatelessWidget {
   final String title;
   final Uint8List? coverBytes;
 
-  const _AlbumCover({required this.title, required this.coverBytes, super.key});
+  const _AlbumCover({required this.title, required this.coverBytes});
 
   @override
   Widget build(BuildContext context) {
@@ -272,7 +270,6 @@ class _SongMeta extends StatelessWidget {
     required this.isLiked,
     required this.onToggleLike,
     this.onAddToPlaylist,
-    super.key,
   });
 
   @override
@@ -333,7 +330,7 @@ class _SongMeta extends StatelessWidget {
 class _PlayerConsole extends StatelessWidget {
   final MusicInfo music;
 
-  const _PlayerConsole({required this.music, super.key});
+  const _PlayerConsole({required this.music});
 
   @override
   Widget build(BuildContext context) {
@@ -389,7 +386,7 @@ class _PlayerConsole extends StatelessWidget {
 
 /// ======================== 歌词区域 ========================
 class _LyricsSection extends StatefulWidget {
-  const _LyricsSection({super.key});
+  const _LyricsSection();
 
   @override
   State<_LyricsSection> createState() => _LyricsSectionState();
@@ -554,7 +551,6 @@ class _LyricLine extends StatelessWidget {
     required this.isActive,
     required this.isNear,
     required this.onTap,
-    super.key,
   });
 
   @override
@@ -608,7 +604,6 @@ class _DraggableProgressBar extends StatelessWidget {
   final ValueChanged<double> onSeek;
 
   const _DraggableProgressBar({
-    super.key,
     required this.position,
     required this.total,
     required this.onSeek,

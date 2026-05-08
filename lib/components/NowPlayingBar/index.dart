@@ -9,9 +9,21 @@ import 'package:myapp/providers/MusicProvider/index.dart';
 import 'package:provider/provider.dart';
 
 /// 底部播放进度栏组件
-class NowPlayingBar extends StatelessWidget {
-  static const double _breakpoint = 700.0; // 响应式切换阈值
+class NowPlayingBar extends StatefulWidget {
   const NowPlayingBar({super.key});
+
+  @override
+  State<NowPlayingBar> createState() => _NowPlayingBarState();
+}
+
+class _NowPlayingBarState extends State<NowPlayingBar> {
+  late final bool isWide;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    isWide = MediaQuery.of(context).size.width >= 700;
+  }
 
   /// 时间格式化辅助函数：将 Duration 转为 00:00 格式
   static String _fmt(Duration d) {
@@ -26,42 +38,22 @@ class NowPlayingBar extends StatelessWidget {
       (p) => p.currentMusic,
     );
     if (music == null) return const SizedBox.shrink();
-
-    return _BarContainer(
-      onTap: () => context.push('/music-detail'), // 点击跳转详情页
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final isWide = constraints.maxWidth >= _breakpoint;
-          // 根据容器宽度决定布局模式
-          if (isWide) return _WideLayout(music: music, fmt: _fmt);
-          return _CompactLayout(music: music);
-        },
-      ),
-    );
-  }
-}
-
-/// 播放栏外层容器：处理背景色、圆角、高度和点击反馈
-class _BarContainer extends StatelessWidget {
-  final VoidCallback onTap;
-  final Widget child;
-  const _BarContainer({required this.onTap, required this.child});
-
-  @override
-  Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+
     return Material(
       color: cs.surfaceContainerHigh,
       borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
       child: InkWell(
-        onTap: onTap,
+        onTap: () => context.push('/music-detail'),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
         child: SizedBox(
           width: double.infinity,
           height: 84, // 固定高度
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: child,
+            child: isWide
+                ? _WideLayout(music: music, fmt: _fmt)
+                : _CompactLayout(music: music),
           ),
         ),
       ),
@@ -96,19 +88,7 @@ class _WideLayout extends StatelessWidget {
         _PlaybackCenter(fmt: fmt),
 
         // 右侧：功能操作
-        Align(
-          alignment: Alignment.centerRight,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _VolumeControllerWidget(),
-              _QueueActions(
-                showCompactPlayPause: false,
-                onPlayPause: mp.togglePlay,
-              ),
-            ],
-          ),
-        ),
+        _QueueActions(showCompactPlayPause: false, onPlayPause: mp.togglePlay),
       ],
     );
   }
@@ -312,7 +292,7 @@ class _ProgressBar extends StatelessWidget {
 
 /// 音量控制
 class _VolumeControllerWidget extends StatelessWidget {
-  const _VolumeControllerWidget({super.key});
+  const _VolumeControllerWidget();
 
   @override
   Widget build(BuildContext context) {
@@ -323,25 +303,22 @@ class _VolumeControllerWidget extends StatelessWidget {
 
     return Row(
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4.0),
-          child: SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              // 核心修复：改为 onlyForContinuous，这样连续滑动的 Slider 也会在拖动时显示气泡
-              showValueIndicator: ShowValueIndicator.onlyForContinuous,
-              // 可选：美化气泡形状（M3 风格）
-              valueIndicatorShape: const DropSliderValueIndicatorShape(),
-            ),
-            child: Slider(
-              year2023: false,
-              label: "${(volume * 100).toInt()}%",
-              value: volume,
-              onChanged: (value) {
-                mp.setVolume(value);
-              },
-              activeColor: colorScheme.primary,
-              inactiveColor: colorScheme.surfaceContainerHighest,
-            ),
+        SliderTheme(
+          data: SliderTheme.of(context).copyWith(
+            // 核心修复：改为 onlyForContinuous，这样连续滑动的 Slider 也会在拖动时显示气泡
+            showValueIndicator: ShowValueIndicator.onlyForContinuous,
+            // 可选：美化气泡形状（M3 风格）
+            valueIndicatorShape: const DropSliderValueIndicatorShape(),
+          ),
+          child: Slider(
+            year2023: false,
+            label: "${(volume * 100).toInt()}%",
+            value: volume,
+            onChanged: (value) {
+              mp.setVolume(value);
+            },
+            activeColor: colorScheme.primary,
+            inactiveColor: colorScheme.surfaceContainerHighest,
           ),
         ),
         _MiniIconButton(
@@ -427,99 +404,25 @@ class _QueueActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // final cs = Theme.of(context).colorScheme;
     final isPlaying = context.select<MusicProvider, bool>(
       (p) => p.player.playing,
     );
 
-    // final mp = context.read<MusicProvider>();
-
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
+        if (!showCompactPlayPause) _VolumeControllerWidget(),
         if (showCompactPlayPause)
           _MiniIconButton(
             icon: isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
             onPressed: onPlayPause,
           ),
-        // 点击弹出播放队列菜单
-        // MenuAnchor(
-        //   menuChildren: [
-        //     Padding(
-        //       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        //       child: Row(
-        //         children: [
-        //           const Text(
-        //             '播放队列',
-        //             style: TextStyle(fontWeight: FontWeight.bold),
-        //           ),
-        //           const SizedBox(width: 8),
-        //           Text(
-        //             '${queue.length} 首',
-        //             style: TextStyle(color: cs.outline),
-        //           ),
-        //         ],
-        //       ),
-        //     ),
-        //     const Divider(height: 1),
-        //     SizedBox(
-        //       height: 300,
-        //       width: 260,
-        //       child: ListView(
-        //         children: queue.asMap().entries.map((entry) {
-        //           final music = entry.value;
-        //           final isCurrent = currentMusic?.id == music.id;
-        //           return MenuItemButton(
-        //             onPressed: () => mp.playByIndex(entry.key),
-        //             leadingIcon: isCurrent
-        //                 ? const Icon(Icons.play_arrow_rounded, size: 24)
-        //                 : (music.coverBytes != null &&
-        //                           music.coverBytes!.isNotEmpty
-        //                       ? SizedBox(
-        //                           width: 24,
-        //                           height: 24,
-        //                           child: ClipRRect(
-        //                             borderRadius: BorderRadius.circular(6),
-        //                             child: Image.memory(
-        //                               music.coverBytes!,
-        //                               fit: BoxFit.cover,
-        //                             ),
-        //                           ),
-        //                         )
-        //                       : const Icon(Icons.music_note_rounded, size: 24)),
-        //             child: Text(
-        //               music.title,
-        //               maxLines: 1,
-        //               overflow: TextOverflow.ellipsis,
-        //             ),
-        //           );
-        //         }).toList(),
-        //       ),
-        //     ),
-        //   ],
-        //   builder: (context, controller, child) {
-        //     return _MiniIconButton(
-        //       icon: Icons.queue_music_rounded,
-        //       onPressed: () =>
-        //           controller.isOpen ? controller.close() : controller.open(),
-        //     );
-        //   },
-        // ),
         _MiniIconButton(
           icon: Icons.queue_music_rounded,
           onPressed: () => _showModalBottomSheet(context),
         ),
       ],
     );
-  }
-}
-
-class ModalBottomSheet extends StatelessWidget {
-  const ModalBottomSheet({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container();
   }
 }
 

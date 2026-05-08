@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:myapp/contants/Theme/index.dart';
-import 'package:myapp/theme/seed_color.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingService {

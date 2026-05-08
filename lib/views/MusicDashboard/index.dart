@@ -97,13 +97,13 @@ class _DashboardCard extends StatelessWidget {
         icon = Icons.play_arrow_rounded;
         break;
       case 2:
-        bgColor = colorScheme.surfaceVariant.withOpacity(0.5);
+        bgColor = colorScheme.surfaceContainerHighest.withOpacity(0.5);
         onColor = colorScheme.onSurfaceVariant;
         label = "96kHz";
         icon = Icons.high_quality_rounded;
         break;
       case 3:
-        bgColor = colorScheme.surfaceVariant.withOpacity(0.5);
+        bgColor = colorScheme.surfaceContainerHighest.withOpacity(0.5);
         onColor = colorScheme.onSurfaceVariant;
         label = "LDAC";
         icon = Icons.bluetooth_audio_rounded;
