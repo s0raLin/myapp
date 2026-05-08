@@ -1,0 +1,155 @@
+import 'package:flutter/material.dart';
+
+class CoverFlowPage extends StatefulWidget {
+  const CoverFlowPage({super.key});
+
+  @override
+  State<CoverFlowPage> createState() => _CoverFlowPageState();
+}
+
+class _CoverFlowPageState extends State<CoverFlowPage> {
+  late PageController _pageController;
+  double _currentPage = 0.0;
+
+  // 设定一个你认为最舒服的卡片物理宽度
+  final double _idealCardWidth = 300.0;
+
+  final List<Map<String, String>> _musicData = [
+    {'cover': 'https://picsum.photos/seed/1/600/600', 'title': 'World Is Mine'},
+    {'cover': 'https://picsum.photos/seed/2/600/600', 'title': 'Senbonzakura'},
+    {
+      'cover': 'https://picsum.photos/seed/3/600/600',
+      'title': 'Hajimete no Oto',
+    },
+    {'cover': 'https://picsum.photos/seed/4/600/600', 'title': 'Melt'},
+    {
+      'cover': 'https://picsum.photos/seed/5/600/600',
+      'title': 'Tell Your World',
+    },
+  ];
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // ✅ 动态计算 viewportFraction：确保卡片间距紧凑
+    // 如果屏幕宽 1200，卡片宽 300，比例就是 0.25
+    double screenWidth = MediaQuery.of(context).size.width;
+    double fraction = (_idealCardWidth / screenWidth).clamp(0.2, 0.8);
+
+    _pageController = PageController(viewportFraction: fraction);
+    _pageController.addListener(() {
+      setState(() {
+        _currentPage = _pageController.page!;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Scaffold(
+      // 使用 M3 标准的表面颜色
+      backgroundColor: colorScheme.surface,
+      appBar: AppBar(
+        title: const Text("Now Playing"),
+        backgroundColor: Colors.transparent,
+        scrolledUnderElevation: 0,
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              height: _idealCardWidth + 80, // 预留文字空间
+              child: PageView.builder(
+                controller: _pageController,
+                clipBehavior: Clip.none, // 允许左右卡片超出边界显示，增加紧凑感
+                itemCount: _musicData.length,
+                itemBuilder: (context, index) {
+                  double relativePosition = index - _currentPage;
+                  return _buildM3Card(
+                    index,
+                    relativePosition,
+                    colorScheme,
+                    textTheme,
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildM3Card(
+    int index,
+    double relativePosition,
+    ColorScheme colorScheme,
+    TextTheme textTheme,
+  ) {
+    // 变换逻辑：侧边卡片稍微缩小并旋转
+    final double scale = (1 - (relativePosition.abs() * 0.15)).clamp(0.0, 1.0);
+    final double rotation = (relativePosition * 0.2).clamp(-1.0, 1.0);
+
+    return Center(
+      child: Container(
+        width: _idealCardWidth,
+        transform: Matrix4.identity()
+          ..setEntry(3, 2, 0.001)
+          ..scale(scale)
+          ..rotateY(rotation),
+        transformAlignment: Alignment.center,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // 卡片主体
+            Card(
+              elevation: 0, // M3 风格倾向于使用色调变化而非深阴影
+              clipBehavior: Clip.antiAlias,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(28), // M3 典型的圆角
+                side: BorderSide(
+                  color: colorScheme.outlineVariant.withOpacity(0.5),
+                  width: 1,
+                ),
+              ),
+              color: colorScheme.surfaceContainerHigh,
+              child: AspectRatio(
+                aspectRatio: 1,
+                child: Image.network(
+                  _musicData[index]['cover']!,
+                  fit: BoxFit.cover,
+                  filterQuality: FilterQuality.medium, // 兼顾性能与清晰度
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            // 文字部分：使用 FittedBox 解决越界，使用 M3 字体样式
+            SizedBox(
+              width: _idealCardWidth * 0.8,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  _musicData[index]['title']!,
+                  style: textTheme.titleLarge?.copyWith(
+                    color: colorScheme.onSurface,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

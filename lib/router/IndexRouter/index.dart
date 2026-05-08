@@ -4,6 +4,7 @@ import 'package:myapp/contants/Assets/index.dart';
 import 'package:myapp/model/Music/index.dart';
 import 'package:myapp/providers/NavProvider/index.dart';
 import 'package:myapp/providers/ThemeProvider/index.dart';
+import 'package:myapp/views/MusicDashboard/CoverFlow/index.dart';
 import 'package:myapp/views/MusicDashboard/index.dart';
 import 'package:myapp/views/User/EditProfile/index.dart';
 import 'package:myapp/views/User/Files/index.dart';
@@ -69,6 +70,13 @@ final List<AppNavItem> navItems = [
     i: ImageIcon(AssetImage(MyAssets.dashboard)),
     icon: Icons.dashboard,
     label: "仪表盘",
+    routes: [
+      GoRoute(
+        name: "coverFlow",
+        path: "/cover-flow",
+        builder: (context, state) => CoverFlowPage(),
+      ),
+    ],
   ),
   AppNavItem(
     name: "user",

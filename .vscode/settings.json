@@ -1,3 +1,8 @@
 {
-  "cSpell.words": ["almbum", "setlocale", "zcool"]
+  "cSpell.words": [
+    "almbum",
+    "setlocale",
+    "zcool"
+  ],
+  "cmake.sourceDirectory": "/home/cangli/Desktop/dart/myapp/linux"
 }

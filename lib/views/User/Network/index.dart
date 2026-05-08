@@ -22,6 +22,7 @@ class _NetWorkPageState extends State<NetWorkPage> {
               child: TextButton(
                 onPressed: () async {
                   musics = await MusicApi.listMusic();
+                  setState(() {});
                 },
                 child: Text("获取"),
               ),

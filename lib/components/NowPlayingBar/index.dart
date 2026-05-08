@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
@@ -8,24 +6,9 @@ import 'package:myapp/model/Music/index.dart';
 import 'package:myapp/providers/MusicProvider/index.dart';
 import 'package:provider/provider.dart';
 
-/// 底部播放进度栏组件
-class NowPlayingBar extends StatefulWidget {
+class NowPlayingBar extends StatelessWidget {
   const NowPlayingBar({super.key});
 
-  @override
-  State<NowPlayingBar> createState() => _NowPlayingBarState();
-}
-
-class _NowPlayingBarState extends State<NowPlayingBar> {
-  late final bool isWide;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    isWide = MediaQuery.of(context).size.width >= 700;
-  }
-
-  /// 时间格式化辅助函数：将 Duration 转为 00:00 格式
   static String _fmt(Duration d) {
     String p(int n) => n.toString().padLeft(2, '0');
     return '${p(d.inMinutes.remainder(60))}:${p(d.inSeconds.remainder(60))}';
@@ -33,12 +16,13 @@ class _NowPlayingBarState extends State<NowPlayingBar> {
 
   @override
   Widget build(BuildContext context) {
-    // 监听当前音乐信息，如果没有播放内容则隐藏
     final music = context.select<MusicProvider, MusicInfo?>(
       (p) => p.currentMusic,
     );
     if (music == null) return const SizedBox.shrink();
+
     final cs = Theme.of(context).colorScheme;
+    final bool isWide = MediaQuery.of(context).size.width >= 800; // 宽屏阈值建议略微调大
 
     return Material(
       color: cs.surfaceContainerHigh,
@@ -46,86 +30,141 @@ class _NowPlayingBarState extends State<NowPlayingBar> {
       child: InkWell(
         onTap: () => context.push('/music-detail'),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-        child: SizedBox(
+        child: Container(
           width: double.infinity,
-          height: 84, // 固定高度
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: isWide
-                ? _WideLayout(music: music, fmt: _fmt)
-                : _CompactLayout(music: music),
-          ),
+          height: 88,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: isWide
+              ? _buildWideLayout(context, music)
+              : _buildCompactLayout(context, music),
         ),
       ),
     );
   }
-}
 
-/// 宽屏模式布局：左右固定/自适应，中间绝对居中
-class _WideLayout extends StatelessWidget {
-  final MusicInfo music;
-  final String Function(Duration) fmt;
-  const _WideLayout({required this.music, required this.fmt});
-
-  @override
-  Widget build(BuildContext context) {
+  // --- 宽屏布局：左(3) 中(4) 右(3) ---
+  Widget _buildWideLayout(BuildContext context, MusicInfo music) {
     final mp = context.read<MusicProvider>();
+    final isPlaying = context.select<MusicProvider, bool>(
+      (p) => p.player.playing,
+    );
 
-    // 使用 Stack 配合 Center 实现中间内容绝对居中
-    return Stack(
-      alignment: Alignment.center,
+    return Row(
       children: [
-        // 左侧：歌曲信息
-        Align(
-          alignment: Alignment.centerLeft,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 300), // 限制左侧最大宽度避免挤压中间
-            child: _TrackInfo(music: music),
+        // 左侧：歌曲信息 (Flex 3)
+        Expanded(flex: 3, child: _TrackInfoTile(music: music)),
+
+        // 中间：控制与进度 (Flex 4) - 核心控制区
+        Expanded(
+          flex: 4,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _IconButton(
+                    Icons.shuffle_rounded,
+                    mp.togglePlayMode,
+                    size: 20,
+                  ),
+                  _IconButton(Icons.skip_previous_rounded, mp.playPrev),
+                  _IconButton(
+                    isPlaying
+                        ? Icons.pause_circle_filled_rounded
+                        : Icons.play_circle_filled_rounded,
+                    mp.togglePlay,
+                    size: 42,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  _IconButton(Icons.skip_next_rounded, mp.playNext),
+                  _IconButton(Icons.repeat_rounded, () {}, size: 20), // 示例
+                ],
+              ),
+              const _ProgressBar(fmt: _fmt),
+            ],
           ),
         ),
 
-        // 中间：播放控制按钮和进度条（绝对居中）
-        _PlaybackCenter(fmt: fmt),
-
-        // 右侧：功能操作
-        _QueueActions(showCompactPlayPause: false, onPlayPause: mp.togglePlay),
+        // 右侧：音量与功能 (Flex 3)
+        Expanded(
+          flex: 3,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              const _VolumeControl(),
+              _IconButton(Icons.queue_music_rounded, () => _showQueue(context)),
+            ],
+          ),
+        ),
       ],
     );
   }
-}
 
-/// 紧凑模式布局：仅显示歌曲信息和基本控制
-class _CompactLayout extends StatelessWidget {
-  final MusicInfo music;
-  const _CompactLayout({required this.music});
-
-  @override
-  Widget build(BuildContext context) {
+  // --- 紧凑布局 ---
+  Widget _buildCompactLayout(BuildContext context, MusicInfo music) {
     final mp = context.read<MusicProvider>();
+    final isPlaying = context.select<MusicProvider, bool>(
+      (p) => p.player.playing,
+    );
+
     return Row(
       children: [
-        Expanded(child: _TrackInfo(music: music)),
-        _QueueActions(showCompactPlayPause: true, onPlayPause: mp.togglePlay),
+        Expanded(child: _TrackInfoTile(music: music)),
+        _IconButton(
+          isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+          mp.togglePlay,
+        ),
+        _IconButton(Icons.queue_music_rounded, () => _showQueue(context)),
       ],
+    );
+  }
+
+  // 内部辅助方法：显示播放队列
+  void _showQueue(BuildContext context) {
+    final mp = context.read<MusicProvider>();
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => _QueueSheet(mp: mp),
     );
   }
 }
 
-/// 歌曲基本信息：封面 + 歌名 + 歌手
-class _TrackInfo extends StatelessWidget {
+// ---------------------------------------------------------------------------
+// 抽离的子组件（保持功能独立，但减少过度嵌套）
+// ---------------------------------------------------------------------------
+
+/// 歌曲信息块（封面+文字）
+class _TrackInfoTile extends StatelessWidget {
   final MusicInfo music;
-  const _TrackInfo({required this.music});
+  const _TrackInfoTile({required this.music});
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _AlbumArt(coverBytes: music.coverBytes),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: music.coverBytes != null && music.coverBytes!.isNotEmpty
+              ? Image.memory(
+                  music.coverBytes!,
+                  width: 56,
+                  height: 56,
+                  fit: BoxFit.cover,
+                )
+              : Container(
+                  width: 56,
+                  height: 56,
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  child: const Icon(Icons.music_note_rounded),
+                ),
+        ),
         const SizedBox(width: 12),
         Flexible(
-          // 使用 Flexible 允许文本在空间不足时省略
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -135,7 +174,7 @@ class _TrackInfo extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.bold,
                   fontSize: 14,
                 ),
               ),
@@ -143,7 +182,10 @@ class _TrackInfo extends StatelessWidget {
                 music.artist,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(color: cs.onSurfaceVariant, fontSize: 12),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 12,
+                ),
               ),
             ],
           ),
@@ -153,63 +195,7 @@ class _TrackInfo extends StatelessWidget {
   }
 }
 
-/// 中间播放控制区域
-class _PlaybackCenter extends StatelessWidget {
-  final String Function(Duration) fmt;
-  const _PlaybackCenter({required this.fmt});
-
-  @override
-  Widget build(BuildContext context) {
-    final mp = context.read<MusicProvider>();
-    final cs = Theme.of(context).colorScheme;
-    // 监听播放状态
-    final isPlaying = context.select<MusicProvider, bool>(
-      (p) => p.player.playing,
-    );
-    final isShuffle = context.select<MusicProvider, bool>(
-      (p) => p.playMode == PlayMode.shuffle,
-    );
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _MiniIconButton(
-              icon: isShuffle ? Icons.sort_rounded : Icons.shuffle_rounded,
-              tooltip: isShuffle ? '顺序播放' : '随机播放',
-              color: isShuffle ? cs.primary : cs.onSurfaceVariant,
-              onPressed: mp.togglePlayMode,
-            ),
-            _MiniIconButton(
-              icon: Icons.skip_previous_rounded,
-              onPressed: mp.playPrev,
-            ),
-            // 主播放按钮
-            _MiniIconButton(
-              icon: isPlaying
-                  ? Icons.pause_circle_filled_rounded
-                  : Icons.play_circle_filled_rounded,
-              size: 40, // 突出显示
-              color: cs.primary,
-              onPressed: mp.togglePlay,
-            ),
-            _MiniIconButton(
-              icon: Icons.skip_next_rounded,
-              onPressed: mp.playNext,
-            ),
-          ],
-        ),
-        const SizedBox(height: 2),
-        _ProgressBar(fmt: fmt),
-      ],
-    );
-  }
-}
-
-/// 进度条组件：使用 StreamBuilder 实现秒级更新
+/// 进度条（使用 StreamBuilder 局部刷新）
 class _ProgressBar extends StatelessWidget {
   final String Function(Duration) fmt;
   const _ProgressBar({required this.fmt});
@@ -225,255 +211,117 @@ class _ProgressBar extends StatelessWidget {
         final pos =
             snap.data ??
             PositionData(Duration.zero, Duration.zero, Duration.zero);
-        final durationMs = pos.duration.inMilliseconds;
-        final positionMs = pos.position.inMilliseconds;
-        double value = (durationMs > 0) ? positionMs / durationMs : 0.0;
+        double value = (pos.duration.inMilliseconds > 0)
+            ? pos.position.inMilliseconds / pos.duration.inMilliseconds
+            : 0.0;
 
-        return SizedBox(
-          width: 320,
-          // 既然要变大，我们把高度稍微拉一点点，确保文字对齐
-          height: 36,
-          child: Row(
-            children: [
-              // 时间文本稍微放大一点点以匹配变粗的线条
-              Text(fmt(pos.position), style: _ts(cs)),
-              const SizedBox(width: 8), // 增加一点文本和线条的间距
-              Expanded(
-                child: SliderTheme(
-                  data: SliderTheme.of(context).copyWith(
-                    // 1. 核心改动：显著增加轨道高度，使其看起来“更大”
-                    trackHeight: 10.0, // 从 2.0 增加到 10.0
-                    // 2. 核心改动：彻底移除圆形滑块（Thumb）
-                    thumbShape: SliderComponentShape.noThumb,
-
-                    // 3. 核心改动：点击时不再显示圆形光晕（Overlay）
-                    overlayShape: SliderComponentShape.noOverlay,
-
-                    // 4. 调整轨道形状：使用圆角矩形，更 M3
-                    trackShape: const RoundedRectSliderTrackShape(),
-
-                    // 气泡样式保持一致
-                    showValueIndicator: ShowValueIndicator.onlyForContinuous,
-                    valueIndicatorShape: const DropSliderValueIndicatorShape(),
-                    // 因为没有滑块，气泡可能需要往上调一点点
-                    valueIndicatorColor: cs.primary,
+        return Row(
+          children: [
+            Text(
+              fmt(pos.position),
+              style: TextStyle(fontSize: 10, color: cs.onSurfaceVariant),
+            ),
+            Expanded(
+              child: SliderTheme(
+                data: SliderTheme.of(context).copyWith(
+                  trackHeight: 4,
+                  thumbShape: const RoundSliderThumbShape(
+                    enabledThumbRadius: 6,
                   ),
-                  child: Slider(
-                    year2023: false,
-                    label: fmt(pos.position),
-                    value: value.clamp(0.0, 1.0),
-                    // 虽然视觉上没有滑块，但 onChanged 依然有效
-                    // 用户点击或拖动整根线条都能跳转进度
-                    onChanged: (v) => mp.player.seek(
-                      Duration(milliseconds: (durationMs * v).toInt()),
+                  overlayShape: const RoundSliderOverlayShape(
+                    overlayRadius: 12,
+                  ),
+                ),
+                child: Slider(
+                  value: value.clamp(0.0, 1.0),
+                  onChanged: (v) => mp.player.seek(
+                    Duration(
+                      milliseconds: (pos.duration.inMilliseconds * v).toInt(),
                     ),
-                    // 鲜艳模式下使用 primary
-                    activeColor: cs.primary,
-                    // 未激活部分使用表面色的变体，增加层级感
-                    inactiveColor: cs.surfaceContainerHighest,
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
-              Text(fmt(pos.duration), style: _ts(cs)),
-            ],
-          ),
+            ),
+            Text(
+              fmt(pos.duration),
+              style: TextStyle(fontSize: 10, color: cs.onSurfaceVariant),
+            ),
+          ],
         );
       },
     );
   }
-
-  TextStyle _ts(ColorScheme cs) => TextStyle(
-    fontSize: 11,
-    color: cs.onSurfaceVariant,
-    fontWeight: FontWeight.w500,
-  );
 }
 
 /// 音量控制
-class _VolumeControllerWidget extends StatelessWidget {
-  const _VolumeControllerWidget();
+class _VolumeControl extends StatelessWidget {
+  const _VolumeControl();
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     final mp = context.read<MusicProvider>();
     final volume = context.select<MusicProvider, double>((p) => p.volume);
-    final isMuted = volume == 0.0;
-
-    return Row(
-      children: [
-        SliderTheme(
-          data: SliderTheme.of(context).copyWith(
-            // 核心修复：改为 onlyForContinuous，这样连续滑动的 Slider 也会在拖动时显示气泡
-            showValueIndicator: ShowValueIndicator.onlyForContinuous,
-            // 可选：美化气泡形状（M3 风格）
-            valueIndicatorShape: const DropSliderValueIndicatorShape(),
-          ),
-          child: Slider(
-            year2023: false,
-            label: "${(volume * 100).toInt()}%",
-            value: volume,
-            onChanged: (value) {
-              mp.setVolume(value);
-            },
-            activeColor: colorScheme.primary,
-            inactiveColor: colorScheme.surfaceContainerHighest,
-          ),
-        ),
-        _MiniIconButton(
-          icon: isMuted ? Icons.volume_off_rounded : Icons.volume_up_rounded,
-          tooltip: isMuted ? '打开声音' : '静音',
-          onPressed: () {
-            if (isMuted) {
-              mp.setVolume(0.5); // 恢复到中等音量
-            } else {
-              mp.setVolume(0.0); // 静音
-            }
-          },
-        ),
-      ],
-    );
-  }
-}
-
-/// 更多操作：包括播放队列菜单
-class _QueueActions extends StatelessWidget {
-  final bool showCompactPlayPause;
-  final VoidCallback onPlayPause;
-  const _QueueActions({
-    required this.showCompactPlayPause,
-    required this.onPlayPause,
-  });
-
-  void _showModalBottomSheet(BuildContext context) {
-    final musicProvider = context.read<MusicProvider>();
-    final queue = musicProvider.queue;
-    final currentMusic = musicProvider.currentMusic;
-    final isPlaying = musicProvider.player.playing;
-
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ), //设置圆角
-      builder: (context) {
-        return SizedBox(
-          height: 200,
-          child: ListView.builder(
-            itemCount: queue.length,
-            itemBuilder: (context, index) {
-              final music = queue[index];
-              final coverBytes = music.coverBytes;
-              final artist = music.artist;
-              final album = music.album;
-              final isCurrent = currentMusic?.id == music.id;
-              return ListTile(
-                onTap: () {
-                  musicProvider.playByIndex(index);
-                },
-                leading: isCurrent
-                    ? Lottie.asset(
-                        MyAssets.equalizer,
-                        width: 24,
-                        height: 24,
-                        animate: isPlaying,
-                      )
-                    : (coverBytes != null && coverBytes.isNotEmpty
-                          ? SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(6),
-                                child: Image.memory(
-                                  music.coverBytes!,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                            )
-                          : Icon(Icons.music_note_rounded)),
-                title: Text(music.title),
-                subtitle: Text('$artist ${album != null ? "· $album" : ""}'),
-              );
-            },
-          ),
-        );
-      },
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isPlaying = context.select<MusicProvider, bool>(
-      (p) => p.player.playing,
-    );
 
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (!showCompactPlayPause) _VolumeControllerWidget(),
-        if (showCompactPlayPause)
-          _MiniIconButton(
-            icon: isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-            onPressed: onPlayPause,
-          ),
-        _MiniIconButton(
-          icon: Icons.queue_music_rounded,
-          onPressed: () => _showModalBottomSheet(context),
+        Icon(
+          volume == 0 ? Icons.volume_off_rounded : Icons.volume_up_rounded,
+          size: 20,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
+        SizedBox(
+          width: 100, // 固定音量条宽度，防止挤压
+          child: Slider(value: volume, onChanged: (v) => mp.setVolume(v)),
         ),
       ],
     );
   }
 }
 
-// ---------------------------------------------------------------------------
-// 以下为基础 UI 小组件，增加了容错处理
-// ---------------------------------------------------------------------------
-
-class _MiniIconButton extends StatelessWidget {
+/// 统一的图标按钮，减少重复代码
+class _IconButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onPressed;
   final double size;
   final Color? color;
-  final String? tooltip;
 
-  const _MiniIconButton({
-    required this.icon,
-    required this.onPressed,
-    this.size = 28,
-    this.color,
-    this.tooltip,
-  });
+  const _IconButton(this.icon, this.onPressed, {this.size = 28, this.color});
 
   @override
   Widget build(BuildContext context) {
     return IconButton(
       icon: Icon(icon, size: size, color: color),
       onPressed: onPressed,
-      tooltip: tooltip,
       visualDensity: VisualDensity.compact,
-      padding: EdgeInsets.zero,
     );
   }
 }
 
-class _AlbumArt extends StatelessWidget {
-  final Uint8List? coverBytes;
-  const _AlbumArt({this.coverBytes});
+/// 抽离队列视图
+class _QueueSheet extends StatelessWidget {
+  final MusicProvider mp;
+  const _QueueSheet({required this.mp});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 52,
-      height: 52,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: coverBytes != null && coverBytes!.isNotEmpty
-          ? Image.memory(coverBytes!, fit: BoxFit.cover)
-          : const Icon(Icons.music_note_rounded),
+    return ListView.builder(
+      itemCount: mp.queue.length,
+      itemBuilder: (context, index) {
+        final m = mp.queue[index];
+        final isCurrent = mp.currentMusic?.id == m.id;
+        return ListTile(
+          leading: isCurrent
+              ? Lottie.asset(
+                  MyAssets.equalizer,
+                  width: 24,
+                  animate: mp.player.playing,
+                )
+              : const Icon(Icons.music_note),
+          title: Text(m.title),
+          onTap: () => mp.playByIndex(index),
+        );
+      },
     );
   }
 }

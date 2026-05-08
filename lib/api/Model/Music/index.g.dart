@@ -8,8 +8,8 @@ part of 'index.dart';
 
 Music _$MusicFromJson(Map<String, dynamic> json) => Music(
   title: json['title'] as String,
-  artist: json['artist'] as String,
-  album: json['album'] as String,
+  artist: json['artist'] as String?,
+  album: json['album'] as String?,
   duration: const DurationConverter().fromJson(
     (json['duration'] as num).toInt(),
   ),

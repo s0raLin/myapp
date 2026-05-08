@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:go_router/go_router.dart';
 
 class MusicDashboardPage extends StatelessWidget {
   const MusicDashboardPage({super.key});
@@ -115,35 +116,46 @@ class _DashboardCard extends StatelessWidget {
         icon = Icons.short_text_rounded;
     }
 
-    return Container(
-      padding: EdgeInsets.all(isNarrow && (index == 2 || index == 3) ? 12 : 16),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: colorScheme.outlineVariant.withOpacity(0.2),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: onColor, size: isNarrow ? 20 : 28),
-          const Spacer(),
-          // 使用 FittedBox 解决窄屏下文字挤压导致的越界问题
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
-            child: Text(
-              label,
-              style: textTheme.labelLarge?.copyWith(
-                color: onColor,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 0.5,
-              ),
+    return Material(
+      child: InkWell(
+        onTap: () {
+          if (index == 0) {
+            context.push("/dashboard/cover-flow");
+          }
+        },
+        child: Container(
+          padding: EdgeInsets.all(
+            isNarrow && (index == 2 || index == 3) ? 12 : 16,
+          ),
+          decoration: BoxDecoration(
+            color: bgColor,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: colorScheme.outlineVariant.withOpacity(0.2),
+              width: 1,
             ),
           ),
-        ],
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(icon, color: onColor, size: isNarrow ? 20 : 28),
+              const Spacer(),
+              // 使用 FittedBox 解决窄屏下文字挤压导致的越界问题
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  label,
+                  style: textTheme.labelLarge?.copyWith(
+                    color: onColor,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -1,4 +1,3 @@
-
 import 'package:json_annotation/json_annotation.dart';
 
 part 'index.g.dart';
@@ -16,8 +15,8 @@ class DurationConverter implements JsonConverter<Duration, int> {
 @JsonSerializable()
 class Music {
   final String title;
-  final String artist;
-  final String album;
+  final String? artist;
+  final String? album;
   @DurationConverter()
   final Duration duration;
   final String ossKey;
