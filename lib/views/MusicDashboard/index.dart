@@ -13,53 +13,95 @@ class MusicDashboardPage extends StatelessWidget {
       backgroundColor: colorScheme.surface,
       body: LayoutBuilder(
         builder: (context, constraints) {
-          // 响应式阈值：宽度小于 480 视为窄屏（竖屏手机）
-          final bool isNarrow = constraints.maxWidth < 480;
-          final int crossAxisCount = isNarrow ? 2 : 4;
+          final double width = constraints.maxWidth;
 
-          // 这里的 Tile 逻辑模仿了 Dashboard 的错落感
-          final List<QuiltedGridTile> pattern = isNarrow
-              ? const [
-                  QuiltedGridTile(2, 2), // 专辑封面 (大)
-                  QuiltedGridTile(1, 2), // 播放控制 (宽)
-                  QuiltedGridTile(1, 1), // 采样率 (小)
-                  QuiltedGridTile(1, 1), // 输出设备 (小)
-                  QuiltedGridTile(2, 2), // 歌词预览 (长)
-                ]
-              : const [
-                  QuiltedGridTile(2, 2), // 专辑封面
-                  QuiltedGridTile(1, 2), // 播放控制
-                  QuiltedGridTile(1, 1), // 采样率
-                  QuiltedGridTile(1, 1), // 输出设备
-                  QuiltedGridTile(2, 4), // 宽屏下歌词横向拉长
-                ];
+          // 定义响应式变量
+          final int crossAxisCount;
+          final List<QuiltedGridTile> pattern;
+          final double horizontalPadding;
+          final double spacing;
 
-          return CustomScrollView(
-            slivers: [
-              SliverAppBar(
-                title: const Text("MikuMusic"),
-                centerTitle: false,
-                backgroundColor: Colors.transparent,
-                scrolledUnderElevation: 0,
-              ),
-              SliverPadding(
-                padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
-                sliver: SliverGrid(
-                  gridDelegate: SliverQuiltedGridDelegate(
-                    crossAxisCount: crossAxisCount,
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
-                    repeatPattern: QuiltedGridRepeatPattern.inverted,
-                    pattern: pattern,
+          // 响应式逻辑
+          if (width < 600) {
+            // 1. 窄屏 (手机)
+            crossAxisCount = 2;
+            horizontalPadding = 16.0;
+            spacing = 12.0;
+            pattern = const [
+              QuiltedGridTile(2, 2), // 专辑封面
+              QuiltedGridTile(1, 2), // 播放控制
+              QuiltedGridTile(1, 1), // 采样率
+              QuiltedGridTile(1, 1), // 输出设备
+              QuiltedGridTile(2, 2), // 歌词预览
+            ];
+          } else if (width < 1024) {
+            // 2. 中等屏 (平板/窄窗口)
+            crossAxisCount = 4;
+            horizontalPadding = 24.0;
+            spacing = 16.0;
+            pattern = const [
+              QuiltedGridTile(2, 2), // 专辑封面
+              QuiltedGridTile(1, 2), // 播放控制
+              QuiltedGridTile(1, 1), // 采样率
+              QuiltedGridTile(1, 1), // 输出设备
+              QuiltedGridTile(1, 4), // 歌词横向长条
+            ];
+          } else {
+            // 3. 宽屏 (桌面)
+            crossAxisCount = 6;
+            horizontalPadding = 32.0;
+            spacing = 20.0;
+            pattern = const [
+              QuiltedGridTile(3, 3), // 专辑封面 (占据一半高度和一半宽度)
+              QuiltedGridTile(1, 3), // 播放控制
+              QuiltedGridTile(1, 1), // 采样率
+              QuiltedGridTile(1, 1), // 输出设备
+              QuiltedGridTile(1, 1), // 备用占位
+              QuiltedGridTile(1, 3), // 歌词预览
+            ];
+          }
+
+          return Center(
+            child: ConstrainedBox(
+              // 关键：限制桌面端内容最大宽度
+              constraints: const BoxConstraints(maxWidth: 1200),
+              child: CustomScrollView(
+                slivers: [
+                  SliverAppBar(
+                    title: const Text(
+                      "M3Music",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    centerTitle: false,
+                    backgroundColor: Colors.transparent,
+                    scrolledUnderElevation: 0,
+                    pinned: true,
                   ),
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) =>
-                        _DashboardCard(index: index, isNarrow: isNarrow),
-                    childCount: 5,
+                  SliverPadding(
+                    padding: EdgeInsets.fromLTRB(
+                      horizontalPadding,
+                      0,
+                      horizontalPadding,
+                      32,
+                    ),
+                    sliver: SliverGrid(
+                      gridDelegate: SliverQuiltedGridDelegate(
+                        crossAxisCount: crossAxisCount,
+                        mainAxisSpacing: spacing,
+                        crossAxisSpacing: spacing,
+                        repeatPattern: QuiltedGridRepeatPattern.inverted,
+                        pattern: pattern,
+                      ),
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) =>
+                            _DashboardCard(index: index, screenWidth: width),
+                        childCount: 5,
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
-            ],
+            ),
           );
         },
       ),
@@ -69,16 +111,16 @@ class MusicDashboardPage extends StatelessWidget {
 
 class _DashboardCard extends StatelessWidget {
   final int index;
-  final bool isNarrow;
+  final double screenWidth;
 
-  const _DashboardCard({required this.index, required this.isNarrow});
+  const _DashboardCard({required this.index, required this.screenWidth});
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
-    // 根据索引分配不同的语义颜色和内容
+    // 状态配置
     final Color bgColor;
     final Color onColor;
     final String label;
@@ -116,44 +158,50 @@ class _DashboardCard extends StatelessWidget {
         icon = Icons.short_text_rounded;
     }
 
-    return Material(
-      child: InkWell(
-        onTap: () {
-          if (index == 0) {
-            context.push("/dashboard/cover-flow");
-          }
-        },
-        child: Container(
-          padding: EdgeInsets.all(
-            isNarrow && (index == 2 || index == 3) ? 12 : 16,
-          ),
-          decoration: BoxDecoration(
-            color: bgColor,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: colorScheme.outlineVariant.withOpacity(0.2),
-              width: 1,
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(icon, color: onColor, size: isNarrow ? 20 : 28),
-              const Spacer(),
-              // 使用 FittedBox 解决窄屏下文字挤压导致的越界问题
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  label,
-                  style: textTheme.labelLarge?.copyWith(
-                    color: onColor,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.5,
+    // 桌面端微调：让图标和文字不要太大
+    final double responsiveIconSize = screenWidth > 1024 ? 24 : 28;
+    final double responsivePadding = screenWidth > 1024 ? 20 : 16;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(28), // 稍微调圆润一点更现代
+        border: Border.all(
+          color: colorScheme.outlineVariant.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent, // 保证水波纹在 Container 之上
+        child: InkWell(
+          borderRadius: BorderRadius.circular(28),
+          onTap: () {
+            if (index == 0) {
+              context.push("/dashboard/cover-flow");
+            }
+          },
+          child: Padding(
+            padding: EdgeInsets.all(responsivePadding),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(icon, color: onColor, size: responsiveIconSize),
+                const Spacer(),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    label,
+                    style: textTheme.labelLarge?.copyWith(
+                      color: onColor,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                      fontSize: screenWidth > 1024 ? 14 : 16,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

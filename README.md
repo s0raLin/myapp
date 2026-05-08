@@ -1,4 +1,4 @@
-# MikuMusic - Flutter音乐播放器
+# M3Music - Flutter音乐播放器
 
 基于 Flutter 框架开发的跨平台音乐播放器应用，支持 Android、iOS、Linux 和 Windows 平台。
 
@@ -23,7 +23,7 @@
 
 **情境**：在移动端和桌面端缺乏一款轻量级、开源且具有现代设计语言的音乐播放器应用。
 
-MikuMusic 是一个基于 Flutter 3.11.4 开发的跨平台音乐播放器，深度整合了 media_kit 音频引擎、provider 状态管理和 go_router 路由系统，提供流畅的音乐播放体验和现代化的 Material 3 设计界面。
+M3Music 是一个基于 Flutter 3.11.4 开发的跨平台音乐播放器，深度整合了 media_kit 音频引擎、provider 状态管理和 go_router 路由系统，提供流畅的音乐播放体验和现代化的 Material 3 设计界面。
 
 ### 核心价值
 

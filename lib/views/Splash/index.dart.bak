@@ -96,7 +96,7 @@ class _SplashPageState extends State<SplashPage>
             FadeTransition(
               opacity: _fadeAnimation,
               child: Text(
-                'MikuMusic',
+                'M3Music',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,

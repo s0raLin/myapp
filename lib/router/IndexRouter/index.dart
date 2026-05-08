@@ -18,7 +18,7 @@ import 'package:myapp/views/User/Recent/index.dart';
 import 'package:myapp/views/NotFound/index.dart';
 import 'package:myapp/views/Settings/index.dart';
 import 'package:myapp/views/Splash/index.dart';
-import 'package:myapp/views/User/Favorites/index.dart';
+import 'package:myapp/views/User/PlaylistDetail/Favorites/index.dart';
 import 'package:myapp/views/User/PlaylistDetail/index.dart';
 import 'package:myapp/views/User/index.dart';
 import 'package:myapp/views/index.dart';
@@ -114,18 +114,25 @@ final List<AppNavItem> navItems = [
         path: "/network",
         builder: (context, state) => NetWorkPage(),
       ),
-      GoRoute(
-        name: "favorites",
-        path: "/favorites",
-        builder: (context, state) => const FavoritesPage(),
-      ),
+
       GoRoute(
         name: "playlist",
-        path: "/playlist/:id",
-        builder: (context, state) {
-          final id = state.pathParameters['id']!;
-          return PlaylistDetailPage(playlistId: id);
-        },
+        path: "/playlist",
+        routes: [
+          GoRoute(
+            name: "favorites",
+            path: "/favorites",
+            builder: (context, state) => const FavoritesPage(),
+          ),
+          GoRoute(
+            path: "/:id",
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return PlaylistDetailPage(playlistId: id);
+            },
+          ),
+        ],
+        builder: (context, state) => const MusicPage(),
       ),
       GoRoute(
         name: "edit-profile",

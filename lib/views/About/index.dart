@@ -154,15 +154,11 @@ class AboutPage extends StatelessWidget {
               ),
             ],
           ),
-          child: Icon(
-            Icons.music_note_rounded,
-            size: 60,
-            color: cs.onPrimary,
-          ),
+          child: Icon(Icons.music_note_rounded, size: 60, color: cs.onPrimary),
         ),
         const SizedBox(height: 24),
         Text(
-          'MikuMusic',
+          'M3Music',
           style: theme.textTheme.headlineMedium?.copyWith(
             fontWeight: FontWeight.w900,
           ),

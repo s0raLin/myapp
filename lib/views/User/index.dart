@@ -97,7 +97,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                 runSpacing: 12.0,
                 children: [
                   _PlaylistQuickCard(
-                    onTap: () => context.push("/user/favorites"),
+                    onTap: () => context.push("/user/playlist/favorites"),
                     title: "喜欢",
                     icon: Icons.favorite_rounded,
                   ),
@@ -237,7 +237,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
   }
 }
 
-// --- User Playlist Card (for grid) ---
+// --- 用户播放列表卡（用于网格） ---
 class _UserPlaylistCard extends StatelessWidget {
   final Playlist playlist;
   final int songCount;
@@ -336,7 +336,7 @@ class _UserPlaylistCard extends StatelessWidget {
   }
 }
 
-// --- Playlist management helpers ---
+// --- 播放列表管理 ---
 Future<void> _showPlaylistOptions(
   BuildContext context,
   Playlist playlist,
@@ -588,7 +588,7 @@ class _PlaylistQuickCard extends StatelessWidget {
     return SizedBox(
       width: 105,
       child: Card.filled(
-        color: colorScheme.secondaryContainer,
+        color: colorScheme.surfaceContainerLow,
         clipBehavior: Clip.antiAlias,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: InkWell(
@@ -599,10 +599,10 @@ class _PlaylistQuickCard extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 22,
-                  backgroundColor: colorScheme.onSecondaryContainer.withValues(
+                  backgroundColor: colorScheme.primary.withValues(
                     alpha: 0.10,
                   ),
-                  foregroundColor: colorScheme.onSecondaryContainer,
+                  foregroundColor: colorScheme.primary,
                   child: Icon(icon),
                 ),
                 const SizedBox(height: 10),
