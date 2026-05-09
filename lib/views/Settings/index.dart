@@ -363,19 +363,6 @@ class SettingsPage extends StatelessWidget {
     }
   }
 
-  String _getDensityName(String density) {
-    switch (density) {
-      case "compact":
-        return "紧凑";
-      case "normal":
-        return "正常";
-      case "loose":
-        return "宽松";
-      default:
-        return "正常";
-    }
-  }
-
   String _getQualityName(String quality) {
     switch (quality) {
       case "low":

@@ -1,0 +1,175 @@
+// ─── 歌词区域 ─────────────────────────────────────────────────────────────────
+
+import 'package:flutter/material.dart';
+import 'package:myapp/providers/MusicProvider/index.dart';
+import 'package:provider/provider.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
+
+class LyricsSection extends StatefulWidget {
+  const LyricsSection({super.key});
+
+  @override
+  State<LyricsSection> createState() => _LyricsSectionState();
+}
+
+class _LyricsSectionState extends State<LyricsSection>
+    with AutomaticKeepAliveClientMixin {
+  final ItemScrollController _scrollController = ItemScrollController();
+  int _lastAutoScrollIndex = -1;
+  List<Map<String, dynamic>> _prevLyrics = [];
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final lyrics = context.read<MusicProvider>().currentLyrics;
+    if (!_lyricsEqual(lyrics, _prevLyrics)) {
+      _prevLyrics = List.from(lyrics);
+      _lastAutoScrollIndex = -1;
+    }
+  }
+
+  bool _lyricsEqual(
+    List<Map<String, dynamic>> a,
+    List<Map<String, dynamic>> b,
+  ) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i]['time'] != b[i]['time'] || a[i]['text'] != b[i]['text']) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    final lyrics = context.watch<MusicProvider>().currentLyrics;
+    final cs = Theme.of(context).colorScheme;
+
+    if (lyrics.isEmpty) {
+      return Center(
+        child: Text(
+          '暂无歌词',
+          style: Theme.of(
+            context,
+          ).textTheme.bodyLarge?.copyWith(color: cs.onSurfaceVariant),
+        ),
+      );
+    }
+
+    return StreamBuilder<PositionData>(
+      stream: context.read<MusicProvider>().positionDataStream,
+      builder: (context, snapshot) {
+        final position = snapshot.data?.position ?? Duration.zero;
+
+        int currentIndex = 0;
+        for (var i = 0; i < lyrics.length; i++) {
+          if (position >= (lyrics[i]['time'] as Duration)) {
+            currentIndex = i;
+          } else {
+            break;
+          }
+        }
+
+        if (currentIndex != _lastAutoScrollIndex &&
+            _scrollController.isAttached) {
+          _lastAutoScrollIndex = currentIndex;
+          final isNearEnd = currentIndex >= lyrics.length - 3;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            _scrollController.scrollTo(
+              index: currentIndex,
+              alignment: isNearEnd ? 0.1 : 0.5,
+              duration: Duration(milliseconds: isNearEnd ? 340 : 300),
+              curve: Curves.easeOutCubic,
+            );
+          });
+        }
+
+        Widget fadeGradient(Alignment alignment) => IgnorePointer(
+          child: Align(
+            alignment: alignment,
+            child: Container(
+              height: 80,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: alignment,
+                  end: alignment == Alignment.topCenter
+                      ? Alignment.bottomCenter
+                      : Alignment.topCenter,
+                  colors: [cs.surface, cs.surface.withValues(alpha: 0)],
+                ),
+              ),
+            ),
+          ),
+        );
+
+        return Stack(
+          children: [
+            ScrollablePositionedList.builder(
+              itemScrollController: _scrollController,
+              itemCount: lyrics.length,
+              padding: const EdgeInsets.symmetric(vertical: 80),
+              itemBuilder: (context, index) {
+                final item = lyrics[index];
+                final isActive = index == currentIndex;
+                final isNear = (index - currentIndex).abs() == 1;
+
+                final style = isActive
+                    ? TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        color: cs.primary,
+                        height: 1.4,
+                      )
+                    : isNear
+                    ? TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: cs.onSurface.withValues(alpha: 0.6),
+                        height: 1.4,
+                      )
+                    : TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w400,
+                        color: cs.onSurfaceVariant.withValues(alpha: 0.8),
+                        height: 1.4,
+                      );
+
+                return InkWell(
+                  onTap: () => context.read<MusicProvider>().player.seek(
+                    item['time'] as Duration,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 24,
+                    ),
+                    child: AnimatedDefaultTextStyle(
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeOut,
+                      style: style,
+                      child: Text(
+                        (item['text'] as String).isEmpty
+                            ? '\u00a0'
+                            : item['text'] as String,
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+            fadeGradient(Alignment.topCenter),
+            fadeGradient(Alignment.bottomCenter),
+          ],
+        );
+      },
+    );
+  }
+}
