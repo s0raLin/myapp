@@ -3,6 +3,9 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio_media_kit/just_audio_media_kit.dart';
+import 'package:myapp/model/Music/index.dart';
+import 'package:myapp/service/Files/index.dart';
+import 'package:myapp/service/Music/index.dart';
 import 'package:myapp/service/Settings/index.dart';
 
 class InitializationService {
@@ -47,5 +50,20 @@ class InitializationService {
       'playlistSortBy': results[8],
       'maxHistoryCount': results[9],
     };
+  }
+
+  static Future<List<MusicInfo>> scanInitialMusic() async {
+    final List<MusicInfo> fetchedLibrary = [];
+    final paths = await FileService.loadPaths();
+
+    if (paths.isEmpty) return [];
+
+    // 使用 await for 等待扫描流完成（这可能会让启动页停留稍久，但能保证数据完整）
+    await for (final s in MusicService.scanDirectories(paths)) {
+      if (s.music != null) {
+        fetchedLibrary.add(s.music!);
+      }
+    }
+    return fetchedLibrary;
   }
 }
