@@ -1,10 +1,11 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-class HttpUtils {
-  static String _baseUrl = "http://localhost:8080";
+class NeteaseCloudUtil {
+  String _baseUrl = dotenv.get("API_URL", fallback: "");
 
-  static final HttpUtils _instance = HttpUtils._internal();
+  static final NeteaseCloudUtil _instance = NeteaseCloudUtil._internal();
   late final Dio _dio;
 
   void setBaseUrl(String url) {
@@ -14,9 +15,9 @@ class HttpUtils {
 
   String get currentBaseUrl => _dio.options.baseUrl;
 
-  factory HttpUtils() => _instance;
+  factory NeteaseCloudUtil() => _instance;
 
-  HttpUtils._internal() {
+  NeteaseCloudUtil._internal() {
     BaseOptions options = BaseOptions(
       baseUrl: _baseUrl,
       connectTimeout: const Duration(seconds: 10),

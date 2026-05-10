@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:myapp/api/NeteaseCloudMusic/index.dart';
 import 'package:myapp/components/Shared/index.dart';
 import 'package:myapp/model/Playlist/index.dart';
 import 'package:myapp/providers/MusicProvider/index.dart';
@@ -19,6 +20,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
     final nav = context.read<NavProvider>();
+
     return Scaffold(
       body: CustomScrollView(
         slivers: [
@@ -135,7 +137,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
                   Row(
                     children: [
                       FilledButton.icon(
-                        onPressed: () => _showCreatePlaylistDialog(context),
+                        onPressed: () async {
+                          await _showCreatePlaylistDialog(context);
+                        },
                         icon: const Icon(Icons.add_rounded, size: 18),
                         label: const Text("新建歌单"),
                       ),
@@ -257,10 +261,7 @@ class _UserPlaylistCard extends StatelessWidget {
         shape: const CircleBorder(),
         child: IconButton(
           onPressed: onMoreTap,
-          icon: Icon(
-            Icons.more_horiz_rounded,
-            color: colorScheme.onSurface,
-          ),
+          icon: Icon(Icons.more_horiz_rounded, color: colorScheme.onSurface),
         ),
       ),
     );
@@ -346,6 +347,7 @@ Future<void> _showDeleteConfirmDialog(
   Playlist playlist,
   MusicProvider provider,
 ) async {
+  final mp = context.read<MusicProvider>();
   final confirmed = await showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
@@ -357,7 +359,10 @@ Future<void> _showDeleteConfirmDialog(
           child: const Text("取消"),
         ),
         FilledButton(
-          onPressed: () => Navigator.pop(context, true),
+          onPressed: () {
+            mp.deletePlaylist(playlist.id);
+            Navigator.pop(context, true);
+          },
           child: const Text("删除"),
         ),
       ],
@@ -370,32 +375,82 @@ Future<void> _showDeleteConfirmDialog(
 }
 
 Future<void> _showCreatePlaylistDialog(BuildContext context) async {
-  final controller = TextEditingController();
-  final name = await showDialog<String>(
+  final nameController = TextEditingController();
+  final uidController = TextEditingController();
+  final mp = context.read<MusicProvider>();
+
+  await showDialog(
     context: context,
-    builder: (context) => AlertDialog(
-      title: const Text("新建歌单"),
-      content: TextField(
-        controller: controller,
-        autofocus: true,
-        decoration: const InputDecoration(hintText: "歌单名称"),
+    builder: (context) => DefaultTabController(
+      length: 2,
+      child: Builder(
+        builder: (tabContext) {
+          return AlertDialog(
+            title: TabBar(
+              tabs: [
+                Tab(text: "新建歌单"),
+                Tab(text: "网易云导入"),
+              ],
+            ),
+            content: SizedBox(
+              width: 120,
+              height: 96,
+              child: TabBarView(
+                children: [
+                  Center(
+                    child: TextField(
+                      controller: nameController,
+                      autofocus: true,
+                      decoration: const InputDecoration(hintText: "歌单名称"),
+                    ),
+                  ),
+                  Center(
+                    child: TextField(
+                      controller: uidController,
+                      decoration: const InputDecoration(
+                        hintText: "输入网易云用户id",
+                        helperText: "将自动获取该用户公开的歌单",
+                        prefixIcon: Icon(Icons.cloud_download),
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("取消"),
+              ),
+              FilledButton(
+                onPressed: () {
+                  // 根据当前选中的索引判断执行哪种逻辑
+                  final tabIndex = DefaultTabController.of(tabContext).index;
+                  Navigator.pop(context, {'index': tabIndex});
+                },
+                child: const Text("确定"),
+              ),
+            ],
+          );
+        },
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text("取消"),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop(context, controller.text.trim()),
-          child: const Text("创建"),
-        ),
-      ],
     ),
-  );
-  if (!context.mounted) return;
-  if (name != null && name.isNotEmpty) {
-    context.read<MusicProvider>().createPlaylist(name);
-  }
+  ).then((result) async {
+    if (result == null || !context.mounted) return [];
+
+    final provider = context.read<MusicProvider>();
+    if (result['index'] == 0) {
+      final name = nameController.text.trim();
+      if (name.isNotEmpty) provider.createPlaylist(name);
+    } else {
+      final uid = uidController.text.trim();
+      if (uid.isNotEmpty) {
+        final playlists = await NeteaseCloudMusicApi.getPlaylist(uid);
+        mp.addNetworkPlaylists(playlists);
+      }
+    }
+  });
 }
 
 // --- 优化后的用户信息卡片 ---

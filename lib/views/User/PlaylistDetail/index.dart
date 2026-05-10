@@ -50,7 +50,9 @@ class _PlaylistDetailPageState extends State<PlaylistDetailPage> {
         ],
       ),
     );
-    if (newName != null && newName.isNotEmpty) {
+
+    if (newName != null && newName.isEmpty) {
+      if (!context.mounted) return;
       context.read<MusicProvider>().renamePlaylist(playlist.id, newName);
     }
   }
@@ -80,9 +82,14 @@ class _PlaylistDetailPageState extends State<PlaylistDetailPage> {
         ],
       ),
     );
-    if (confirmed == true) {
-      context.read<MusicProvider>().deletePlaylist(playlist.id);
-      if (mounted) context.pop();
+    if (confirmed != true || !context.mounted) return;
+
+    final provider = context.read<MusicProvider>();
+
+    provider.deletePlaylist(playlist.id);
+
+    if (context.mounted) {
+      Navigator.of(context).pop();
     }
   }
 
@@ -108,9 +115,8 @@ class _PlaylistDetailPageState extends State<PlaylistDetailPage> {
         ],
       ),
     );
-    if (confirmed == true) {
-      context.read<MusicProvider>().removeFromPlaylist(playlistId, musicId);
-    }
+    if (confirmed != true || !context.mounted) return;
+    context.read<MusicProvider>().removeFromPlaylist(playlistId, musicId);
   }
 
   Future<void> _showAddToPlaylistSheet(
@@ -159,10 +165,7 @@ class _PlaylistDetailPageState extends State<PlaylistDetailPage> {
                     leading: const Icon(Icons.playlist_add_rounded),
                     title: Text(p.name),
                     trailing: alreadyIn
-                        ? Icon(
-                            Icons.check_circle,
-                            color: cs.secondary,
-                          )
+                        ? Icon(Icons.check_circle, color: cs.secondary)
                         : null,
                     onTap: () {
                       musicProvider.addToPlaylist(p.id, song);

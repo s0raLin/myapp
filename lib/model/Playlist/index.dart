@@ -56,6 +56,22 @@ class Playlist {
     };
   }
 
+  factory Playlist.fromNeteaseJson(Map<String, dynamic> json) {
+    return Playlist(
+      id: json['id'].toString(),
+      name: json['name'] ?? '未知歌单',
+      description: json['description'],
+      // 封面需要异步下载，这里先初始化为空，或者修改模型支持 URL
+      coverBytes: null,
+      // 原始数据里没给歌曲列表，先给个空集
+      songIds: [],
+      // specialType 为 5 通常是网易云的“我喜欢的音乐”系统歌单
+      isSystem: json['specialType'] == 5,
+      createdAt: DateTime.fromMillisecondsSinceEpoch(json['createTime']),
+      updatedAt: DateTime.fromMillisecondsSinceEpoch(json['updateTime']),
+    );
+  }
+
   factory Playlist.fromJson(Map<String, dynamic> json) {
     return Playlist(
       id: json['id'],
@@ -76,4 +92,8 @@ class Playlist {
   factory Playlist.fromSerializedString(String str) {
     return Playlist.fromJson(jsonDecode(str));
   }
+
+  @override
+  String toString() =>
+      "Playlist(id: $id, name: $name, description: $description, songIds: $songIds, isSystem: $isSystem, createdAt: $createdAt, updatedAt: $updatedAt)";
 }

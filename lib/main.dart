@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:myapp/providers/MusicProvider/index.dart';
 import 'package:myapp/providers/NavProvider/index.dart';
 import 'package:myapp/providers/StartupProvider/index.dart';
@@ -10,6 +11,8 @@ import 'package:provider/provider.dart';
 
 Future<void> main() async {
   await InitializationService.preRunInit();
+
+  await dotenv.load(fileName: ".env");
 
   runApp(
     MultiProvider(

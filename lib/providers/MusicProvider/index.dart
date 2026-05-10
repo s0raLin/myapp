@@ -565,6 +565,11 @@ class MusicProvider extends ChangeNotifier {
   // 歌单管理
   // ─────────────────────────────────────────────
 
+  void addNetworkPlaylists(List<Playlist> playlists) {
+    _playlists.addAll(playlists);
+    notifyListeners();
+  }
+
   /// 从 SharedPreferences 读取所有歌单，并确保系统歌单存在。
   Future<void> _loadPlaylists() async {
     final pfs = await SharedPreferences.getInstance();
