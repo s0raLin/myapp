@@ -61,7 +61,7 @@ class MusicService {
     // 2. 手动寻找并读取外部 .lrc 文件
     String lyrics = "";
     final baseName = p.withoutExtension(path);
-    final lrcPath = "$baseName.lrc.txt";
+    final lrcPath = "$baseName.lrc";
     final file = File(lrcPath);
 
     if (await file.exists()) {
