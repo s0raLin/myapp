@@ -21,6 +21,29 @@ class _UserProfilePageState extends State<UserProfilePage> {
     final colorScheme = Theme.of(context).colorScheme;
     final nav = context.read<NavProvider>();
 
+    final quickCards = [
+      _PlaylistQuickCard(
+        onTap: () => context.push("/user/playlist/favorites"),
+        title: "喜欢",
+        icon: Icons.favorite_rounded,
+      ),
+      _PlaylistQuickCard(
+        onTap: () => context.push("/user/recent"),
+        title: "最近",
+        icon: Icons.history_rounded,
+      ),
+      _PlaylistQuickCard(
+        onTap: () => context.push("/user/files"),
+        title: "本地",
+        icon: Icons.folder_special_rounded,
+      ),
+      _PlaylistQuickCard(
+        onTap: () => context.push("/user/network"),
+        title: "网络",
+        icon: Icons.cloud_queue,
+      ),
+    ];
+
     return Scaffold(
       body: CustomScrollView(
         slivers: [
@@ -94,31 +117,19 @@ class _UserProfilePageState extends State<UserProfilePage> {
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Wrap(
-                spacing: 12.0,
-                runSpacing: 12.0,
-                children: [
-                  _PlaylistQuickCard(
-                    onTap: () => context.push("/user/playlist/favorites"),
-                    title: "喜欢",
-                    icon: Icons.favorite_rounded,
-                  ),
-                  _PlaylistQuickCard(
-                    onTap: () => context.push("/user/recent"),
-                    title: "最近",
-                    icon: Icons.history_rounded,
-                  ),
-                  _PlaylistQuickCard(
-                    onTap: () => context.push("/user/files"),
-                    title: "本地",
-                    icon: Icons.folder_special_rounded,
-                  ),
-                  _PlaylistQuickCard(
-                    onTap: () => context.push("/user/network"),
-                    title: "网络",
-                    icon: Icons.cloud_queue,
-                  ),
-                ],
+              child: SizedBox(
+                height: 120,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal, // 设置为横向滚动
+                  itemBuilder: (BuildContext context, int index) =>
+                      quickCards[index],
+                  separatorBuilder: (BuildContext context, int index) =>
+                      const SizedBox(width: 12.0),
+                  itemCount: quickCards.length,
+
+                  // spacing: 12.0,
+                  // runSpacing: 12.0,
+                ),
               ),
             ),
           ),
