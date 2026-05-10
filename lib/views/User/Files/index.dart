@@ -8,9 +8,10 @@ import 'package:go_router/go_router.dart';
 
 import 'package:myapp/components/Shared/index.dart';
 import 'package:myapp/model/Music/index.dart';
+import 'package:myapp/providers/MusicProvider/index.dart';
 import 'package:myapp/service/Files/index.dart';
 import 'package:myapp/service/Music/index.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:provider/provider.dart';
 
 import 'package:path/path.dart' as p;
 
@@ -30,54 +31,50 @@ class _FilesPageState extends State<FilesPage>
 
   StreamSubscription? _scanSubscription;
 
-  // --- 新增：专门用于存储分类结果的缓存变量 ---
-  final Map<String, List<MusicInfo>> _folderGroups = {}; // 按文件夹路径分组
-  final Map<String, List<MusicInfo>> _albumGroups = {}; // 按专辑名分组
-  final Map<String, List<MusicInfo>> _artistGroups = {}; // 按艺术家分组
-
   @override
   void initState() {
     super.initState();
     FileService.loadPaths().then((p) {
-      if (p.isNotEmpty) {
-        setState(() {
-          _paths = p;
-          _startScan();
-        });
-      }
+      if (!mounted) return;
+      setState(() {
+        _paths = p;
+      });
+      _startScan();
     });
   }
 
   // 核心逻辑：将扫描流转换为“累加列表流”
   void _startScan() {
+    // if (Platform.isAndroid) return;
+
     _scanSubscription?.cancel(); //取消上一次扫描
     setState(() {
       _musicList = [];
       _isScanning = true;
     });
+    final scanProgressStream = MusicService.scanDirectories(_paths);
 
-    _scanSubscription = MusicService.scanDirectories(_paths).listen(
+    _scanSubscription = scanProgressStream.listen(
       (s) {
+        if (!mounted) return;
         if (s.music != null) {
           setState(() {
             _musicList.add(s.music!);
-            //如果不存在这个 Key，就放进去一个初始值() => []
-            _folderGroups
-                .putIfAbsent(p.dirname(s.music!.id), () => [])
-                .add(s.music!);
-            _albumGroups
-                .putIfAbsent(s.music!.album ?? "未知", () => [])
-                .add(s.music!);
-            _artistGroups.putIfAbsent(s.music!.artist, () => []).add(s.music!);
           });
         }
       },
-      onDone: () => setState(() {
-        _isScanning = false;
-      }),
-      onError: (_) => setState(() {
-        _isScanning = false;
-      }),
+      onDone: () {
+        if (!mounted) return;
+        setState(() {
+          _isScanning = false;
+        });
+      },
+      onError: (_) {
+        if (!mounted) return;
+        setState(() {
+          _isScanning = false;
+        });
+      },
     );
   }
 
@@ -135,24 +132,66 @@ class _FilesPageState extends State<FilesPage>
     );
 
     if (result != null) {
-      if (Platform.isAndroid && !(await Permission.audio.request().isGranted)) {
+      if (Platform.isAndroid &&
+          !(await MusicService.ensureAndroidAudioPermission())) {
         return;
       }
       await FileService.savePaths(result);
       setState(() {
         _paths = result;
-
-        _startScan();
       });
+      _startScan();
     }
   }
 
-  Widget _buildLeft() {
+  // List<MusicInfo> _resolveSongs(BuildContext context) {
+  //   if (!Platform.isAndroid) return _musicList;
+
+  //   final library = context.watch<MusicProvider>().library;
+  //   if (_paths.isEmpty) return library;
+
+  //   return library.where((music) {
+  //     final id = music.id;
+  //     return _paths.any(
+  //       (path) =>
+  //           id == path || id.startsWith('$path/') || id.startsWith('$path\\'),
+  //     );
+  //   }).toList();
+  // }
+
+  Map<String, List<MusicInfo>> _groupByFolder(List<MusicInfo> songs) {
+    final groups = <String, List<MusicInfo>>{};
+    for (final song in songs) {
+      groups.putIfAbsent(p.dirname(song.id), () => []).add(song);
+    }
+    return groups;
+  }
+
+  Map<String, List<MusicInfo>> _groupByAlbum(List<MusicInfo> songs) {
+    final groups = <String, List<MusicInfo>>{};
+    for (final song in songs) {
+      final album = song.album?.trim();
+      groups
+          .putIfAbsent(album?.isNotEmpty == true ? album! : '未知专辑', () => [])
+          .add(song);
+    }
+    return groups;
+  }
+
+  Map<String, List<MusicInfo>> _groupByArtist(List<MusicInfo> songs) {
+    final groups = <String, List<MusicInfo>>{};
+    for (final song in songs) {
+      groups.putIfAbsent(song.artist, () => []).add(song);
+    }
+    return groups;
+  }
+
+  Widget _buildLeft(List<MusicInfo> songs) {
     if (_isScanning && _musicList.isEmpty && _paths.isNotEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (_paths.isEmpty) {
+    if (_paths.isEmpty && !Platform.isAndroid) {
       return const AppEmptyState(
         icon: Icons.folder_open_rounded,
         title: "还没有扫描目录",
@@ -161,7 +200,17 @@ class _FilesPageState extends State<FilesPage>
       );
     }
 
-    final albums = _folderGroups.entries.toList();
+    final folderGroups = _groupByFolder(songs);
+    if (!_isScanning && folderGroups.isEmpty) {
+      return const AppEmptyState(
+        icon: Icons.audio_file_rounded,
+        title: "没有找到音频文件",
+        subtitle: "当前范围内没有可显示的音频文件",
+        compact: true,
+      );
+    }
+
+    final albums = folderGroups.entries.toList();
     return _buildCollectionGrid(
       albums,
       emptyIcon: Icons.folder_open_rounded,
@@ -176,12 +225,12 @@ class _FilesPageState extends State<FilesPage>
     );
   }
 
-  Widget _buildCenter() {
+  Widget _buildCenter(List<MusicInfo> songs) {
     if (_isScanning && _musicList.isEmpty && _paths.isNotEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (_paths.isEmpty) {
+    if (_paths.isEmpty && !Platform.isAndroid) {
       return const AppEmptyState(
         icon: Icons.album_rounded,
         title: "还没有扫描目录",
@@ -190,7 +239,17 @@ class _FilesPageState extends State<FilesPage>
       );
     }
 
-    final albums = _albumGroups.entries.toList();
+    final albumGroups = _groupByAlbum(songs);
+    if (!_isScanning && albumGroups.isEmpty) {
+      return const AppEmptyState(
+        icon: Icons.audio_file_rounded,
+        title: "没有找到音频文件",
+        subtitle: "当前范围内没有可显示的音频文件",
+        compact: true,
+      );
+    }
+
+    final albums = albumGroups.entries.toList();
     return _buildCollectionGrid(
       albums,
       emptyIcon: Icons.album_rounded,
@@ -205,12 +264,12 @@ class _FilesPageState extends State<FilesPage>
     );
   }
 
-  Widget _buildRight() {
+  Widget _buildRight(List<MusicInfo> songs) {
     if (_isScanning && _musicList.isEmpty && _paths.isNotEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (_paths.isEmpty) {
+    if (_paths.isEmpty && !Platform.isAndroid) {
       return const AppEmptyState(
         icon: Icons.person_rounded,
         title: "还没有扫描目录",
@@ -219,7 +278,17 @@ class _FilesPageState extends State<FilesPage>
       );
     }
 
-    final albums = _artistGroups.entries.toList();
+    final artistGroups = _groupByArtist(songs);
+    if (!_isScanning && artistGroups.isEmpty) {
+      return const AppEmptyState(
+        icon: Icons.audio_file_rounded,
+        title: "没有找到音频文件",
+        subtitle: "当前范围内没有可显示的音频文件",
+        compact: true,
+      );
+    }
+
+    final albums = artistGroups.entries.toList();
     return _buildCollectionGrid(
       albums,
       emptyIcon: Icons.person_rounded,
@@ -264,7 +333,14 @@ class _FilesPageState extends State<FilesPage>
                 itemCount: entries.length,
                 itemBuilder: (context, i) {
                   final entry = entries[i];
-                  final cover = entry.value.first.coverBytes;
+                  final cover = entry.value
+                      .firstWhere(
+                        (song) =>
+                            song.coverBytes != null &&
+                            song.coverBytes!.isNotEmpty,
+                        orElse: () => entry.value.first,
+                      )
+                      .coverBytes;
                   return MediaGridCard(
                     title: titleBuilder(entry),
                     subtitle: subtitleBuilder(entry),
@@ -289,6 +365,7 @@ class _FilesPageState extends State<FilesPage>
   Widget build(BuildContext context) {
     super.build(context);
     final colorScheme = Theme.of(context).colorScheme;
+    final songs = _musicList;
     return Scaffold(
       body: DefaultTabController(
         length: 3,
@@ -312,7 +389,11 @@ class _FilesPageState extends State<FilesPage>
             ];
           },
           body: TabBarView(
-            children: [_buildLeft(), _buildCenter(), _buildRight()],
+            children: [
+              _buildLeft(songs),
+              _buildCenter(songs),
+              _buildRight(songs),
+            ],
           ),
         ),
       ),

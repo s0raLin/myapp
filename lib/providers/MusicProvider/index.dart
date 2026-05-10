@@ -495,11 +495,11 @@ class MusicProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> initLibrary(List<MusicInfo> scannedSongs) async {
-    _library.clear();
-    _library.addAll(scannedSongs);
-    notifyListeners();
-  }
+  // Future<void> initLibrary(List<MusicInfo> scannedSongs) async {
+  //   _library.clear();
+  //   _library.addAll(scannedSongs);
+  //   notifyListeners();
+  // }
 
   /// 将收藏列表 ID 持久化，并同步更新"我喜欢"系统歌单。
   Future<void> _saveFavList() async {

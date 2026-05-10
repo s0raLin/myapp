@@ -71,19 +71,29 @@ class InitializationService {
   }) async {
     final List<MusicInfo> fetchedLibrary = [];
     final paths = await FileService.loadPaths();
+    final isAndroid = !kIsWeb && Platform.isAndroid;
+    final hasSelectedPaths = paths.isNotEmpty;
 
     onProgress?.call(
       StartupScanProgress(
         module: '读取本地目录',
-        detail: paths.isEmpty ? '没有已保存的音乐目录' : '已读取 ${paths.length} 个目录',
+        detail: isAndroid && hasSelectedPaths
+            ? 'Android 使用已保存目录扫描音频'
+            : isAndroid
+            ? 'Android 使用系统媒体库扫描音频'
+            : paths.isEmpty
+            ? '没有已保存的音乐目录'
+            : '已读取 ${paths.length} 个目录',
       ),
     );
 
-    if (paths.isEmpty) return [];
+    if (!isAndroid && paths.isEmpty) return [];
 
     // 使用 await for 等待扫描流完成（这可能会让启动页停留稍久，但能保证数据完整）
     var scannedCount = 0;
-    await for (final s in MusicService.scanDirectories(paths)) {
+    final scanProgressStream = MusicService.scanDirectories(paths);
+
+    await for (final s in scanProgressStream) {
       scannedCount++;
 
       if (s.music != null) {
