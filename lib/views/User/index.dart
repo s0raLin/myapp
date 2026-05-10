@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:myapp/components/Shared/index.dart';
 import 'package:myapp/model/Playlist/index.dart';
 import 'package:myapp/providers/MusicProvider/index.dart';
 import 'package:myapp/providers/NavProvider/index.dart';
@@ -32,7 +33,6 @@ class _UserProfilePageState extends State<UserProfilePage> {
                   if (value == "edit") {
                     context.push("/user/edit-profile");
                   }
-                  print("选择了: $value");
                 },
                 itemBuilder: (BuildContext context) => [
                   const PopupMenuItem(
@@ -129,12 +129,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    "我的歌单",
-                    style: textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+                  AppSectionHeader(title: "我的歌单"),
                   const SizedBox(height: 12),
                   // 新建歌单按钮 + 进入音乐库链接
                   Row(
@@ -160,37 +155,27 @@ class _UserProfilePageState extends State<UserProfilePage> {
                       if (userPlaylists.isEmpty) {
                         return Padding(
                           padding: const EdgeInsets.symmetric(vertical: 28),
-                          child: Card.filled(
-                            color: colorScheme.surfaceContainerLow,
-                            clipBehavior: Clip.antiAlias,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(18),
-                              child: Row(
-                                children: [
-                                  CircleAvatar(
-                                    radius: 22,
-                                    backgroundColor:
-                                        colorScheme.secondaryContainer,
-                                    foregroundColor:
-                                        colorScheme.onSecondaryContainer,
-                                    child: const Icon(
-                                      Icons.queue_music_rounded,
+                          child: AppPanel(
+                            child: Row(
+                              children: [
+                                CircleAvatar(
+                                  radius: 22,
+                                  backgroundColor:
+                                      colorScheme.secondaryContainer,
+                                  foregroundColor:
+                                      colorScheme.onSecondaryContainer,
+                                  child: const Icon(Icons.queue_music_rounded),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    "还没有创建歌单\n点击上方「新建歌单」按钮创建",
+                                    style: textTheme.bodyMedium?.copyWith(
+                                      color: colorScheme.onSurfaceVariant,
                                     ),
                                   ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Text(
-                                      "还没有创建歌单\n点击上方「新建歌单」按钮创建",
-                                      style: textTheme.bodyMedium?.copyWith(
-                                        color: colorScheme.onSurfaceVariant,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
                           ),
                         );
@@ -201,7 +186,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                         gridDelegate:
                             const SliverGridDelegateWithMaxCrossAxisExtent(
                               maxCrossAxisExtent: 220, // ← 关键：限制每个卡片最大宽度为 220
-                              childAspectRatio: 0.88, // 高度比宽度稍高一点，看起来更舒服
+                              childAspectRatio: 0.9,
                               crossAxisSpacing: 16,
                               mainAxisSpacing: 16,
                             ),
@@ -254,82 +239,28 @@ class _UserPlaylistCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: InkWell(
-        onLongPress: onMoreTap,
-        onTap: onTap,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Container(
-                width: double.infinity,
-                color: colorScheme.surfaceContainerHighest,
-                child: Stack(
-                  children: [
-                    Center(
-                      child:
-                          playlist.coverBytes != null &&
-                              playlist.coverBytes!.isNotEmpty
-                          ? Image.memory(
-                              playlist.coverBytes!,
-                              fit: BoxFit.cover,
-                            )
-                          : Icon(
-                              Icons.playlist_play_rounded,
-                              size: 48,
-                              color: colorScheme.primary,
-                            ),
-                    ),
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: onMoreTap,
-                          borderRadius: BorderRadius.circular(50),
-                          child: Padding(
-                            padding: const EdgeInsets.all(4.0),
-                            child: Icon(
-                              Icons.more_vert_rounded,
-                              size: 28,
-                              color: colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    playlist.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    "$songCount 首",
-                    style: TextStyle(color: colorScheme.onSurfaceVariant),
-                  ),
-                ],
-              ),
-            ),
-          ],
+    final actionBackground = colorScheme.surfaceContainerHigh.withValues(
+      alpha: colorScheme.brightness == Brightness.dark ? 0.9 : 0.82,
+    );
+    return MediaGridCard(
+      title: playlist.name,
+      subtitle: "$songCount 首",
+      coverBytes: playlist.coverBytes,
+      fallbackIcon: Icons.playlist_play_rounded,
+      onTap: onTap,
+      coverAspectRatio: 1.22,
+      titleLines: 1,
+      contentSpacing: 4,
+      padding: const EdgeInsets.fromLTRB(8, 8, 8, 6),
+      trailing: Material(
+        color: actionBackground,
+        shape: const CircleBorder(),
+        child: IconButton(
+          onPressed: onMoreTap,
+          icon: Icon(
+            Icons.more_horiz_rounded,
+            color: colorScheme.onSurface,
+          ),
         ),
       ),
     );
@@ -482,68 +413,64 @@ class M3UserCard extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
-    return Card(
-      elevation: 0,
+    return AppPanel(
       color: colorScheme.surfaceContainer,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 36,
-                  backgroundColor: colorScheme.primary,
-                  child: CircleAvatar(
-                    radius: 34,
-                    backgroundColor: colorScheme.surfaceContainerHighest,
-                    foregroundColor: colorScheme.onSurfaceVariant,
-                    child: const Icon(Icons.person_rounded, size: 34),
-                  ),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 36,
+                backgroundColor: colorScheme.primary,
+                child: CircleAvatar(
+                  radius: 34,
+                  backgroundColor: colorScheme.surfaceContainerHighest,
+                  foregroundColor: colorScheme.onSurfaceVariant,
+                  child: const Icon(Icons.person_rounded, size: 34),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        username,
-                        style: textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: colorScheme.onSurface,
-                        ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      username,
+                      style: textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onSurface,
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        description,
-                        style: textTheme.bodyMedium?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      description,
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-                FilledButton(
-                  onPressed: () => context.push("/user/edit-profile"),
-                  child: const Text("编辑"),
-                ),
-              ],
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              child: Divider(color: colorScheme.outlineVariant),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildStatItem("动态", "128", colorScheme),
-                _buildStatItem("关注", "1.2k", colorScheme),
-                _buildStatItem("粉丝", "8.5k", colorScheme),
-              ],
-            ),
-          ],
-        ),
+              ),
+              FilledButton(
+                onPressed: () => context.push("/user/edit-profile"),
+                child: const Text("编辑"),
+              ),
+            ],
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Divider(color: colorScheme.outlineVariant),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildStatItem("动态", "128", colorScheme),
+              _buildStatItem("关注", "1.2k", colorScheme),
+              _buildStatItem("粉丝", "8.5k", colorScheme),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -582,42 +509,10 @@ class _PlaylistQuickCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-
     return SizedBox(
-      width: 105,
-      child: Card.filled(
-        color: colorScheme.surfaceContainerLow,
-        clipBehavior: Clip.antiAlias,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: InkWell(
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Column(
-              children: [
-                CircleAvatar(
-                  radius: 22,
-                  backgroundColor: colorScheme.primary.withValues(
-                    alpha: 0.10,
-                  ),
-                  foregroundColor: colorScheme.primary,
-                  child: Icon(icon),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  title,
-                  style: textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: colorScheme.onSecondaryContainer,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+      width: 116,
+      height: 116,
+      child: QuickActionCard(title: title, icon: icon, onTap: onTap),
     );
   }
 }

@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:myapp/components/Shared/index.dart';
 import 'package:myapp/model/Music/index.dart';
 import 'package:myapp/providers/MusicProvider/index.dart';
 import 'package:provider/provider.dart';
@@ -32,39 +33,10 @@ class RecentlyPlayedPage extends StatelessWidget {
           SliverPadding(
             padding: const EdgeInsets.symmetric(vertical: 8.0),
             sliver: history.isEmpty
-                ? SliverFillRemaining(
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.history_rounded,
-                            size: 80,
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
-                          const SizedBox(height: 24),
-                          Text(
-                            "还没有播放记录",
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurface,
-                                ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            "去音乐库听听歌曲吧",
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurface,
-                                ),
-                          ),
-                        ],
-                      ),
-                    ),
+                ? const AppEmptySliver(
+                    icon: Icons.history_rounded,
+                    title: "还没有播放记录",
+                    subtitle: "去音乐库听听歌曲吧",
                   )
                 : SliverList.builder(
                     itemCount: history.length,
@@ -158,31 +130,15 @@ class _MusicListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return ListTile(
+    return SongListCardTile(
+      title: title,
+      subtitle: subtitle,
+      coverBytes: coverBytes,
+      fallbackIcon: Icons.music_note_rounded,
       onTap: onTap,
-      leading: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          width: 48,
-          height: 48,
-          color: colorScheme.surfaceContainerHighest,
-          child: coverBytes != null && coverBytes!.isNotEmpty
-              ? Image.memory(coverBytes!, fit: BoxFit.cover)
-              : Icon(Icons.music_note_rounded, color: colorScheme.primary),
-        ),
-      ),
-      title: Text(
-        title,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: const TextStyle(fontWeight: FontWeight.w500),
-      ),
-      subtitle: Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis),
       trailing: onMoreTap != null
           ? IconButton(
-              icon: const Icon(Icons.more_vert_rounded),
+              icon: const Icon(Icons.more_horiz_rounded),
               onPressed: onMoreTap,
             )
           : null,

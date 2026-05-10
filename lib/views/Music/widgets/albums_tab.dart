@@ -30,33 +30,53 @@ class AlbumsTab extends StatelessWidget {
               title: "还没有专辑",
               subtitle: "上传歌曲后会自动归类到专辑",
             )
-          : GridView.builder(
-              padding: const EdgeInsets.all(12),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 0.9,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-              ),
-              itemCount: albums.length,
-              itemBuilder: (context, index) {
-                final entry = albums[index];
-                final albumName = entry.key;
-                final songs = entry.value;
-                final cover = songs
-                    .firstWhere(
-                      (s) => s.coverBytes != null && s.coverBytes!.isNotEmpty,
-                      orElse: () => songs.first,
-                    )
-                    .coverBytes;
-                return AlbumCard(
-                  albumName: albumName,
-                  songCount: songs.length,
-                  coverBytes: cover,
-                  onTap: () {
-                    context.push(
-                      "/user/files/album-detail",
-                      extra: {'albumName': albumName, 'songs': songs},
+          : LayoutBuilder(
+              builder: (context, constraints) {
+                final width = constraints.maxWidth;
+                final double horizontalPadding = width >= 1000 ? 20 : 16;
+                final double spacing = width >= 1000 ? 16 : 12;
+                final double maxExtent = width >= 1400
+                    ? 220
+                    : width >= 1000
+                    ? 200
+                    : width >= 700
+                    ? 188
+                    : 176;
+
+                return GridView.builder(
+                  padding: EdgeInsets.fromLTRB(
+                    horizontalPadding,
+                    12,
+                    horizontalPadding,
+                    20,
+                  ),
+                  gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: maxExtent,
+                    childAspectRatio: 0.92,
+                    crossAxisSpacing: spacing,
+                    mainAxisSpacing: spacing,
+                  ),
+                  itemCount: albums.length,
+                  itemBuilder: (context, index) {
+                    final entry = albums[index];
+                    final albumName = entry.key;
+                    final songs = entry.value;
+                    final cover = songs
+                        .firstWhere(
+                          (s) => s.coverBytes != null && s.coverBytes!.isNotEmpty,
+                          orElse: () => songs.first,
+                        )
+                        .coverBytes;
+                    return AlbumCard(
+                      albumName: albumName,
+                      songCount: songs.length,
+                      coverBytes: cover,
+                      onTap: () {
+                        context.push(
+                          "/user/files/album-detail",
+                          extra: {'albumName': albumName, 'songs': songs},
+                        );
+                      },
                     );
                   },
                 );

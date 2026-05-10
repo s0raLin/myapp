@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:myapp/api/Client/Music/index.dart';
+import 'package:myapp/components/Shared/index.dart';
 import 'package:myapp/model/Music/index.dart';
 import 'package:myapp/providers/MusicProvider/index.dart';
 import 'package:myapp/views/Music/widgets/empty_state.dart';
@@ -61,36 +62,13 @@ class SongTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Card(
-      color: isCurrent ? colorScheme.secondaryContainer : null,
-      child: ListTile(
-        selected: isCurrent,
-        onTap: onTap,
-        leading: Container(
-          width: 50,
-          height: 50,
-          clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(borderRadius: BorderRadius.circular(8)),
-          child: music.coverBytes != null && music.coverBytes!.isNotEmpty
-              ? Image.memory(music.coverBytes!, fit: BoxFit.cover)
-              : Icon(Icons.music_note_rounded, color: colorScheme.primary),
-        ),
-        title: Text(
-          music.title,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            fontWeight: isCurrent ? FontWeight.w600 : FontWeight.normal,
-          ),
-        ),
-        subtitle: Text(
-          music.artist,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ),
+    return SongListCardTile(
+      title: music.title,
+      subtitle: music.artist,
+      coverBytes: music.coverBytes,
+      fallbackIcon: Icons.music_note_rounded,
+      onTap: onTap,
+      highlighted: isCurrent,
     );
   }
 }

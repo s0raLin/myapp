@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:myapp/components/Shared/index.dart';
 import 'package:myapp/model/Music/index.dart';
 import 'package:myapp/service/Files/index.dart';
 import 'package:myapp/service/Music/index.dart';
@@ -152,108 +153,24 @@ class _FilesPageState extends State<FilesPage>
     }
 
     if (_paths.isEmpty) {
-      return const Center(child: Text("请先添加目录"));
+      return const AppEmptyState(
+        icon: Icons.folder_open_rounded,
+        title: "还没有扫描目录",
+        subtitle: "点击右下角按钮添加目录后，这里会展示扫描到的内容",
+        compact: true,
+      );
     }
 
     final albums = _folderGroups.entries.toList();
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final maxExtent = constraints.maxWidth >= 1400
-            ? 180.0
-            : constraints.maxWidth >= 1000
-            ? 200.0
-            : 220.0;
-        return CustomScrollView(
-          slivers: [
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
-              sliver: SliverGrid.builder(
-                gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                  maxCrossAxisExtent: maxExtent,
-                  mainAxisSpacing: 16,
-                  crossAxisSpacing: 16,
-                  childAspectRatio: 0.8,
-                ),
-                itemCount: albums.length,
-                itemBuilder: (context, i) {
-                  final cover = albums[i].value.first.coverBytes;
-                  final albumName = albums[i].key;
-                  final album = albums[i].value;
-
-                  return InkWell(
-                    onTap: () {
-                      context.push(
-                        "/user/files/album-detail",
-                        extra: {"albumName": albumName, "songs": album},
-                      );
-                    },
-                    // 使用 borderRadius 确保水波纹点击效果也符合卡片圆角
-                    borderRadius: BorderRadius.circular(12),
-                    child: Card(
-                      // 1. 显式设置 M3 风格：可以通过 elevation 为 0 并设置颜色来实现 Filled 效果
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12), // M3 默认圆角较大
-                      ),
-                      // 2. 使用 surfaceContainerHighest 或 surfaceVariant 作为背景色
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.surfaceContainerHighest,
-                      clipBehavior: Clip.antiAlias,
-                      child: Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start, // 文字左对齐通常更美观
-                        children: [
-                          // 3. 比例固定的图片容器
-                          AspectRatio(
-                            aspectRatio: 1 / 1, // 强制图片为正方形，符合专辑封面逻辑
-                            child: Container(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.surfaceContainerHighest,
-                              child: Center(
-                                child: cover != null && cover.isNotEmpty
-                                    ? Image.memory(
-                                        cover,
-                                        fit: BoxFit.cover,
-                                        width: double.infinity, // 铺满容器
-                                        height: double.infinity,
-                                      )
-                                    : Icon(
-                                        Icons.music_note, // 建议使用 M3 风格图标
-                                        size: 40,
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.primary,
-                                      ),
-                              ),
-                            ),
-                          ),
-                          // 4. 文字内边距与排版
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-                            child: Text(
-                              albumName,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis, // 防止长文本溢出
-                              style: Theme.of(context).textTheme.titleSmall
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onSurface,
-                                  ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
+    return _buildCollectionGrid(
+      albums,
+      emptyIcon: Icons.folder_open_rounded,
+      titleBuilder: (entry) => p.basename(entry.key),
+      subtitleBuilder: (entry) => "${entry.value.length} 首",
+      onTap: (entry) {
+        context.push(
+          "/user/files/album-detail",
+          extra: {"albumName": entry.key, "songs": entry.value},
         );
       },
     );
@@ -265,108 +182,24 @@ class _FilesPageState extends State<FilesPage>
     }
 
     if (_paths.isEmpty) {
-      return const Center(child: Text("请先添加目录"));
+      return const AppEmptyState(
+        icon: Icons.album_rounded,
+        title: "还没有扫描目录",
+        subtitle: "添加目录后，这里会自动整理出专辑内容",
+        compact: true,
+      );
     }
 
     final albums = _albumGroups.entries.toList();
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final maxExtent = constraints.maxWidth >= 1400
-            ? 180.0
-            : constraints.maxWidth >= 1000
-            ? 200.0
-            : 220.0;
-        return CustomScrollView(
-          slivers: [
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
-              sliver: SliverGrid.builder(
-                gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                  maxCrossAxisExtent: maxExtent,
-                  mainAxisSpacing: 16,
-                  crossAxisSpacing: 16,
-                  childAspectRatio: 0.8,
-                ),
-                itemCount: albums.length,
-                itemBuilder: (context, i) {
-                  final cover = albums[i].value.first.coverBytes;
-                  final albumName = albums[i].key;
-                  final album = albums[i].value;
-
-                  return InkWell(
-                    onTap: () {
-                      context.push(
-                        "/user/files/album-detail",
-                        extra: {"albumName": albumName, "songs": album},
-                      );
-                    },
-                    // 使用 borderRadius 确保水波纹点击效果也符合卡片圆角
-                    borderRadius: BorderRadius.circular(12),
-                    child: Card(
-                      // 1. 显式设置 M3 风格：可以通过 elevation 为 0 并设置颜色来实现 Filled 效果
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12), // M3 默认圆角较大
-                      ),
-                      // 2. 使用 surfaceContainerHighest 或 surfaceVariant 作为背景色
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.surfaceContainerHighest,
-                      clipBehavior: Clip.antiAlias,
-                      child: Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start, // 文字左对齐通常更美观
-                        children: [
-                          // 3. 比例固定的图片容器
-                          AspectRatio(
-                            aspectRatio: 1 / 1, // 强制图片为正方形，符合专辑封面逻辑
-                            child: Container(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.surfaceContainerHighest,
-                              child: Center(
-                                child: cover != null && cover.isNotEmpty
-                                    ? Image.memory(
-                                        cover,
-                                        fit: BoxFit.cover,
-                                        width: double.infinity, // 铺满容器
-                                        height: double.infinity,
-                                      )
-                                    : Icon(
-                                        Icons.music_note, // 建议使用 M3 风格图标
-                                        size: 40,
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.primary,
-                                      ),
-                              ),
-                            ),
-                          ),
-                          // 4. 文字内边距与排版
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-                            child: Text(
-                              albumName,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis, // 防止长文本溢出
-                              style: Theme.of(context).textTheme.titleSmall
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onSurface,
-                                  ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
+    return _buildCollectionGrid(
+      albums,
+      emptyIcon: Icons.album_rounded,
+      titleBuilder: (entry) => entry.key,
+      subtitleBuilder: (entry) => "${entry.value.length} 首",
+      onTap: (entry) {
+        context.push(
+          "/user/files/album-detail",
+          extra: {"albumName": entry.key, "songs": entry.value},
         );
       },
     );
@@ -378,10 +211,38 @@ class _FilesPageState extends State<FilesPage>
     }
 
     if (_paths.isEmpty) {
-      return const Center(child: Text("请先添加目录"));
+      return const AppEmptyState(
+        icon: Icons.person_rounded,
+        title: "还没有扫描目录",
+        subtitle: "添加目录后，这里会自动整理出艺术家内容",
+        compact: true,
+      );
     }
 
     final albums = _artistGroups.entries.toList();
+    return _buildCollectionGrid(
+      albums,
+      emptyIcon: Icons.person_rounded,
+      titleBuilder: (entry) => entry.key,
+      subtitleBuilder: (entry) => "${entry.value.length} 首",
+      onTap: (entry) {
+        context.push(
+          "/user/files/album-detail",
+          extra: {"albumName": entry.key, "songs": entry.value},
+        );
+      },
+    );
+  }
+
+  Widget _buildCollectionGrid(
+    List<MapEntry<String, List<MusicInfo>>> entries, {
+    required IconData emptyIcon,
+    required String Function(MapEntry<String, List<MusicInfo>> entry)
+    titleBuilder,
+    required String Function(MapEntry<String, List<MusicInfo>> entry)
+    subtitleBuilder,
+    required void Function(MapEntry<String, List<MusicInfo>> entry) onTap,
+  }) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final maxExtent = constraints.maxWidth >= 1400
@@ -398,82 +259,22 @@ class _FilesPageState extends State<FilesPage>
                   maxCrossAxisExtent: maxExtent,
                   mainAxisSpacing: 16,
                   crossAxisSpacing: 16,
-                  childAspectRatio: 0.8,
+                  childAspectRatio: 0.9,
                 ),
-                itemCount: albums.length,
+                itemCount: entries.length,
                 itemBuilder: (context, i) {
-                  final cover = albums[i].value.first.coverBytes;
-                  final albumName = albums[i].key;
-                  final album = albums[i].value;
-
-                  return InkWell(
-                    onTap: () {
-                      context.push(
-                        "/user/files/album-detail",
-                        extra: {"albumName": albumName, "songs": album},
-                      );
-                    },
-                    // 使用 borderRadius 确保水波纹点击效果也符合卡片圆角
-                    borderRadius: BorderRadius.circular(12),
-                    child: Card(
-                      // 1. 显式设置 M3 风格：可以通过 elevation 为 0 并设置颜色来实现 Filled 效果
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12), // M3 默认圆角较大
-                      ),
-                      // 2. 使用 surfaceContainerHighest 或 surfaceVariant 作为背景色
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.surfaceContainerHighest,
-                      clipBehavior: Clip.antiAlias,
-                      child: Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start, // 文字左对齐通常更美观
-                        children: [
-                          // 3. 比例固定的图片容器
-                          AspectRatio(
-                            aspectRatio: 1 / 1, // 强制图片为正方形，符合专辑封面逻辑
-                            child: Container(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.surfaceContainerHighest,
-                              child: Center(
-                                child: cover != null && cover.isNotEmpty
-                                    ? Image.memory(
-                                        cover,
-                                        fit: BoxFit.cover,
-                                        width: double.infinity, // 铺满容器
-                                        height: double.infinity,
-                                      )
-                                    : Icon(
-                                        Icons.music_note, // 建议使用 M3 风格图标
-                                        size: 40,
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.primary,
-                                      ),
-                              ),
-                            ),
-                          ),
-                          // 4. 文字内边距与排版
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-                            child: Text(
-                              albumName,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis, // 防止长文本溢出
-                              style: Theme.of(context).textTheme.titleSmall
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onSurface,
-                                  ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                  final entry = entries[i];
+                  final cover = entry.value.first.coverBytes;
+                  return MediaGridCard(
+                    title: titleBuilder(entry),
+                    subtitle: subtitleBuilder(entry),
+                    coverBytes: cover,
+                    fallbackIcon: emptyIcon,
+                    onTap: () => onTap(entry),
+                    coverAspectRatio: 1.22,
+                    titleLines: 1,
+                    contentSpacing: 4,
+                    padding: const EdgeInsets.fromLTRB(8, 8, 8, 6),
                   );
                 },
               ),

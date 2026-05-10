@@ -172,7 +172,8 @@ class ThemeProvider extends ChangeNotifier {
 
       cardTheme: CardThemeData(
         elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        color: scheme.surfaceContainerLow,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         clipBehavior: Clip.antiAlias,
       ),
 
@@ -187,7 +188,7 @@ class ThemeProvider extends ChangeNotifier {
       drawerTheme: DrawerThemeData(backgroundColor: scheme.surface),
 
       listTileTheme: ListTileThemeData(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         selectedColor: scheme.secondary,
         dense: _listDensity == "compact",
       ),
@@ -197,6 +198,20 @@ class ThemeProvider extends ChangeNotifier {
         labelColor: scheme.primary,
         unselectedLabelColor: scheme.onSurfaceVariant,
         indicatorColor: scheme.primary,
+      ),
+
+      // 配置 DropdownMenu 的统一样式
+      dropdownMenuTheme: DropdownMenuThemeData(
+        menuStyle: MenuStyle(
+          // 设置下拉列表的背景色（通常使用 surfaceContainer 系列）
+          backgroundColor: WidgetStatePropertyAll(scheme.surfaceContainerLow),
+          // 设置统一的圆角
+          shape: WidgetStatePropertyAll(
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          ),
+          // 这里的 elevation 可以控制投影
+          elevation: const WidgetStatePropertyAll(6),
+        ),
       ),
 
       // 菜单样式

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:go_router/go_router.dart';
+import 'package:myapp/components/Shared/index.dart';
 
 class MusicDashboardPage extends StatelessWidget {
   const MusicDashboardPage({super.key});
@@ -124,6 +125,7 @@ class _DashboardCard extends StatelessWidget {
     final Color bgColor;
     final Color onColor;
     final String label;
+    final String subtitle;
     final IconData icon;
 
     switch (index) {
@@ -131,30 +133,35 @@ class _DashboardCard extends StatelessWidget {
         bgColor = colorScheme.primaryContainer;
         onColor = colorScheme.onPrimaryContainer;
         label = "Now Playing";
+        subtitle = "封面流与当前播放";
         icon = Icons.album_rounded;
         break;
       case 1:
         bgColor = colorScheme.secondaryContainer;
         onColor = colorScheme.onSecondaryContainer;
         label = "Control";
+        subtitle = "播放控制与进度";
         icon = Icons.play_arrow_rounded;
         break;
       case 2:
-        bgColor = colorScheme.surfaceContainerHighest.withOpacity(0.5);
+        bgColor = colorScheme.surfaceContainerHighest.withValues(alpha: 0.5);
         onColor = colorScheme.onSurfaceVariant;
         label = "96kHz";
+        subtitle = "采样率";
         icon = Icons.high_quality_rounded;
         break;
       case 3:
-        bgColor = colorScheme.surfaceContainerHighest.withOpacity(0.5);
+        bgColor = colorScheme.surfaceContainerHighest.withValues(alpha: 0.5);
         onColor = colorScheme.onSurfaceVariant;
         label = "LDAC";
+        subtitle = "输出设备";
         icon = Icons.bluetooth_audio_rounded;
         break;
       default:
         bgColor = colorScheme.tertiaryContainer;
         onColor = colorScheme.onTertiaryContainer;
         label = "Lyrics Preview";
+        subtitle = "歌词与信息预览";
         icon = Icons.short_text_rounded;
     }
 
@@ -162,48 +169,63 @@ class _DashboardCard extends StatelessWidget {
     final double responsiveIconSize = screenWidth > 1024 ? 24 : 28;
     final double responsivePadding = screenWidth > 1024 ? 20 : 16;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(28), // 稍微调圆润一点更现代
-        border: Border.all(
-          color: colorScheme.outlineVariant.withOpacity(0.2),
-          width: 1,
-        ),
-      ),
-      child: Material(
-        color: Colors.transparent, // 保证水波纹在 Container 之上
-        child: InkWell(
-          borderRadius: BorderRadius.circular(28),
-          onTap: () {
-            if (index == 0) {
-              context.push("/dashboard/cover-flow");
-            }
-          },
-          child: Padding(
-            padding: EdgeInsets.all(responsivePadding),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(icon, color: onColor, size: responsiveIconSize),
-                const Spacer(),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    label,
-                    style: textTheme.labelLarge?.copyWith(
-                      color: onColor,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.5,
-                      fontSize: screenWidth > 1024 ? 14 : 16,
-                    ),
+    return AppPanel(
+      color: bgColor,
+      borderRadius: BorderRadius.circular(28),
+      onTap: () {
+        if (index == 0) {
+          context.push("/dashboard/cover-flow");
+        }
+      },
+      padding: EdgeInsets.all(responsivePadding),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final bool compact = constraints.maxHeight < 150;
+          final double iconBoxSize = compact
+              ? responsiveIconSize + 12
+              : responsiveIconSize + 20;
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: iconBoxSize,
+                height: iconBoxSize,
+                decoration: BoxDecoration(
+                  color: onColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(compact ? 14 : 18),
+                ),
+                child: Icon(icon, color: onColor, size: responsiveIconSize),
+              ),
+              const Spacer(),
+              Text(
+                subtitle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: textTheme.bodySmall?.copyWith(
+                  color: onColor.withValues(alpha: 0.75),
+                ),
+              ),
+              SizedBox(height: compact ? 4 : 6),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  style: textTheme.titleMedium?.copyWith(
+                    color: onColor,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.3,
+                    fontSize: compact
+                        ? (screenWidth > 1024 ? 16 : 18)
+                        : (screenWidth > 1024 ? 18 : 20),
                   ),
                 ),
-              ],
-            ),
-          ),
-        ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

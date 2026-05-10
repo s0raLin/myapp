@@ -1,6 +1,7 @@
 // ─── HomePage ─────────────────────────────────────────────────────────────────
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:myapp/components/Shared/index.dart';
 import 'package:myapp/contants/Assets/index.dart';
 import 'package:myapp/providers/MusicProvider/index.dart';
 import 'package:provider/provider.dart';
@@ -38,7 +39,6 @@ class _HomePageState extends State<HomePage> {
     final history = context.watch<MusicProvider>().history;
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
-
 
     final double carouselHeight = (MediaQuery.sizeOf(context).width * 0.5)
         .clamp(160.0, 220.0); // 最小160，最大220
@@ -82,21 +82,13 @@ class _HomePageState extends State<HomePage> {
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      '最近播放',
-                      style: textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () => context.push('/user/recent'),
-                    child: const Text('查看更多'),
-                  ),
-                ],
+              child: AppSectionHeader(
+                title: '最近播放',
+                subtitle: '继续你最近在听的内容',
+                action: TextButton(
+                  onPressed: () => context.push('/user/recent'),
+                  child: const Text('查看更多'),
+                ),
               ),
             ),
           ),
@@ -131,64 +123,57 @@ class _HomePageState extends State<HomePage> {
                 )
               : SliverToBoxAdapter(
                   child: SizedBox(
-                    height: 150,
+                    height: 186,
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       itemCount: history.take(6).length,
                       itemBuilder: (context, index) {
                         final item = history[index];
-                        return GestureDetector(
-                          onTap: () {
-                            context.read<MusicProvider>().playFromLibrary(item);
-                            context.push('/music-detail', extra: item);
-                          },
-                          child: Container(
-                            width: 100,
-                            margin: EdgeInsets.only(
-                              right: index == history.take(6).length - 1
-                                  ? 0
-                                  : 12,
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: Container(
-                                    width: 100,
-                                    height: 100,
-                                    color: colorScheme.surfaceContainerHighest,
-                                    child:
-                                        item.coverBytes != null &&
-                                            item.coverBytes!.isNotEmpty
-                                        ? Image.memory(
-                                            item.coverBytes!,
-                                            fit: BoxFit.cover,
-                                          )
-                                        : Icon(
-                                            Icons.music_note_rounded,
-                                            color: colorScheme.primary,
-                                          ),
+                        final badgeBackground = colorScheme.surfaceContainerHigh
+                            .withValues(
+                              alpha: colorScheme.brightness == Brightness.dark
+                                  ? 0.88
+                                  : 0.82,
+                            );
+                        return SizedBox(
+                          width: 156,
+                          child: MediaGridCard(
+                            title: item.title,
+                            subtitle: item.artist,
+                            coverBytes: item.coverBytes,
+                            fallbackIcon: Icons.music_note_rounded,
+                            coverAspectRatio: 1.28,
+                            titleLines: 1,
+                            contentSpacing: 2,
+                            padding: const EdgeInsets.fromLTRB(8, 8, 8, 6),
+                            onTap: () {
+                              context.read<MusicProvider>().playFromLibrary(
+                                item,
+                              );
+                              context.push('/music-detail', extra: item);
+                            },
+                            badge: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: badgeBackground,
+                                border: Border.all(
+                                  color: colorScheme.outlineVariant.withValues(
+                                    alpha: 0.45,
                                   ),
                                 ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  item.title,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: textTheme.bodySmall,
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                              child: Text(
+                                '#${index + 1}',
+                                style: textTheme.labelSmall?.copyWith(
+                                  color: colorScheme.onSurface,
+                                  fontWeight: FontWeight.w700,
                                 ),
-                                Text(
-                                  item.artist,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: textTheme.bodySmall?.copyWith(
-                                    color: colorScheme.onSurfaceVariant,
-                                    fontSize: 11,
-                                  ),
-                                ),
-                              ],
+                              ),
                             ),
                           ),
                         );
@@ -201,12 +186,7 @@ class _HomePageState extends State<HomePage> {
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
-              child: Text(
-                '排行榜',
-                style: textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+              child: AppSectionHeader(title: '排行榜'),
             ),
           ),
         ],

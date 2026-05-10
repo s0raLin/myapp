@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:myapp/components/Shared/index.dart';
 import 'package:myapp/providers/MusicProvider/index.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -64,16 +65,8 @@ class AboutPage extends StatelessWidget {
 
                   // 链接列表：合并为一个圆角列表组
                   _buildSectionTitle(context, '更多信息'),
-                  Card(
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24),
-                      side: BorderSide(
-                        color: colorScheme.outlineVariant,
-                        width: 0.8,
-                      ),
-                    ),
-                    clipBehavior: Clip.antiAlias,
+                  AppPanel(
+                    padding: EdgeInsets.zero,
                     child: Column(
                       children: [
                         _buildLinkTile(
@@ -182,13 +175,8 @@ class AboutPage extends StatelessWidget {
   }
 
   Widget _buildDescriptionCard(ColorScheme cs, ThemeData theme) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: cs.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
-      ),
+    return AppPanel(
+      color: cs.surfaceContainerLowest,
       child: Text(
         '一个跨平台播放器。基于 Flutter 构建，使用 Material 3 设计语言。',
         textAlign: TextAlign.center,
@@ -198,15 +186,11 @@ class AboutPage extends StatelessWidget {
   }
 
   Widget _buildSectionTitle(BuildContext context, String title) {
-    return Container(
-      alignment: Alignment.centerLeft,
-      padding: const EdgeInsets.only(left: 8, bottom: 12),
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-          color: Theme.of(context).colorScheme.primary,
-          fontWeight: FontWeight.bold,
-        ),
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: 12),
+      child: AppSectionHeader(
+        title: title,
+        subtitle: title == '应用特性' ? '统一的区块标题和容器风格' : '项目与版本相关链接',
       ),
     );
   }
