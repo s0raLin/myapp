@@ -1,10 +1,14 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:myapp/contants/Assets/index.dart';
 import 'package:myapp/providers/MusicProvider/index.dart';
 import 'package:myapp/providers/StartupProvider/index.dart';
 import 'package:myapp/providers/ThemeProvider/index.dart';
 import 'package:myapp/router/Extensions/router.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -40,6 +44,8 @@ class _SplashPageState extends State<SplashPage>
 
     _controller.forward();
     _startInitialization();
+
+    _initAndroidApp();
   }
 
   Future<void> _startInitialization() async {
@@ -69,6 +75,20 @@ class _SplashPageState extends State<SplashPage>
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  Future<void> _initAndroidApp() async {
+    if (!Platform.isAndroid) return;
+
+    final pfs = await SharedPreferences.getInstance();
+    final bool isFirstRun = pfs.getBool("is_first_run") ?? true;
+
+    if (!mounted) return;
+    if (isFirstRun) {
+      context.go("setup");
+    } else {
+      context.go("home");
+    }
   }
 
   @override

@@ -6,6 +6,7 @@ import 'package:myapp/providers/NavProvider/index.dart';
 import 'package:myapp/providers/ThemeProvider/index.dart';
 import 'package:myapp/views/MusicDashboard/CoverFlow/index.dart';
 import 'package:myapp/views/MusicDashboard/index.dart';
+import 'package:myapp/views/SetupWizard/index.dart';
 import 'package:myapp/views/User/EditProfile/index.dart';
 import 'package:myapp/views/User/Files/index.dart';
 import 'package:myapp/views/Home/index.dart';
@@ -157,8 +158,12 @@ final _shellBranches = navItems.map((item) {
 }).toList();
 
 final _routes = [
-  GoRoute(path: "/splash", builder: (context, state) => SplashPage()),
-  GoRoute(path: "/login", builder: (context, state) => LoginPage()),
+  GoRoute(path: "/splash", builder: (context, state) => const SplashPage()),
+  GoRoute(
+    path: "/setup",
+    builder: (context, state) => const SetupWizardScreen(),
+  ),
+  GoRoute(path: "/login", builder: (context, state) => const LoginPage()),
   GoRoute(
     name: "about",
     path: "/about",

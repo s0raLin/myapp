@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:myapp/providers/MusicProvider/index.dart';
@@ -10,7 +8,6 @@ import 'package:myapp/providers/UserProvider/index.dart';
 import 'package:myapp/router/IndexRouter/index.dart';
 import 'package:myapp/service/Initialization/index.dart';
 import 'package:provider/provider.dart';
-import 'package:system_tray/system_tray.dart';
 import 'package:window_manager/window_manager.dart';
 
 Future<void> main() async {
