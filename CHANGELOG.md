@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.1](https://github.com/s0raLin/miku_music/compare/v1.11.0...v1.11.1) (2026-05-11)
+
+
+### Bug Fixes
+
+* **macos:** add placeholder .env file to prevent build failure ([8a7f522](https://github.com/s0raLin/miku_music/commit/8a7f52214a7ca58e5efc139822076e440a194eb6))
+
 ## [1.11.0](https://github.com/s0raLin/miku_music/compare/v1.10.0...v1.11.0) (2026-05-11)
 
 
