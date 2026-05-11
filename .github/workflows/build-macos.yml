@@ -1,38 +1,57 @@
 name: Build macOS
 
 on:
-  push:
-    tags:
-      - 'v*'
+  # 支持在 GitHub Actions 界面手动点击运行
   workflow_dispatch:
+    inputs:
+      build_type:
+        description: '构建类型 (release/debug)'
+        required: true
+        default: 'release'
+  # 也可以配置在推送到 main 分支时自动触发
+  push:
+    branches:
+      - main
+    paths:
+      - 'lib/**'
+      - 'macos/**'
+      - 'pubspec.yaml'
 
 jobs:
-  build-macos:
+  build:
     runs-on: macos-latest
 
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - uses: subosito/flutter-action@v2
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.29.x'
           channel: 'stable'
           cache: true
 
-      - name: Enable macOS
-        run: flutter config --enable-macos-desktop
+      - name: Install Dependencies
+        run: |
+          flutter pub get
+          cd macos && pod install && cd ..
 
-      - name: Get Flutter dependencies
-        run: flutter pub get
+      - name: Build macOS App
+        run: |
+          if [ "${{ github.event.inputs.build_type }}" == "debug" ]; then
+            flutter build macos --debug
+          else
+            flutter build macos --release
+          fi
 
-      - name: Build macOS (Universal)
-        run: flutter build macos --release --no-codesign
+      # 将构建出的 .app 打包成 .zip 方便下载
+      - name: Compress Build Output
+        run: |
+          cd build/macos/Build/Products/Release
+          zip -r ../../../../Flutter-MacOS-App.zip *.app
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: M3Music-macOS
-          path: build/macos/Build/Products/Release/*.app
-          retention-days: 7
+          name: macos-release-app
+          path: Flutter-MacOS-App.zip
