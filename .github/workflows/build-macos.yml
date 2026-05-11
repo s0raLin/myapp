@@ -4,6 +4,8 @@ on:
   push:
     tags:
       - 'v*'
+      # 方式2：允许你在 GitHub 网页上手动触发构建
+  workflow_dispatch:
 
 jobs:
   build-macos:
