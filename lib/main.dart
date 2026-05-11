@@ -15,7 +15,11 @@ import 'package:window_manager/window_manager.dart';
 Future<void> main() async {
   await InitializationService.preRunInit();
 
-  await dotenv.load(fileName: ".env");
+  try {
+    await dotenv.load(fileName: ".env");
+  } catch (e) {
+    debugPrint("Warning: Could not load .env file, using default values.");
+  }
 
   //初始化窗口管理器
   if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
