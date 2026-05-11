@@ -4,7 +4,6 @@ on:
   push:
     tags:
       - 'v*'
-      # 方式2：允许你在 GitHub 网页上手动触发构建
   workflow_dispatch:
 
 jobs:
@@ -13,21 +12,27 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.x'
+          fetch-depth: 0
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.29.x'
           channel: 'stable'
+          cache: true
 
       - name: Enable macOS
         run: flutter config --enable-macos-desktop
 
-      - name: Build macOS
-        run: flutter build macos --release
+      - name: Get Flutter dependencies
+        run: flutter pub get
+
+      - name: Build macOS (Universal)
+        run: flutter build macos --release --no-codesign
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: M3Music-macOS
           path: build/macos/Build/Products/Release/*.app
+          retention-days: 7
