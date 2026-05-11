@@ -9,13 +9,13 @@ on:
         required: true
         default: 'release'
   # 也可以配置在推送到 main 分支时自动触发
-  push:
-    branches:
-      - main
-    paths:
-      - 'lib/**'
-      - 'macos/**'
-      - 'pubspec.yaml'
+  # push:
+  #   branches:
+  #     - main
+  #   paths:
+  #     - 'lib/**'
+  #     - 'macos/**'
+  #     - 'pubspec.yaml'
 
 jobs:
   build:
