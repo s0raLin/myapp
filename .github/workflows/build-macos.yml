@@ -36,6 +36,10 @@ jobs:
           flutter pub get
           cd macos && pod install && cd ..
 
+      # 关键修复：解决 .env 文件缺失导致打包失败的问题
+      - name: Create placeholder .env
+        run: touch .env
+
       - name: Build macOS App
         run: |
           if [ "${{ github.event.inputs.build_type }}" == "debug" ]; then
