@@ -48,14 +48,27 @@ jobs:
             flutter build macos --release
           fi
 
-      # 将构建出的 .app 打包成 .zip 方便下载
+      # 将构建出的 .app 打包成 .zip
       - name: Compress Build Output
         run: |
-          cd build/macos/Build/Products/Release
-          zip -r ../../../../Flutter-MacOS-App.zip *.app
+          # 1. 查找生成的 .app 路径（避免因为项目名不同导致的路径差异）
+          APP_PATH=$(find build/macos/Build/Products/Release -name "*.app" -maxdepth 1)
+          echo "Found App at: $APP_PATH"
+
+          if [ -z "$APP_PATH" ]; then
+            echo "Error: Could not find .app file!"
+            exit 1
+          fi
+
+          # 2. 切换到该目录下进行压缩，这样 zip 包内不会包含冗长的 build/macos/... 文件夹层级
+          # 我们把压缩包直接输出到 GitHub 的工作根目录 (${{ github.workspace }})
+          cd "$(dirname "$APP_PATH")"
+          zip -r "${{ github.workspace }}/Flutter-MacOS-App.zip" "$(basename "$APP_PATH")"
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: macos-release-app
           path: Flutter-MacOS-App.zip
+          # 加上这个可以确保如果文件缺失，构建会直接报错显现出来
+          if-no-files-found: error
