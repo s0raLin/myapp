@@ -465,7 +465,7 @@ class M3UserCard extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return AppPanel(
-      color: colorScheme.surfaceContainer,
+      color: colorScheme.secondaryContainer,
       padding: const EdgeInsets.all(16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
