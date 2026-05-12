@@ -153,7 +153,7 @@ class _AppBanner extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '全平台统一体验的音乐播放器',
+                      '跨平台音乐播放器',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: cs.onSurfaceVariant,
                       ),
