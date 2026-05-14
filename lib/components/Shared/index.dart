@@ -96,7 +96,6 @@ class AppToast {
     );
   }
 }
-
 class _AppToastOverlay extends StatefulWidget {
   final String message;
   final String? title;
@@ -122,9 +121,7 @@ class _AppToastOverlayState extends State<_AppToastOverlay> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      setState(() {
-        _visible = true;
-      });
+      setState(() => _visible = true);
     });
   }
 
@@ -138,23 +135,13 @@ class _AppToastOverlayState extends State<_AppToastOverlay> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final accentColor = switch (widget.tone) {
-      AppToastTone.success => colorScheme.tertiary,
-      AppToastTone.warning => colorScheme.primary,
-      AppToastTone.error => colorScheme.error,
-      AppToastTone.neutral => colorScheme.primary,
-    };
-    final accentContainer = switch (widget.tone) {
-      AppToastTone.success => colorScheme.tertiaryContainer,
-      AppToastTone.warning => colorScheme.secondaryContainer,
-      AppToastTone.error => colorScheme.errorContainer,
-      AppToastTone.neutral => colorScheme.secondaryContainer,
-    };
-    final accentOnContainer = switch (widget.tone) {
-      AppToastTone.success => colorScheme.onTertiaryContainer,
-      AppToastTone.warning => colorScheme.onSecondaryContainer,
-      AppToastTone.error => colorScheme.onErrorContainer,
-      AppToastTone.neutral => colorScheme.onSecondaryContainer,
+
+    // M3 语义化配色选择器
+    final (accentColor, iconData) = switch (widget.tone) {
+      AppToastTone.success => (colorScheme.primary, Icons.check_circle_outline_rounded),
+      AppToastTone.warning => (colorScheme.tertiary, Icons.info_outline_rounded),
+      AppToastTone.error => (colorScheme.error, Icons.error_outline_rounded),
+      AppToastTone.neutral => (colorScheme.onSurfaceVariant, Icons.notifications_none_rounded),
     };
 
     return IgnorePointer(
@@ -162,87 +149,63 @@ class _AppToastOverlayState extends State<_AppToastOverlay> {
         child: Align(
           alignment: Alignment.bottomCenter,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 28),
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 40), // 略微调高位置，更符合悬浮感
             child: AnimatedSlide(
-              duration: const Duration(milliseconds: 240),
-              curve: Curves.easeOutCubic,
-              offset: _visible ? Offset.zero : const Offset(0, 0.18),
+              duration: const Duration(milliseconds: 400),
+              curve: const Cubic(0.2, 0.0, 0, 1.0), // 使用 M3 标准的强调曲线
+              offset: _visible ? Offset.zero : const Offset(0, 0.5),
               child: AnimatedOpacity(
-                duration: const Duration(milliseconds: 180),
-                curve: Curves.easeOut,
+                duration: const Duration(milliseconds: 200),
                 opacity: _visible ? 1 : 0,
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 440),
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: colorScheme.surfaceContainerHigh,
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(
-                        color: colorScheme.outlineVariant.withValues(
-                          alpha: 0.7,
-                        ),
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: 400, minHeight: 48),
+                  decoration: ShapeDecoration(
+                    // 核心修改：StadiumBorder 实现胶囊形状
+                    shape: const StadiumBorder(),
+                    color: colorScheme.surfaceContainerHigh,
+                    shadows: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.08),
+                        blurRadius: 24,
+                        offset: const Offset(0, 8),
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: colorScheme.shadow.withValues(alpha: 0.14),
-                          blurRadius: 18,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(12, 10, 16, 10),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(
-                              color: accentContainer,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            alignment: Alignment.center,
-                            child: Icon(
-                              _iconForTone(widget.tone),
-                              size: 20,
-                              color: accentOnContainer,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Flexible(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if (widget.title != null) ...[
-                                  Text(
-                                    widget.title!,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: theme.textTheme.labelLarge?.copyWith(
-                                      color: accentColor,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                ],
+                    ],
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(iconData, size: 22, color: accentColor),
+                        const SizedBox(width: 12),
+                        Flexible(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (widget.title != null)
                                 Text(
-                                  widget.message,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: colorScheme.onSurface,
-                                    fontWeight: FontWeight.w600,
-                                    height: 1.25,
+                                  widget.title!,
+                                  style: theme.textTheme.labelLarge?.copyWith(
+                                    color: accentColor,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 0.5,
                                   ),
                                 ),
-                              ],
-                            ),
+                              Text(
+                                widget.message,
+                                maxLines: 1, // 胶囊样式通常建议单行，保持精致感
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: colorScheme.onSurface,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(width: 4), // 胶囊右侧留白平衡
+                      ],
                     ),
                   ),
                 ),
@@ -252,15 +215,6 @@ class _AppToastOverlayState extends State<_AppToastOverlay> {
         ),
       ),
     );
-  }
-
-  IconData _iconForTone(AppToastTone tone) {
-    return switch (tone) {
-      AppToastTone.success => Icons.check_circle_rounded,
-      AppToastTone.warning => Icons.info_rounded,
-      AppToastTone.error => Icons.error_rounded,
-      AppToastTone.neutral => Icons.notifications_rounded,
-    };
   }
 }
 

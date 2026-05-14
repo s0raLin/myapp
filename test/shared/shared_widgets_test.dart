@@ -98,11 +98,7 @@ class _ToastDemo extends StatelessWidget {
   Widget build(BuildContext _) {
     return FilledButton(
       onPressed: () {
-        AppToast.success(
-          context,
-          title: '下载完成',
-          message: 'Toast 共享组件演示',
-        );
+        AppToast.success(context, title: '下载完成', message: 'Toast 共享组件演示');
       },
       child: const Text('展示 Toast'),
     );
@@ -209,6 +205,9 @@ void main() {
       expect(find.text('保存成功'), findsOneWidget);
       expect(find.text('资料已经更新'), findsOneWidget);
       expect(find.byIcon(Icons.check_circle_rounded), findsOneWidget);
+
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpAndSettle();
     });
 
     testWidgets('shared demo page renders toast trigger', (tester) async {
