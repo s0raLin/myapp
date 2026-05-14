@@ -1,9 +1,268 @@
+import 'dart:async';
 import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
 enum MediaGridCardTextLayout { below, overlay }
+
+enum AppToastTone { neutral, success, warning, error }
+
+class AppToast {
+  AppToast._();
+
+  static OverlayEntry? _currentEntry;
+  static Timer? _dismissTimer;
+
+  static void show(
+    BuildContext context, {
+    required String message,
+    String? title,
+    AppToastTone tone = AppToastTone.neutral,
+    Duration duration = const Duration(seconds: 2),
+  }) {
+    final overlay = Overlay.of(context, rootOverlay: true);
+
+    _dismissTimer?.cancel();
+    _currentEntry?.remove();
+
+    late final OverlayEntry entry;
+    entry = OverlayEntry(
+      builder: (overlayContext) => _AppToastOverlay(
+        title: title,
+        message: message,
+        tone: tone,
+        onHidden: () {
+          if (identical(_currentEntry, entry)) {
+            _currentEntry = null;
+          }
+        },
+      ),
+    );
+
+    _currentEntry = entry;
+    overlay.insert(entry);
+
+    _dismissTimer = Timer(duration, () {
+      if (identical(_currentEntry, entry)) {
+        entry.remove();
+        _currentEntry = null;
+      }
+    });
+  }
+
+  static void success(
+    BuildContext context, {
+    required String message,
+    String? title,
+    Duration duration = const Duration(seconds: 2),
+  }) {
+    show(
+      context,
+      message: message,
+      title: title,
+      tone: AppToastTone.success,
+      duration: duration,
+    );
+  }
+
+  static void warning(
+    BuildContext context, {
+    required String message,
+    String? title,
+    Duration duration = const Duration(seconds: 2),
+  }) {
+    show(
+      context,
+      message: message,
+      title: title,
+      tone: AppToastTone.warning,
+      duration: duration,
+    );
+  }
+
+  static void error(
+    BuildContext context, {
+    required String message,
+    String? title,
+    Duration duration = const Duration(seconds: 3),
+  }) {
+    show(
+      context,
+      message: message,
+      title: title,
+      tone: AppToastTone.error,
+      duration: duration,
+    );
+  }
+}
+
+class _AppToastOverlay extends StatefulWidget {
+  final String message;
+  final String? title;
+  final AppToastTone tone;
+  final VoidCallback onHidden;
+
+  const _AppToastOverlay({
+    required this.message,
+    this.title,
+    required this.tone,
+    required this.onHidden,
+  });
+
+  @override
+  State<_AppToastOverlay> createState() => _AppToastOverlayState();
+}
+
+class _AppToastOverlayState extends State<_AppToastOverlay> {
+  bool _visible = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      setState(() {
+        _visible = true;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    widget.onHidden();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final accentColor = switch (widget.tone) {
+      AppToastTone.success => colorScheme.tertiary,
+      AppToastTone.warning => colorScheme.primary,
+      AppToastTone.error => colorScheme.error,
+      AppToastTone.neutral => colorScheme.primary,
+    };
+    final accentContainer = switch (widget.tone) {
+      AppToastTone.success => colorScheme.tertiaryContainer,
+      AppToastTone.warning => colorScheme.secondaryContainer,
+      AppToastTone.error => colorScheme.errorContainer,
+      AppToastTone.neutral => colorScheme.secondaryContainer,
+    };
+    final accentOnContainer = switch (widget.tone) {
+      AppToastTone.success => colorScheme.onTertiaryContainer,
+      AppToastTone.warning => colorScheme.onSecondaryContainer,
+      AppToastTone.error => colorScheme.onErrorContainer,
+      AppToastTone.neutral => colorScheme.onSecondaryContainer,
+    };
+
+    return IgnorePointer(
+      child: SafeArea(
+        child: Align(
+          alignment: Alignment.bottomCenter,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 28),
+            child: AnimatedSlide(
+              duration: const Duration(milliseconds: 240),
+              curve: Curves.easeOutCubic,
+              offset: _visible ? Offset.zero : const Offset(0, 0.18),
+              child: AnimatedOpacity(
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOut,
+                opacity: _visible ? 1 : 0,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 440),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: colorScheme.surfaceContainerHigh,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(
+                        color: colorScheme.outlineVariant.withValues(
+                          alpha: 0.7,
+                        ),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: colorScheme.shadow.withValues(alpha: 0.14),
+                          blurRadius: 18,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 10, 16, 10),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: accentContainer,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            alignment: Alignment.center,
+                            child: Icon(
+                              _iconForTone(widget.tone),
+                              size: 20,
+                              color: accentOnContainer,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Flexible(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (widget.title != null) ...[
+                                  Text(
+                                    widget.title!,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: theme.textTheme.labelLarge?.copyWith(
+                                      color: accentColor,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                ],
+                                Text(
+                                  widget.message,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: colorScheme.onSurface,
+                                    fontWeight: FontWeight.w600,
+                                    height: 1.25,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  IconData _iconForTone(AppToastTone tone) {
+    return switch (tone) {
+      AppToastTone.success => Icons.check_circle_rounded,
+      AppToastTone.warning => Icons.info_rounded,
+      AppToastTone.error => Icons.error_rounded,
+      AppToastTone.neutral => Icons.notifications_rounded,
+    };
+  }
+}
 
 class AppSectionHeader extends StatelessWidget {
   final String title;
@@ -284,7 +543,10 @@ class MediaGridCard extends StatelessWidget {
       return Stack(
         fit: fillHeight || expandArtwork ? StackFit.expand : StackFit.loose,
         children: [
-          if (fillHeight || expandArtwork) Positioned.fill(child: cover) else cover,
+          if (fillHeight || expandArtwork)
+            Positioned.fill(child: cover)
+          else
+            cover,
           if (badge != null) Positioned(left: 10, top: 10, child: badge!),
           if (trailing != null) Positioned(right: 8, top: 8, child: trailing!),
         ],

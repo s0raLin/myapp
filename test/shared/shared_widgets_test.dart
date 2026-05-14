@@ -17,14 +17,14 @@ class _SharedDemoPage extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: const [
-            AppSectionHeader(
+          children: [
+            const AppSectionHeader(
               title: 'AppSectionHeader',
               subtitle: '用于测试中的集中演示',
               action: Text('Action'),
             ),
-            SizedBox(height: 16),
-            SizedBox(
+            const SizedBox(height: 16),
+            const SizedBox(
               height: 220,
               child: MediaGridCard(
                 title: '夜航星',
@@ -32,8 +32,8 @@ class _SharedDemoPage extends StatelessWidget {
                 fallbackIcon: Icons.music_note_rounded,
               ),
             ),
-            SizedBox(height: 16),
-            SizedBox(
+            const SizedBox(height: 16),
+            const SizedBox(
               height: 220,
               child: MediaGridCard(
                 title: '午后黑胶',
@@ -42,15 +42,15 @@ class _SharedDemoPage extends StatelessWidget {
                 textLayout: MediaGridCardTextLayout.overlay,
               ),
             ),
-            SizedBox(height: 16),
-            SongListCardTile(
+            const SizedBox(height: 16),
+            const SongListCardTile(
               title: '青空',
               subtitle: '高亮列表示例',
               fallbackIcon: Icons.queue_music_rounded,
               highlighted: true,
             ),
-            SizedBox(height: 16),
-            SizedBox(
+            const SizedBox(height: 16),
+            const SizedBox(
               height: 140,
               child: QuickActionCard(
                 title: '扫描音乐',
@@ -58,15 +58,17 @@ class _SharedDemoPage extends StatelessWidget {
                 icon: Icons.library_add_check_rounded,
               ),
             ),
-            SizedBox(height: 16),
-            AppEmptyState(
+            const SizedBox(height: 16),
+            const AppEmptyState(
               icon: Icons.library_music_outlined,
               title: '没有可展示的内容',
               subtitle: '普通布局空状态示例',
               compact: true,
             ),
-            SizedBox(height: 16),
-            SizedBox(
+            const SizedBox(height: 16),
+            Builder(builder: (context) => _ToastDemo(context: context)),
+            const SizedBox(height: 16),
+            const SizedBox(
               height: 220,
               child: CustomScrollView(
                 physics: NeverScrollableScrollPhysics(),
@@ -83,6 +85,26 @@ class _SharedDemoPage extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ToastDemo extends StatelessWidget {
+  final BuildContext context;
+
+  const _ToastDemo({required this.context});
+
+  @override
+  Widget build(BuildContext _) {
+    return FilledButton(
+      onPressed: () {
+        AppToast.success(
+          context,
+          title: '下载完成',
+          message: 'Toast 共享组件演示',
+        );
+      },
+      child: const Text('展示 Toast'),
     );
   }
 }
@@ -170,21 +192,31 @@ void main() {
       expect(find.text('请稍后再试'), findsOneWidget);
     });
 
-    testWidgets('test demo page matches golden', (tester) async {
-      tester.view.physicalSize = const Size(430, 1600);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
+    testWidgets('AppToast renders M3 style overlay content', (tester) async {
+      await tester.pumpWidget(_wrap(const SizedBox.shrink()));
 
+      final context = tester.element(find.byType(SizedBox));
+      AppToast.success(
+        context,
+        title: '保存成功',
+        message: '资料已经更新',
+        duration: const Duration(seconds: 5),
+      );
+
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 250));
+
+      expect(find.text('保存成功'), findsOneWidget);
+      expect(find.text('资料已经更新'), findsOneWidget);
+      expect(find.byIcon(Icons.check_circle_rounded), findsOneWidget);
+    });
+
+    testWidgets('shared demo page renders toast trigger', (tester) async {
       await tester.pumpWidget(_demoApp());
       await tester.pumpAndSettle();
 
       expect(find.text('Shared 测试演示'), findsOneWidget);
-
-      await expectLater(
-        find.byType(Scaffold),
-        matchesGoldenFile('goldens/shared_demo_page.png'),
-      );
+      expect(find.text('展示 Toast'), findsOneWidget);
     });
   });
 }

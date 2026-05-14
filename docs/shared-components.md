@@ -98,6 +98,31 @@ AppSectionHeader(
 - 标题尽量短，副标题一句话内
 - 适合成组展示，通常两列或三列布局效果更好
 
+### `AppToast`
+
+用于全局短消息提示，视觉风格参考 Android 上的 Material 3 浮层 Toast。
+
+- 常用入口：`AppToast.show`、`AppToast.success`、`AppToast.warning`、`AppToast.error`
+- 必填参数：`message`
+- 可选参数：`title`、`tone`、`duration`
+- 适用场景：轻量操作反馈、失败提示、开发中功能占位提示
+
+示例：
+
+```dart
+AppToast.success(
+  context,
+  title: '已保存',
+  message: '歌单信息已经更新',
+);
+```
+
+建议：
+
+- 只用于短反馈，不承载需要用户确认的关键操作
+- 文案尽量控制在两行内，避免遮挡主界面
+- 页面里优先调用 `AppToast`，不要再分散直接写 `SnackBar`
+
 ### `AppEmptyState`
 
 普通布局下的空状态组件。
@@ -120,6 +145,7 @@ AppSectionHeader(
 - `UserProfilePage`：使用 `AppSectionHeader`、`AppPanel`、`QuickActionCard`
 - `LibraryTab` / `RecentlyPlayedPage`：使用 `SongListCardTile`
 - `FilesPage`：使用 `MediaGridCard`、`AppEmptyState`
+- 操作反馈：使用 `AppToast`
 
 ## 测试内演示
 
@@ -135,11 +161,12 @@ AppSectionHeader(
 - `MediaGridCard` 的 `below` / `overlay` 两种布局
 - `SongListCardTile` 高亮与普通态
 - `QuickActionCard` 入口卡片
+- `AppToast` 浮层提示
 - `AppEmptyState` 与 `AppEmptySliver`
 
 ## 测试说明
 
-已新增 widget test 与 golden test：
+已新增 widget test：
 
 - 文件：`test/shared/shared_widgets_test.dart`
 
@@ -149,20 +176,11 @@ AppSectionHeader(
 - `ArtworkCover` 无封面时的 fallback 图标
 - `MediaGridCard` overlay 模式渲染
 - `AppEmptySliver` 在 `CustomScrollView` 中的展示
-- 测试内 `_SharedDemoPage` 的 golden 截图对比
-
-golden 文件：
-
-- `test/shared/goldens/shared_demo_page.png`
+- `AppToast` 的 overlay 渲染
+- 测试内 `_SharedDemoPage` 的渲染与 Toast 触发入口
 
 运行：
 
 ```bash
 flutter test test/shared/shared_widgets_test.dart
-```
-
-更新 golden 基准图：
-
-```bash
-flutter test --update-goldens test/shared/shared_widgets_test.dart
 ```

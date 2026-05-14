@@ -87,9 +87,7 @@ class RecentlyPlayedPage extends StatelessWidget {
               onTap: () {
                 Navigator.pop(context);
                 provider.addToQueue(music);
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(const SnackBar(content: Text("已添加到下一首")));
+                AppToast.success(context, title: "已加入队列", message: "已添加到下一首");
               },
             ),
             ListTile(

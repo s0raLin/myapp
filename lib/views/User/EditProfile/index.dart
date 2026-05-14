@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:myapp/api/Model/User/index.dart';
+import 'package:myapp/components/Shared/index.dart';
 import 'package:myapp/contants/Assets/index.dart';
 import 'package:myapp/providers/UserProvider/index.dart';
 import 'package:provider/provider.dart';
@@ -212,14 +213,18 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 
   void _showSimpleSnackBar(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), behavior: SnackBarBehavior.floating),
+    AppToast.show(
+      context,
+      message: msg,
+      title: '功能提示',
+      tone: AppToastTone.neutral,
     );
   }
 
   // 保存逻辑保持不变，但增加一点触感反馈
   void _saveProfile() {
     if (!_formKey.currentState!.validate()) return;
+    AppToast.success(context, title: '资料已保存', message: '新的个人资料已更新');
     // ... 原有逻辑 ...
   }
 }

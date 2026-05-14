@@ -487,7 +487,11 @@ Future<void> _showCreatePlaylistDialog(BuildContext context) async {
     final provider = context.read<MusicProvider>();
     if (result['index'] == 0) {
       final name = nameController.text.trim();
-      if (name.isNotEmpty) provider.createPlaylist(name);
+      if (name.isNotEmpty) {
+        provider.createPlaylist(name);
+        
+      };
+
     } else {
       final uid = uidController.text.trim();
       if (uid.isNotEmpty) {
