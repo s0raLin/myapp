@@ -10,16 +10,21 @@ class NowPlayingMiniFab extends StatelessWidget {
   Widget build(BuildContext context) {
     final mp = context.watch<MusicProvider>();
     final cs = Theme.of(context).colorScheme;
+    final isPlaying = mp.player.playing;
     return GestureDetector(
+      // 1. 长按：恢复成 Bar 模式
       onLongPress: () {
-        // 1. 长按：恢复成 Bar 模式
         mp.setMiniMode(false);
-        Feedback.forLongPress(context); // 增加一个震动反馈
+        Feedback.forLongPress(context);
+      },
+      // 2. 双击：跳转到详情页 (或者你可以把单击设为跳转，长按设为模式切换)
+      onDoubleTap: () {
+        context.push('/music-detail');
       },
       child: FloatingActionButton(
         onPressed: () {
-          // 2. 短击：直接跳转到详情页
-          context.push('/music-detail');
+          // 2. 短击：播放暂停
+          mp.togglePlay();
         },
         backgroundColor: cs.primaryContainer,
         elevation: 6,
@@ -29,7 +34,7 @@ class NowPlayingMiniFab extends StatelessWidget {
           children: [
             _MiniCircularProgress(),
             Icon(
-              mp.player.playing
+              isPlaying
                   ? Icons.music_note_rounded
                   : Icons.play_arrow_rounded,
               color: cs.onPrimaryContainer,
