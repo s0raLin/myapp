@@ -7,7 +7,7 @@ class MusicInfo {
   final String artist; // 歌手
   final Duration duration; // 时长
   final Uint8List? coverBytes; // 封面
-  final String? lyrics; // 歌词
+  String? lyrics; // 歌词
   final String? album;
 
   MusicInfo({

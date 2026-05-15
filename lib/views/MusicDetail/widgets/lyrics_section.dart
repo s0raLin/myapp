@@ -1,7 +1,9 @@
 // ─── 歌词区域 ─────────────────────────────────────────────────────────────────
 
 import 'package:flutter/material.dart';
+import 'package:myapp/api/Client/Music/index.dart';
 import 'package:myapp/providers/MusicProvider/index.dart';
+import 'package:myapp/views/Music/widgets/empty_state.dart';
 import 'package:provider/provider.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
@@ -47,16 +49,27 @@ class _LyricsSectionState extends State<LyricsSection>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final lyrics = context.watch<MusicProvider>().currentLyrics;
+    final mp = context.watch<MusicProvider>();
+    final music = mp.currentMusic;
+    final lyrics = mp.currentLyrics;
+
     final cs = Theme.of(context).colorScheme;
 
     if (lyrics.isEmpty) {
-      return Center(
-        child: Text(
-          '暂无歌词',
-          style: Theme.of(
-            context,
-          ).textTheme.bodyLarge?.copyWith(color: cs.onSurfaceVariant),
+      return EmptyState(
+        icon: Icons.music_note_rounded,
+        title: "暂无歌词",
+        subtitle: "点击下方按钮查找",
+        action: FilledButton.icon(
+          onPressed: () async {
+            final result = await MusicApi.searchLyrics(
+              music?.artist,
+              music?.title,
+            );
+            mp.setCurrentLrc(result.$1);
+          },
+          label: const Text("下载歌词"),
+          icon: const Icon(Icons.download_rounded),
         ),
       );
     }

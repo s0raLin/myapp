@@ -307,6 +307,18 @@ class MusicProvider extends ChangeNotifier {
     return lyrics;
   }
 
+  void setCurrentLrc(String? lrcContent) {
+    if (_currentIndex < 0 || _currentIndex >= _queue.length) return;
+    _queue[_currentIndex].lyrics = lrcContent;
+
+    //调用解析器,将String转化成List<Map>
+    _currentLyrics = _parseLrc(lrcContent);
+
+    notifyListeners();
+
+    
+  }
+
   // ─────────────────────────────────────────────
   // 播放队列操作
   // ─────────────────────────────────────────────

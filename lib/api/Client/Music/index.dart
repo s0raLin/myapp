@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:myapp/api/Model/Music/index.dart';
 import 'package:myapp/service/Music/index.dart';
 import 'package:myapp/utils/Http/index.dart';
@@ -39,14 +40,14 @@ class MusicApi {
       "/api/music",
       formData: formData,
       onSendProgress: (int sent, int total) {
-        print("上传进度: ${(sent / total * 100).round()}%");
+        debugPrint("上传进度: ${(sent / total * 100).round()}%");
       },
     );
 
     if (response.statusCode == 200) {
-      print("上传成功: ${response.data}");
+      debugPrint("上传成功: ${response.data}");
     } else {
-      print("上传失败");
+      debugPrint("上传失败");
     }
   }
 
@@ -54,7 +55,7 @@ class MusicApi {
     final response = await HttpUtils().get("/api/music");
 
     if (response.statusCode == 200) {
-      print("获取成功: ${response.data}");
+      debugPrint("获取成功: ${response.data}");
       List dataList = response.data["data"];
       List<Music> musics = dataList
           .map((item) => Music.fromJson(item))
@@ -63,5 +64,32 @@ class MusicApi {
     } else {
       throw Exception("获取失败: ${response.statusMessage}");
     }
+  }
+
+  static Future<(String, String)> searchLyrics(
+    String? artist,
+    String? title,
+  ) async {
+
+    String plainLyrics = '无纯文本歌词';
+    String syncedLyrics = '无滚动歌词';
+    if (artist == "" || title == "") return (syncedLyrics, plainLyrics);
+
+    final dio = Dio();
+    try {
+      final response = await dio.get(
+        'https://lrclib.net/api/get',
+        queryParameters: {'artist_name': artist, 'track_name': title},
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        plainLyrics = data['plainLyrics'];
+        syncedLyrics = data['syncedLyrics'];
+      }
+    } on DioException catch (e) {
+      debugPrint("未找到歌词: $e");
+    }
+    return (syncedLyrics, plainLyrics);
   }
 }
