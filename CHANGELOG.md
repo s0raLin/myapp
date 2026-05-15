@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.16.0](https://github.com/s0raLin/miku_music/compare/v1.15.0...v1.16.0) (2026-05-15)
+
+
+### Features
+
+* **ui:** add navigation tap interaction to NowPlayingBar ([e5d7f76](https://github.com/s0raLin/miku_music/commit/e5d7f7649f21adfba0af647a277253fc419519de))
+
 ## [1.15.0](https://github.com/s0raLin/miku_music/compare/v1.14.0...v1.15.0) (2026-05-15)
 
 
