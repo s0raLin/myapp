@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
 import 'package:myapp/contants/Assets/index.dart';
 import 'package:myapp/model/Music/index.dart';
@@ -235,56 +236,61 @@ class _TrackInfoTile extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        // M3 Shape：small（8dp corners）用于封面图
-        ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: music.coverBytes != null && music.coverBytes!.isNotEmpty
-              ? Image.memory(
-                  music.coverBytes!,
-                  width: 48,
-                  height: 48,
-                  fit: BoxFit.cover,
-                )
-              : Container(
-                  width: 48,
-                  height: 48,
-                  color: cs.surfaceContainerHighest,
-                  child: Icon(
-                    Icons.music_note_rounded,
-                    size: 24,
-                    color: cs.onSurfaceVariant,
+    return GestureDetector(
+      onTap: () {
+        context.push("/music-detail");
+      },
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // M3 Shape：small（8dp corners）用于封面图
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: music.coverBytes != null && music.coverBytes!.isNotEmpty
+                ? Image.memory(
+                    music.coverBytes!,
+                    width: 48,
+                    height: 48,
+                    fit: BoxFit.cover,
+                  )
+                : Container(
+                    width: 48,
+                    height: 48,
+                    color: cs.surfaceContainerHighest,
+                    child: Icon(
+                      Icons.music_note_rounded,
+                      size: 24,
+                      color: cs.onSurfaceVariant,
+                    ),
                   ),
-                ),
-        ),
-        const SizedBox(width: 12),
-        Flexible(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // M3 TypeScale：titleSmall（14sp / medium weight）
-              Text(
-                music.title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: tt.titleSmall,
-              ),
-              const SizedBox(height: 2),
-              // M3 TypeScale：bodySmall（12sp），onSurfaceVariant
-              Text(
-                music.artist,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-              ),
-            ],
           ),
-        ),
-      ],
+          const SizedBox(width: 12),
+          Flexible(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // M3 TypeScale：titleSmall（14sp / medium weight）
+                Text(
+                  music.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: tt.titleSmall,
+                ),
+                const SizedBox(height: 2),
+                // M3 TypeScale：bodySmall（12sp），onSurfaceVariant
+                Text(
+                  music.artist,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

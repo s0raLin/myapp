@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:myapp/providers/MusicProvider/index.dart';
 import 'package:provider/provider.dart';
 
@@ -9,22 +10,32 @@ class NowPlayingMiniFab extends StatelessWidget {
   Widget build(BuildContext context) {
     final mp = context.watch<MusicProvider>();
     final cs = Theme.of(context).colorScheme;
-    return FloatingActionButton(
-      onPressed: () => mp.setMiniMode(false),
-      backgroundColor: cs.primaryContainer,
-      elevation: 6,
-      shape: const CircleBorder(),
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          _MiniCircularProgress(),
-          Icon(
-            mp.player.playing
-                ? Icons.music_note_rounded
-                : Icons.play_arrow_rounded,
-            color: cs.onPrimaryContainer,
-          ),
-        ],
+    return GestureDetector(
+      onLongPress: () {
+        // 1. 长按：恢复成 Bar 模式
+        mp.setMiniMode(false);
+        Feedback.forLongPress(context); // 增加一个震动反馈
+      },
+      child: FloatingActionButton(
+        onPressed: () {
+          // 2. 短击：直接跳转到详情页
+          context.push('/music-detail');
+        },
+        backgroundColor: cs.primaryContainer,
+        elevation: 6,
+        shape: const CircleBorder(),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            _MiniCircularProgress(),
+            Icon(
+              mp.player.playing
+                  ? Icons.music_note_rounded
+                  : Icons.play_arrow_rounded,
+              color: cs.onPrimaryContainer,
+            ),
+          ],
+        ),
       ),
     );
   }
