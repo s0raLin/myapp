@@ -27,39 +27,49 @@ class NowPlayingBar extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    return SizedBox(
-      height: 72,
-      child: isWide
-          ? Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: _WideLayout(music: music, fmt: NowPlayingBar._fmt),
-            )
-          : Stack(
-              children: [
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  child: _MiniProgressBar(fmt: NowPlayingBar._fmt),
+    return Material(
+      child: InkWell(
+        onTap: () {
+          context.push("/music-detail");
+        },
+        child: SizedBox(
+          height: 72,
+          child: isWide
+              ? Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: _WideLayout(music: music, fmt: NowPlayingBar._fmt),
+                )
+              : Stack(
+                  children: [
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      child: _MiniProgressBar(fmt: NowPlayingBar._fmt),
+                    ),
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: _CompactLayout(music: music),
+                      ),
+                    ),
+                    // 添加一个微小的“收起”按钮
+                    Positioned(
+                      right: 0,
+                      top: 4,
+                      child: IconButton(
+                        icon: const Icon(
+                          Icons.close_fullscreen_rounded,
+                          size: 16,
+                        ),
+                        onPressed: () =>
+                            context.read<MusicProvider>().setMiniMode(true),
+                      ),
+                    ),
+                  ],
                 ),
-                Center(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: _CompactLayout(music: music),
-                  ),
-                ),
-                // 添加一个微小的“收起”按钮
-                Positioned(
-                  right: 0,
-                  top: 4,
-                  child: IconButton(
-                    icon: const Icon(Icons.close_fullscreen_rounded, size: 16),
-                    onPressed: () =>
-                        context.read<MusicProvider>().setMiniMode(true),
-                  ),
-                ),
-              ],
-            ),
+        ),
+      ),
     );
   }
 }
@@ -236,61 +246,56 @@ class _TrackInfoTile extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    return GestureDetector(
-      onTap: () {
-        context.push("/music-detail");
-      },
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          // M3 Shape：small（8dp corners）用于封面图
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: music.coverBytes != null && music.coverBytes!.isNotEmpty
-                ? Image.memory(
-                    music.coverBytes!,
-                    width: 48,
-                    height: 48,
-                    fit: BoxFit.cover,
-                  )
-                : Container(
-                    width: 48,
-                    height: 48,
-                    color: cs.surfaceContainerHighest,
-                    child: Icon(
-                      Icons.music_note_rounded,
-                      size: 24,
-                      color: cs.onSurfaceVariant,
-                    ),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        // M3 Shape：small（8dp corners）用于封面图
+        ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: music.coverBytes != null && music.coverBytes!.isNotEmpty
+              ? Image.memory(
+                  music.coverBytes!,
+                  width: 48,
+                  height: 48,
+                  fit: BoxFit.cover,
+                )
+              : Container(
+                  width: 48,
+                  height: 48,
+                  color: cs.surfaceContainerHighest,
+                  child: Icon(
+                    Icons.music_note_rounded,
+                    size: 24,
+                    color: cs.onSurfaceVariant,
                   ),
-          ),
-          const SizedBox(width: 12),
-          Flexible(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // M3 TypeScale：titleSmall（14sp / medium weight）
-                Text(
-                  music.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: tt.titleSmall,
                 ),
-                const SizedBox(height: 2),
-                // M3 TypeScale：bodySmall（12sp），onSurfaceVariant
-                Text(
-                  music.artist,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                ),
-              ],
-            ),
+        ),
+        const SizedBox(width: 12),
+        Flexible(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // M3 TypeScale：titleSmall（14sp / medium weight）
+              Text(
+                music.title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: tt.titleSmall,
+              ),
+              const SizedBox(height: 2),
+              // M3 TypeScale：bodySmall（12sp），onSurfaceVariant
+              Text(
+                music.artist,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
