@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.14.0](https://github.com/s0raLin/miku_music/compare/v1.13.0...v1.14.0) (2026-05-15)
+
+
+### Features
+
+* **ui:** add navigation to music detail from NowPlaying components ([84444ba](https://github.com/s0raLin/miku_music/commit/84444ba2eee8e88a9e4082e23e4a816722f0436f))
+* **ui:** integrate AppToast for user feedback across views ([6745fd4](https://github.com/s0raLin/miku_music/commit/6745fd42fbfdc48907558ef85be58a2a310100aa))
+* **ui:** replace NowPlayingBar with new NowPlaying component ([43b6ebe](https://github.com/s0raLin/miku_music/commit/43b6ebe0b75c83e48ce4c7f37a065d39b167fe03))
+* **ui:** update NowPlayingMiniFab interaction logic ([bd31bdf](https://github.com/s0raLin/miku_music/commit/bd31bdf131c5c257b57288808fb38be899d52e8b))
+
 ## [1.13.0](https://github.com/s0raLin/miku_music/compare/v1.12.0...v1.13.0) (2026-05-14)
 
 
