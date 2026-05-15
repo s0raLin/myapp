@@ -144,7 +144,7 @@ class MusicService {
             : '$path.lrc';
         final lrcFile = File(lrcPath);
         await lrcFile.writeAsString(lrcContent);
-        debugPrint("歌词已成功通过正则替换保存至: $lrcPath");
+        debugPrint("歌词已成功保存至: $lrcPath");
       }
     } catch (e) {
       debugPrint("歌词保存本地失败: $e");

@@ -66,14 +66,12 @@ class MusicApi {
     }
   }
 
-  static Future<(String, String)> searchLyrics(
+  static Future<(String, bool)> searchLyrics(
     String? artist,
     String? title,
   ) async {
-
-    String plainLyrics = '无纯文本歌词';
     String syncedLyrics = '无滚动歌词';
-    if (artist == "" || title == "") return (syncedLyrics, plainLyrics);
+    if (artist == "" || title == "") return (syncedLyrics, false);
 
     final dio = Dio();
     try {
@@ -84,12 +82,14 @@ class MusicApi {
 
       if (response.statusCode == 200) {
         final data = response.data;
-        plainLyrics = data['plainLyrics'];
+
         syncedLyrics = data['syncedLyrics'];
+        if (syncedLyrics.isEmpty) return ("", false);
       }
     } on DioException catch (e) {
       debugPrint("未找到歌词: $e");
+      return ("", false);
     }
-    return (syncedLyrics, plainLyrics);
+    return (syncedLyrics, true);
   }
 }

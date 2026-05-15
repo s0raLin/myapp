@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:myapp/api/Client/Music/index.dart';
+import 'package:myapp/components/Shared/index.dart';
 import 'package:myapp/providers/MusicProvider/index.dart';
 import 'package:myapp/views/Music/widgets/empty_state.dart';
 import 'package:provider/provider.dart';
@@ -66,7 +67,15 @@ class _LyricsSectionState extends State<LyricsSection>
               music?.artist,
               music?.title,
             );
+            final isOk = result.$2;
+            if (!context.mounted) return;
+            if (!isOk) {
+              AppToast.neutral(context, message: "暂未找到歌词");
+              return;
+            }
             mp.setCurrentLrc(result.$1);
+
+            AppToast.neutral(context, message: "歌词获取成功");
           },
           label: const Text("下载歌词"),
           icon: const Icon(Icons.download_rounded),
