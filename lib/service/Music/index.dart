@@ -129,4 +129,25 @@ class MusicService {
       }
     }
   }
+
+  //保存歌词
+  static Future<void> saveLyrics(String? lrcContent, String path) async {
+    if (lrcContent==null || lrcContent.isEmpty) return;
+
+    try {
+      if (path.startsWith("/") && await File(path).exists()) {
+        final lrcPath = path.contains(RegExp(r'\.([^./\\]+)$'))
+            ? path.replaceFirstMapped(
+                RegExp(r'\.([^./\\]+)$'),
+                (match) => '.lrc',
+              )
+            : '$path.lrc';
+        final lrcFile = File(lrcPath);
+        await lrcFile.writeAsString(lrcContent);
+        debugPrint("歌词已成功通过正则替换保存至: $lrcPath");
+      }
+    } catch (e) {
+      debugPrint("歌词保存本地失败: $e");
+    }
+  }
 }

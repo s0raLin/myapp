@@ -6,7 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:myapp/model/Music/index.dart';
 import 'package:myapp/model/Playlist/index.dart';
+import 'package:myapp/service/Music/index.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:path/path.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -307,16 +309,19 @@ class MusicProvider extends ChangeNotifier {
     return lyrics;
   }
 
-  void setCurrentLrc(String? lrcContent) {
+  Future<void> setCurrentLrc(String? lrcContent) async {
     if (_currentIndex < 0 || _currentIndex >= _queue.length) return;
+
     _queue[_currentIndex].lyrics = lrcContent;
+    final currentMusic = _queue[_currentIndex];
 
     //调用解析器,将String转化成List<Map>
     _currentLyrics = _parseLrc(lrcContent);
 
     notifyListeners();
 
-    
+    //将歌词保存到歌曲目录,同名文件.lrc
+    await MusicService.saveLyrics(lrcContent, currentMusic.id);
   }
 
   // ─────────────────────────────────────────────
