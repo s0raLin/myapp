@@ -229,6 +229,15 @@ class MusicProvider extends ChangeNotifier {
     await _loadAppInfo();
   }
 
+  // 迷你播放栏
+  bool _isMiniMode = false;
+  bool get isMiniMode => _isMiniMode;
+
+  void setMiniMode(bool value) {
+    _isMiniMode = value;
+    notifyListeners();
+  }
+
   // ─────────────────────────────────────────────
   // 生命周期
   // ─────────────────────────────────────────────

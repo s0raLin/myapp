@@ -3,8 +3,9 @@ import 'package:go_router/go_router.dart';
 import 'package:myapp/components/BottomBar/index.dart';
 import 'package:myapp/components/Drawer/index.dart';
 import 'package:myapp/components/Header/index.dart';
-import 'package:myapp/components/NowPlayingBar/index.dart';
+import 'package:myapp/components/NowPlaying/index.dart';
 import 'package:myapp/components/SideBar/index.dart';
+import 'package:myapp/providers/MusicProvider/index.dart';
 import 'package:myapp/providers/NavProvider/index.dart';
 import 'package:provider/provider.dart';
 
@@ -42,6 +43,8 @@ class _MainPageState extends State<MainPage> {
   Widget _buildDrawerScaffold(BuildContext context) {
     final nav = context.watch<NavProvider>();
     final currentIndex = nav.shell?.currentIndex ?? 0;
+    final mp = context.watch<MusicProvider>();
+    final isMiniMode = mp.isMiniMode;
     return Scaffold(
       body: Column(
         children: [
@@ -56,15 +59,18 @@ class _MainPageState extends State<MainPage> {
               ],
             ),
           ),
-          NowPlayingBar(),
+          if (!isMiniMode) NowPlayingBar(),
         ],
       ),
+      floatingActionButton: isMiniMode ? NowPlayingMiniFab() : null,
     );
   }
 
   Widget _buildBottomBarScaffold(BuildContext context) {
+    final mp = context.watch<MusicProvider>();
     final nav = context.watch<NavProvider>();
     final currentIndex = nav.shell?.currentIndex ?? 0;
+    final isMiniMode = mp.isMiniMode;
     return Scaffold(
       key: _scaffoldKey,
       drawer: const MainDrawer(),
@@ -85,10 +91,10 @@ class _MainPageState extends State<MainPage> {
               ],
             ),
           ),
-          NowPlayingBar(),
+          if (!isMiniMode) NowPlayingBar(),
         ],
       ),
-
+      floatingActionButton: isMiniMode ? NowPlayingMiniFab() : null,
       bottomNavigationBar: BottomBar(
         currentIndex: currentIndex,
         onTap: onTabChanged,

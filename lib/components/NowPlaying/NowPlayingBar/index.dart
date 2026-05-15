@@ -1,24 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
 import 'package:myapp/contants/Assets/index.dart';
 import 'package:myapp/model/Music/index.dart';
 import 'package:myapp/providers/MusicProvider/index.dart';
 import 'package:provider/provider.dart';
-
-// ============================================================
-// NowPlayingBar — Material Design 3 重构版
-//
-// M3 规范要点：
-//  • 使用 NavigationBar 高度规范（80dp）+ Surface Container High 背景色
-//  • 按钮使用 IconButton（M3 StateLayer）& FilledIconButton（主操作）
-//  • 排版使用 M3 TypeScale：bodyMedium / labelSmall / titleSmall
-//  • 进度条使用 Slider with M3 SliderThemeData（trackHeight=4, thumb=10）
-//  • 音量使用标准 Slider，无自定义 thumb
-//  • BottomSheet 使用 showModalBottomSheet + shape（M3 Modal Bottom Sheet）
-//  • 所有颜色通过 ColorScheme token 读取，禁止硬编码颜色
-//  • 触摸目标最小 48×48dp（遵守 M3 Accessibility）
-// ============================================================
 
 class NowPlayingBar extends StatelessWidget {
   const NowPlayingBar({super.key});
@@ -31,105 +16,49 @@ class NowPlayingBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isWide = MediaQuery.sizeOf(context).width >= 840;
+
     final music = context.select<MusicProvider, MusicInfo?>(
       (p) => p.currentMusic,
     );
-    if (music == null) return const SizedBox.shrink();
 
-    // M3 Surface Container High
-    final cs = Theme.of(context).colorScheme;
-    final isWide = MediaQuery.sizeOf(context).width >= 840;
+    if (music == null) {
+      return const SizedBox.shrink();
+    }
 
-    return Material(
-      color: cs.surfaceContainerHigh,
-      // M3：底部栏顶部使用 extra-small shape（4dp top corners）
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(4)),
-      ),
-      child: InkWell(
-        onTap: () => context.push('/music-detail'),
-        customBorder: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(4)),
-        ),
-        child: SizedBox(
-          height: 72, // M3 Navigation Bar 高度 80dp，减去 progressbar 约 8dp
-          child: isWide
-              ? Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: _WideLayout(music: music, fmt: _fmt),
-                )
-              : Stack(
-                  // 使用 Stack 实现叠放
-                  children: [
-                    // 2. 上层进度条：强制对齐到顶部
-                    Positioned(
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      child: _MiniProgressBar(fmt: _fmt),
-                    ),
-                    // 1. 下层内容：垂直居中
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: _CompactLayout(music: music),
-                      ),
-                    ),
-                  ],
+    return SizedBox(
+      height: 72,
+      child: isWide
+          ? Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: _WideLayout(music: music, fmt: NowPlayingBar._fmt),
+            )
+          : Stack(
+              children: [
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: _MiniProgressBar(fmt: NowPlayingBar._fmt),
                 ),
-        ),
-      ),
-    );
-  }
-}
-
-// ============================================================
-// 顶部迷你进度条（M3 LinearProgressIndicator style）
-// ============================================================
-class _MiniProgressBar extends StatelessWidget {
-  final String Function(Duration) fmt;
-  const _MiniProgressBar({required this.fmt, super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final mp = context.read<MusicProvider>();
-    final cs = Theme.of(context).colorScheme;
-
-    return StreamBuilder<PositionData>(
-      stream: mp.positionDataStream,
-      builder: (context, snap) {
-        final pos =
-            snap.data ??
-            PositionData(Duration.zero, Duration.zero, Duration.zero);
-        final value = pos.duration.inMilliseconds > 0
-            ? (pos.position.inMilliseconds / pos.duration.inMilliseconds).clamp(
-                0.0,
-                1.0,
-              )
-            : 0.0;
-
-        return GestureDetector(
-          onTapDown: (details) {
-            final box = context.findRenderObject() as RenderBox;
-            final dx = details.localPosition.dx / box.size.width;
-            mp.player.seek(
-              Duration(
-                milliseconds: (pos.duration.inMilliseconds * dx).toInt(),
-              ),
-            );
-          },
-          child: SizedBox(
-            height: 4,
-            child: LinearProgressIndicator(
-              value: value,
-              backgroundColor: cs.surfaceContainerHighest,
-              valueColor: AlwaysStoppedAnimation(cs.primary),
-              minHeight: 4,
-              borderRadius: BorderRadius.zero,
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: _CompactLayout(music: music),
+                  ),
+                ),
+                // 添加一个微小的“收起”按钮（可选）
+                Positioned(
+                  right: 0,
+                  top: 4,
+                  child: IconButton(
+                    icon: const Icon(Icons.close_fullscreen_rounded, size: 16),
+                    onPressed: () =>
+                        context.read<MusicProvider>().setMiniMode(true),
+                  ),
+                ),
+              ],
             ),
-          ),
-        );
-      },
     );
   }
 }
@@ -148,7 +77,6 @@ class _WideLayout extends StatelessWidget {
     final isPlaying = context.select<MusicProvider, bool>(
       (p) => p.player.playing,
     );
-    final cs = Theme.of(context).colorScheme;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -432,6 +360,57 @@ class _DetailedProgressBar extends StatelessWidget {
               ),
             ),
           ],
+        );
+      },
+    );
+  }
+}
+
+// ============================================================
+// 顶部迷你进度条（M3 LinearProgressIndicator style）
+// ============================================================
+class _MiniProgressBar extends StatelessWidget {
+  final String Function(Duration) fmt;
+  const _MiniProgressBar({required this.fmt, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final mp = context.read<MusicProvider>();
+    final cs = Theme.of(context).colorScheme;
+
+    return StreamBuilder<PositionData>(
+      stream: mp.positionDataStream,
+      builder: (context, snap) {
+        final pos =
+            snap.data ??
+            PositionData(Duration.zero, Duration.zero, Duration.zero);
+        final value = pos.duration.inMilliseconds > 0
+            ? (pos.position.inMilliseconds / pos.duration.inMilliseconds).clamp(
+                0.0,
+                1.0,
+              )
+            : 0.0;
+
+        return GestureDetector(
+          onTapDown: (details) {
+            final box = context.findRenderObject() as RenderBox;
+            final dx = details.localPosition.dx / box.size.width;
+            mp.player.seek(
+              Duration(
+                milliseconds: (pos.duration.inMilliseconds * dx).toInt(),
+              ),
+            );
+          },
+          child: SizedBox(
+            height: 4,
+            child: LinearProgressIndicator(
+              value: value,
+              backgroundColor: cs.surfaceContainerHighest,
+              valueColor: AlwaysStoppedAnimation(cs.primary),
+              minHeight: 4,
+              borderRadius: BorderRadius.zero,
+            ),
+          ),
         );
       },
     );
