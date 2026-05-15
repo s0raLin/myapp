@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.15.0](https://github.com/s0raLin/miku_music/compare/v1.14.0...v1.15.0) (2026-05-15)
+
+
+### Features
+
+* **api:** integrate lrclib for lyrics retrieval ([521dce4](https://github.com/s0raLin/miku_music/commit/521dce499d0e497b1d1888bdf3d29fb9e7e2ab39))
+* **music:** add local persistence for lyrics ([eb762b8](https://github.com/s0raLin/miku_music/commit/eb762b812f10d1cb1e8bd9e5e4bcf5eb8049869a))
+* **ui:** implement native Android toast support ([9399116](https://github.com/s0raLin/miku_music/commit/9399116ce759fddb2bb5df5743d621f871a58dbf))
+
 ## [1.14.0](https://github.com/s0raLin/miku_music/compare/v1.13.0...v1.14.0) (2026-05-15)
 
 
