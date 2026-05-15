@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart' as ft;
 
 enum MediaGridCardTextLayout { below, overlay }
 
@@ -14,6 +16,7 @@ class AppToast {
   static OverlayEntry? _currentEntry;
   static Timer? _dismissTimer;
 
+  /// 核心方法
   static void show(
     BuildContext context, {
     required String message,
@@ -21,12 +24,19 @@ class AppToast {
     AppToastTone tone = AppToastTone.neutral,
     Duration duration = const Duration(seconds: 2),
   }) {
-    final overlay = Overlay.of(context, rootOverlay: true);
+    // ==================== Android 使用系统 Toast ====================
+    if (Platform.isAndroid) {
+      _showAndroidToast(message,title, tone, duration);
+      return;
+    }
 
+    // ==================== 其他平台使用自定义 Overlay ====================
+    final overlay = Overlay.of(context, rootOverlay: true);
     _dismissTimer?.cancel();
     _currentEntry?.remove();
 
     late final OverlayEntry entry;
+
     entry = OverlayEntry(
       builder: (overlayContext) => _AppToastOverlay(
         title: title,
@@ -51,6 +61,29 @@ class AppToast {
     });
   }
 
+  /// Android 原生 Toast 实现
+  static void _showAndroidToast(
+    String message,
+    String? title,
+    AppToastTone tone,
+    Duration duration,
+  ) {
+    // 尽量避免在原生 Toast 中拼入换行标题，保持单行
+    final String finalMessage = title != null ? "$title: $message" : message;
+
+    ft.Fluttertoast.showToast(
+      msg: finalMessage,
+      toastLength: duration.inSeconds > 2
+          ? ft.Toast.LENGTH_LONG
+          : ft.Toast.LENGTH_SHORT,
+      gravity: ft.ToastGravity.BOTTOM,
+      fontSize: 16.0,
+      // 【千万不要】在这里写 backgroundColor 和 textColor！
+      // 留空后，Android 12+ 系统会自动采用 M3 胶囊样式与系统主题色
+    );
+  }
+
+  // ==================== 快捷方法 ====================
   static void success(
     BuildContext context, {
     required String message,
@@ -111,6 +144,7 @@ class AppToast {
     );
   }
 }
+
 class _AppToastOverlay extends StatefulWidget {
   final String message;
   final String? title;
@@ -153,10 +187,19 @@ class _AppToastOverlayState extends State<_AppToastOverlay> {
 
     // M3 语义化配色选择器
     final (accentColor, iconData) = switch (widget.tone) {
-      AppToastTone.success => (colorScheme.primary, Icons.check_circle_outline_rounded),
-      AppToastTone.warning => (colorScheme.tertiary, Icons.info_outline_rounded),
+      AppToastTone.success => (
+        colorScheme.primary,
+        Icons.check_circle_outline_rounded,
+      ),
+      AppToastTone.warning => (
+        colorScheme.tertiary,
+        Icons.info_outline_rounded,
+      ),
       AppToastTone.error => (colorScheme.error, Icons.error_outline_rounded),
-      AppToastTone.neutral => (colorScheme.onSurfaceVariant, Icons.notifications_none_rounded),
+      AppToastTone.neutral => (
+        colorScheme.onSurfaceVariant,
+        Icons.notifications_none_rounded,
+      ),
     };
 
     return IgnorePointer(
@@ -173,7 +216,10 @@ class _AppToastOverlayState extends State<_AppToastOverlay> {
                 duration: const Duration(milliseconds: 200),
                 opacity: _visible ? 1 : 0,
                 child: Container(
-                  constraints: const BoxConstraints(maxWidth: 400, minHeight: 48),
+                  constraints: const BoxConstraints(
+                    maxWidth: 400,
+                    minHeight: 48,
+                  ),
                   decoration: ShapeDecoration(
                     // 核心修改：StadiumBorder 实现胶囊形状
                     shape: const StadiumBorder(),
@@ -187,7 +233,10 @@ class _AppToastOverlayState extends State<_AppToastOverlay> {
                     ],
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
