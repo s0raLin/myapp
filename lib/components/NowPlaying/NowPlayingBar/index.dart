@@ -54,19 +54,6 @@ class NowPlayingBar extends StatelessWidget {
                         child: _CompactLayout(music: music),
                       ),
                     ),
-                    // 添加一个微小的“收起”按钮
-                    Positioned(
-                      right: 0,
-                      top: 4,
-                      child: IconButton(
-                        icon: const Icon(
-                          Icons.close_fullscreen_rounded,
-                          size: 16,
-                        ),
-                        onPressed: () =>
-                            context.read<MusicProvider>().setMiniMode(true),
-                      ),
-                    ),
                   ],
                 ),
         ),
@@ -219,6 +206,10 @@ class _CompactLayout extends StatelessWidget {
           iconSize: 24,
           tooltip: '播放队列',
           onPressed: () => _showQueue(context),
+        ),
+        IconButton(
+          icon: const Icon(Icons.close_fullscreen_rounded, size: 16),
+          onPressed: () => context.read<MusicProvider>().setMiniMode(true),
         ),
       ],
     );
@@ -485,7 +476,6 @@ class _QueueSheet extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
 
     final mp = context.watch<MusicProvider>();
-
 
     return Column(
       mainAxisSize: MainAxisSize.min,
