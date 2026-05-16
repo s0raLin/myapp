@@ -8,10 +8,8 @@ import 'package:go_router/go_router.dart';
 
 import 'package:myapp/components/Shared/index.dart';
 import 'package:myapp/model/Music/index.dart';
-import 'package:myapp/providers/MusicProvider/index.dart';
 import 'package:myapp/service/Files/index.dart';
 import 'package:myapp/service/Music/index.dart';
-import 'package:provider/provider.dart';
 
 import 'package:path/path.dart' as p;
 
@@ -100,6 +98,95 @@ class _FilesPageState extends State<FilesPage>
     super.dispose();
   }
 
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    final colorScheme = Theme.of(context).colorScheme;
+    final songs = _musicList;
+    return Scaffold(
+      body: DefaultTabController(
+        length: 3,
+        child: NestedScrollView(
+          headerSliverBuilder: (context, innerBoxIsScrolled) {
+            return [
+              SliverAppBar(
+                floating: false, // 向上滚动时 AppBar 是否立即显现
+                pinned: true, // 滚动后，bottom 部分（TabBar）是否固定在顶部
+                title: const Text("文件"),
+                bottom: const TabBar(
+                  isScrollable: true,
+                  tabAlignment: TabAlignment.start, // 让 Tab 靠左对齐
+                  tabs: [
+                    Tab(text: "文件夹"),
+                    Tab(text: "专辑"),
+                    Tab(text: "艺术家"),
+                  ],
+                ),
+              ),
+            ];
+          },
+          body: TabBarView(
+            children: [
+              _buildLeft(songs),
+              _buildCenter(songs),
+              _buildRight(songs),
+            ],
+          ),
+        ),
+      ),
+
+      floatingActionButton: SpeedDial(
+        icon: Icons.menu, // 未展开时的图标
+        activeIcon: Icons.close, // 展开时的图标
+        backgroundColor: colorScheme.primaryContainer,
+        foregroundColor: colorScheme.onPrimaryContainer,
+        overlayColor: colorScheme.scrim,
+        overlayOpacity: 0.5,
+        spacing: 12, // 子按钮之间的间距
+        children: [
+          SpeedDialChild(
+            // child: const Icon(Icons.folder_open),
+            backgroundColor: colorScheme.secondaryContainer,
+            labelWidget: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 10.0,
+              ),
+              decoration: BoxDecoration(
+                // Stadium 形状的关键：使用 StadiumBorder 或者设置很大的圆角
+                borderRadius: BorderRadius.circular(28.0),
+                color: Theme.of(context).colorScheme.secondaryContainer,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min, // 紧凑
+                mainAxisAlignment: MainAxisAlignment.center, // 内容居中
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.folder_open,
+                    size: 20,
+                    color: Theme.of(context).colorScheme.onSecondaryContainer,
+                  ),
+                  const SizedBox(width: 8.0),
+                  Text(
+                    '选择目录',
+                    style: TextStyle(
+                      fontSize: 14.0,
+                      fontWeight: FontWeight.w500,
+                      // 关键：标签的字体颜色
+                      color: Theme.of(context).colorScheme.onSecondaryContainer,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            onTap: () => _showPickDialog(),
+          ),
+        ],
+      ),
+    );
+  }
+
   // 弹出选择目录的 Dialog
   Future<void> _showPickDialog() async {
     final List<String> tmp = [..._paths];
@@ -166,21 +253,6 @@ class _FilesPageState extends State<FilesPage>
       _startScan();
     }
   }
-
-  // List<MusicInfo> _resolveSongs(BuildContext context) {
-  //   if (!Platform.isAndroid) return _musicList;
-
-  //   final library = context.watch<MusicProvider>().library;
-  //   if (_paths.isEmpty) return library;
-
-  //   return library.where((music) {
-  //     final id = music.id;
-  //     return _paths.any(
-  //       (path) =>
-  //           id == path || id.startsWith('$path/') || id.startsWith('$path\\'),
-  //     );
-  //   }).toList();
-  // }
 
   Map<String, List<MusicInfo>> _groupByFolder(List<MusicInfo> songs) {
     final groups = <String, List<MusicInfo>>{};
@@ -381,95 +453,6 @@ class _FilesPageState extends State<FilesPage>
           ],
         );
       },
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    super.build(context);
-    final colorScheme = Theme.of(context).colorScheme;
-    final songs = _musicList;
-    return Scaffold(
-      body: DefaultTabController(
-        length: 3,
-        child: NestedScrollView(
-          headerSliverBuilder: (context, innerBoxIsScrolled) {
-            return [
-              SliverAppBar(
-                floating: false, // 向上滚动时 AppBar 是否立即显现
-                pinned: true, // 滚动后，bottom 部分（TabBar）是否固定在顶部
-                title: const Text("文件"),
-                bottom: const TabBar(
-                  isScrollable: true,
-                  tabAlignment: TabAlignment.start, // 让 Tab 靠左对齐
-                  tabs: [
-                    Tab(text: "文件夹"),
-                    Tab(text: "专辑"),
-                    Tab(text: "艺术家"),
-                  ],
-                ),
-              ),
-            ];
-          },
-          body: TabBarView(
-            children: [
-              _buildLeft(songs),
-              _buildCenter(songs),
-              _buildRight(songs),
-            ],
-          ),
-        ),
-      ),
-
-      floatingActionButton: SpeedDial(
-        icon: Icons.menu, // 未展开时的图标
-        activeIcon: Icons.close, // 展开时的图标
-        backgroundColor: colorScheme.primaryContainer,
-        foregroundColor: colorScheme.onPrimaryContainer,
-        overlayColor: colorScheme.scrim,
-        overlayOpacity: 0.5,
-        spacing: 12, // 子按钮之间的间距
-        children: [
-          SpeedDialChild(
-            // child: const Icon(Icons.folder_open),
-            backgroundColor: colorScheme.secondaryContainer,
-            labelWidget: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-                vertical: 10.0,
-              ),
-              decoration: BoxDecoration(
-                // Stadium 形状的关键：使用 StadiumBorder 或者设置很大的圆角
-                borderRadius: BorderRadius.circular(28.0),
-                color: Theme.of(context).colorScheme.secondaryContainer,
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min, // 紧凑
-                mainAxisAlignment: MainAxisAlignment.center, // 内容居中
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.folder_open,
-                    size: 20,
-                    color: Theme.of(context).colorScheme.onSecondaryContainer,
-                  ),
-                  const SizedBox(width: 8.0),
-                  Text(
-                    '选择目录',
-                    style: TextStyle(
-                      fontSize: 14.0,
-                      fontWeight: FontWeight.w500,
-                      // 关键：标签的字体颜色
-                      color: Theme.of(context).colorScheme.onSecondaryContainer,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            onTap: () => _showPickDialog(),
-          ),
-        ],
-      ),
     );
   }
 

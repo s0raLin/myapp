@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:myapp/api/NeteaseCloudMusic/index.dart';
 import 'package:myapp/components/Shared/index.dart';
+import 'package:myapp/config/globals.dart';
 import 'package:myapp/contants/Assets/index.dart';
 import 'package:myapp/model/Playlist/index.dart';
 import 'package:myapp/providers/MusicProvider/index.dart';
@@ -51,6 +52,12 @@ class _UserProfilePageState extends State<UserProfilePage> {
           // 1. 沉浸式顶部栏
           SliverAppBar(
             pinned: true,
+            leading: IconButton(
+              onPressed: () {
+                rootScaffoldKey.currentState?.openDrawer();
+              },
+              icon: const Icon(Icons.menu),
+            ),
             title: const Text("个人主页"),
             actions: [
               PopupMenuButton<String>(
@@ -80,6 +87,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                 ],
               ),
             ],
+
           ),
           const SliverToBoxAdapter(child: SizedBox(height: 16)),
 

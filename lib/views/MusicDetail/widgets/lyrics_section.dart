@@ -63,12 +63,14 @@ class _LyricsSectionState extends State<LyricsSection>
         subtitle: "点击下方按钮查找",
         action: FilledButton.icon(
           onPressed: () async {
+            AppToast.neutral(context, message: "正在查找中...");
             final result = await MusicApi.searchLyrics(
               music?.artist,
               music?.title,
             );
             final isOk = result.$2;
             if (!context.mounted) return;
+
             if (!isOk) {
               AppToast.neutral(context, message: "暂未找到歌词");
               return;

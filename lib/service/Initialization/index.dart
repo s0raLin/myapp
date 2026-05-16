@@ -2,11 +2,13 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:just_audio_media_kit/just_audio_media_kit.dart';
 import 'package:myapp/model/Music/index.dart';
 import 'package:myapp/service/Files/index.dart';
 import 'package:myapp/service/Music/index.dart';
 import 'package:myapp/service/Settings/index.dart';
+import 'package:window_manager/window_manager.dart';
 
 class StartupScanProgress {
   final String module;
@@ -27,12 +29,35 @@ class InitializationService {
   static Future<void> preRunInit() async {
     WidgetsFlutterBinding.ensureInitialized();
 
+    // 加载环境变量
+    try {
+      await dotenv.load(fileName: ".env");
+    } catch (e) {
+      debugPrint("Warning: Could not load .env file, using default values.");
+    }
+
     if (!kIsWeb && Platform.isLinux || Platform.isWindows) {
       JustAudioMediaKit.ensureInitialized(
         linux: true,
         windows: false,
         android: true,
       );
+    }
+
+    //初始化窗口管理器
+    if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+      await windowManager.ensureInitialized();
+      final windowOptions = const WindowOptions(
+        size: Size(800, 600),
+        center: true,
+        skipTaskbar: false,
+        titleBarStyle: TitleBarStyle.normal,
+      );
+
+      await windowManager.waitUntilReadyToShow(windowOptions, () async {
+        await windowManager.show();
+        await windowManager.focus();
+      });
     }
   }
 

@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:myapp/components/BottomBar/index.dart';
 import 'package:myapp/components/Drawer/index.dart';
-import 'package:myapp/components/Header/index.dart';
 import 'package:myapp/components/NowPlaying/index.dart';
 import 'package:myapp/components/SideBar/index.dart';
+import 'package:myapp/config/globals.dart';
 import 'package:myapp/providers/MusicProvider/index.dart';
 import 'package:myapp/providers/NavProvider/index.dart';
 import 'package:provider/provider.dart';
@@ -19,7 +19,6 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   late bool showNavigationDrawer;
 
   void onTabChanged(int idx) {
@@ -46,6 +45,8 @@ class _MainPageState extends State<MainPage> {
     final mp = context.watch<MusicProvider>();
     final isMiniMode = mp.isMiniMode;
     return Scaffold(
+      key: rootScaffoldKey,
+      drawer: const MainDrawer(),
       body: Column(
         children: [
           Expanded(
@@ -72,7 +73,7 @@ class _MainPageState extends State<MainPage> {
     final currentIndex = nav.shell?.currentIndex ?? 0;
     final isMiniMode = mp.isMiniMode;
     return Scaffold(
-      key: _scaffoldKey,
+      key: rootScaffoldKey,
       drawer: const MainDrawer(),
       body: Column(
         children: [
@@ -83,7 +84,7 @@ class _MainPageState extends State<MainPage> {
                 Expanded(
                   child: Column(
                     children: [
-                      Header(scaffoldKey: _scaffoldKey),
+                      // Header(scaffoldKey: _scaffoldKey),
                       Expanded(child: widget.navigationShell),
                     ],
                   ),

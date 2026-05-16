@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:myapp/views/Music/widgets/albums_tab.dart';
 import 'package:myapp/views/Music/widgets/library_tab.dart';
 import 'package:myapp/views/Music/widgets/playlist_tab.dart';
@@ -42,6 +43,34 @@ class _MusicPageState extends State<MusicPage> {
                     Tab(text: "歌单"),
                   ],
                 ),
+                actions: [
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert), // 纵向三个点
+                    onSelected: (value) {
+                      if (value == "edit") {
+                        context.push("/user/edit-profile");
+                      }
+                    },
+                    itemBuilder: (BuildContext context) => [
+                      const PopupMenuItem(
+                        value: "share",
+                        child: ListTile(
+                          leading: Icon(Icons.share_outlined),
+                          title: Text('分享'),
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'edit',
+                        child: ListTile(
+                          leading: Icon(Icons.edit),
+                          title: Text('编辑'),
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ];
           },

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:go_router/go_router.dart';
 import 'package:myapp/components/Shared/index.dart';
+import 'package:myapp/config/globals.dart';
 
 class MusicDashboardPage extends StatelessWidget {
   const MusicDashboardPage({super.key});
@@ -69,6 +70,12 @@ class MusicDashboardPage extends StatelessWidget {
               child: CustomScrollView(
                 slivers: [
                   SliverAppBar(
+                    leading: IconButton(
+                      onPressed: () {
+                        rootScaffoldKey.currentState?.openDrawer();
+                      },
+                      icon: const Icon(Icons.menu),
+                    ),
                     title: const Text(
                       "M3Music",
                       style: TextStyle(fontWeight: FontWeight.bold),
@@ -77,6 +84,14 @@ class MusicDashboardPage extends StatelessWidget {
                     backgroundColor: Colors.transparent,
                     scrolledUnderElevation: 0,
                     pinned: true,
+                    actions: [
+                      IconButton(
+                        onPressed: () {
+                          context.push("/settings");
+                        },
+                        icon: const Icon(Icons.settings),
+                      ),
+                    ],
                   ),
                   SliverPadding(
                     padding: EdgeInsets.fromLTRB(
