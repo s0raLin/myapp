@@ -28,6 +28,7 @@ class NowPlayingBar extends StatelessWidget {
     }
 
     return Material(
+      color: Theme.of(context).colorScheme.surfaceContainer,
       child: InkWell(
         onTap: () {
           context.push("/music-detail");
