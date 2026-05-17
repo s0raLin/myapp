@@ -235,28 +235,19 @@ class AppPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final br = borderRadius ?? AppRadius.cardBR;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: color ?? colorScheme.surfaceContainerLow,
-        borderRadius: br,
-        // 【已修改】移除了 Border.all 以去除边框线
-      ),
-      child: ClipRRect(
-        borderRadius: br,
-        child: Stack(
-          children: [
-            Padding(padding: padding ?? const EdgeInsets.all(12), child: child),
-            if (onTap != null)
-              Positioned.fill(
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(onTap: onTap),
-                ),
-              ),
-          ],
+    // 使用 Card.filled 替代原有的 Container 组合
+    return Card.filled(
+      margin: EdgeInsets.zero,
+      color: color, // 如果为 null，Card 会自动读取 M3 容器色
+      shape: borderRadius != null
+          ? RoundedRectangleBorder(borderRadius: borderRadius!)
+          : null, // 默认自带 M3 Medium 圆角 (12-16dp)
+      clipBehavior: Clip.antiAlias, // 确保 InkWell 泼溅不溢出圆角
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: padding ?? const EdgeInsets.all(12),
+          child: child,
         ),
       ),
     );
@@ -376,15 +367,15 @@ class MediaGridCard extends StatelessWidget {
     final colorScheme = theme.colorScheme;
     final bool useOverlay = textLayout == MediaGridCardTextLayout.overlay;
 
-    // 【修正说明】原 scrim 底色上使用 scrim 颜色文字会导致看不见，这里将其纠正为在阴影遮罩上使用高亮白色/浅色
-    TextStyle titleStyle = (theme.textTheme.titleSmall ?? const TextStyle())
-        .copyWith(
+    // 样式提取
+    final TextStyle titleStyle =
+        (theme.textTheme.titleSmall ?? const TextStyle()).copyWith(
           fontWeight: FontWeight.w600,
           color: useOverlay ? Colors.white : colorScheme.onSurface,
         );
 
-    TextStyle subtitleStyle = (theme.textTheme.bodySmall ?? const TextStyle())
-        .copyWith(
+    final TextStyle subtitleStyle =
+        (theme.textTheme.bodySmall ?? const TextStyle()).copyWith(
           color: useOverlay ? Colors.white70 : colorScheme.onSurfaceVariant,
         );
 
@@ -405,8 +396,9 @@ class MediaGridCard extends StatelessWidget {
       return ArtworkCover(
         bytes: coverBytes,
         fallbackIcon: fallbackIcon.icon!,
-        iconSize: fallbackIcon.size!,
+        iconSize: fallbackIcon.size ?? 24,
         aspectRatio: (fillHeight || expandArtwork) ? null : coverAspectRatio,
+        // 如果是 Overlay 模式，直接把文字塞进 Cover 的 Overlay 层里
         overlay: useOverlay
             ? _GradientOverlay(
                 titleWidget: titleWidget,
@@ -416,16 +408,11 @@ class MediaGridCard extends StatelessWidget {
       );
     }
 
-    final br = AppRadius.cardBR;
-    final cardContent = Container(
-      width: width,
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerLow,
-        borderRadius: br,
-        // 【已修改】移除了 Border.all 移除边框线
-      ),
-      child: ClipRRect(
-        borderRadius: br,
+    final cardContent = Card.filled(
+      margin: EdgeInsets.zero,
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
         child: Stack(
           children: [
             Padding(
@@ -457,16 +444,10 @@ class MediaGridCard extends StatelessWidget {
                 },
               ),
             ),
+            // 徽章与尾部组件挂载
             if (badge != null) Positioned(left: 12, top: 12, child: badge!),
             if (trailing != null)
               Positioned(right: 10, top: 10, child: trailing!),
-            if (onTap != null)
-              Positioned.fill(
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(onTap: onTap),
-                ),
-              ),
           ],
         ),
       ),
@@ -478,6 +459,7 @@ class MediaGridCard extends StatelessWidget {
   }
 }
 
+// 修复了原代码中 Column 内部为空、以及布局写错方法的 Bug
 class _GradientOverlay extends StatelessWidget {
   final Widget titleWidget;
   final Widget subtitleWidget;
@@ -489,39 +471,14 @@ class _GradientOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const DecoratedBox(
+    return DecoratedBox(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [
-            Colors.transparent,
-            Colors.black54, // 【已修改】使用黑半透明遮罩以确保图片上的文本可读性
-          ],
-          stops: [0.4, 1.0],
-        ),
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            // 组件上移，不在这里重复声明
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget buildWithChildren(BuildContext context, List<Widget> children) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Colors.transparent, Colors.black54],
-          stops: [0.4, 1.0],
+          // 【已修复】移除了 const，并修正了不透明度黑色的写法
+          colors: [Colors.transparent, Colors.black.withValues(alpha: 0.75)],
+          stops: const [0.3, 1.0],
         ),
       ),
       child: Padding(
@@ -563,66 +520,48 @@ class SongListCardTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
+    // 根据高亮状态抉择 Card 的底色
     final tileColor = highlighted
         ? colorScheme.secondaryContainer
         : colorScheme.surfaceContainerLowest;
 
-    return Container(
+    return Card.filled(
+      color: tileColor,
       margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
-      decoration: BoxDecoration(
-        color: tileColor,
-        borderRadius: AppRadius.tileBR,
-        // 【已修改】移除了 Border.all 属性以隐藏默认以及高亮状态下的物理边框
-      ),
-      child: ClipRRect(
-        borderRadius: AppRadius.tileBR,
-        child: Stack(
-          children: [
-            ListTile(
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 4,
-              ),
-              leading: ArtworkCover(
-                bytes: coverBytes,
-                fallbackIcon: fallbackIcon,
-                size: 40,
-                borderRadius: AppRadius.inner,
-              ),
-              title: Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontWeight: highlighted ? FontWeight.w700 : FontWeight.w500,
-                  fontSize: 14,
-                  color: highlighted
-                      ? colorScheme.onSecondaryContainer
-                      : colorScheme.onSurface,
-                ),
-              ),
-              subtitle: Text(
-                subtitle,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: highlighted
-                      ? colorScheme.onSecondaryContainer
-                      : colorScheme.onSurfaceVariant,
-                ),
-              ),
-              trailing: trailing,
-            ),
-            if (onTap != null)
-              Positioned.fill(
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(onTap: onTap),
-                ),
-              ),
-          ],
+      clipBehavior: Clip.antiAlias, // 确保 ListTile 的点击水波纹被限制在圆角内
+      child: ListTile(
+        onTap: onTap,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        leading: ArtworkCover(
+          bytes: coverBytes,
+          fallbackIcon: fallbackIcon,
+          size: 40,
+          borderRadius: AppRadius.inner,
         ),
+        title: Text(
+          title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontWeight: highlighted ? FontWeight.w700 : FontWeight.w500,
+            fontSize: 14,
+            color: highlighted
+                ? colorScheme.onSecondaryContainer
+                : colorScheme.onSurface,
+          ),
+        ),
+        subtitle: Text(
+          subtitle,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: 12,
+            color: highlighted
+                ? colorScheme.onSecondaryContainer
+                : colorScheme.onSurfaceVariant,
+          ),
+        ),
+        trailing: trailing,
       ),
     );
   }
@@ -650,41 +589,54 @@ class QuickActionCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return AppPanel(
-      onTap: onTap,
-      padding: const EdgeInsets.all(14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: colorScheme.primaryContainer,
-              borderRadius: AppRadius.innerBR,
-            ),
-            child: Icon(icon, color: colorScheme.onPrimaryContainer, size: 24),
-          ),
-          const Spacer(),
-          Text(
-            title,
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              fontSize: 13,
-            ),
-          ),
-          if (subtitle != null) ...[
-            const SizedBox(height: 2),
-            Text(
-              subtitle!,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurfaceVariant,
+    return Card.filled(
+      margin: EdgeInsets.zero,
+      clipBehavior: Clip.antiAlias, // 确保 InkWell 的水波纹不会溢出卡片的圆角
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 图标容器
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: colorScheme.primaryContainer,
+                  borderRadius: AppRadius.innerBR,
+                ),
+                child: Icon(
+                  icon,
+                  color: colorScheme.onPrimaryContainer,
+                  size: 24,
+                ),
               ),
-            ),
-          ],
-        ],
+              const Spacer(),
+              // 标题
+              Text(
+                title,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
+              // 副标题
+              if (subtitle != null) ...[
+                const SizedBox(height: 2),
+                Text(
+                  subtitle!,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
       ),
     );
   }
