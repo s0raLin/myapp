@@ -166,9 +166,8 @@ class _HomePageState extends State<HomePage> {
                             contentSpacing: 2,
                             padding: const EdgeInsets.fromLTRB(8, 8, 8, 6),
                             onTap: () {
-                              context.read<MusicProvider>().playFromLibrary(
-                                item,
-                              );
+                              final mp = context.read<MusicProvider>();
+                              mp.replaceQueue(mp.history, startIndex: index);
                               context.push('/music-detail', extra: item);
                             },
                             badge: Container(
