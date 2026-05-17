@@ -47,6 +47,7 @@ dependencies:
   window_manager: ^0.5.1
   system_tray: ^0.1.1
   fluttertoast: ^9.0.0
+  audio_service: ^0.18.18
 
 dependency_overrides:
   # 强制锁定版本，消除 2.11.1 与 2.12.0 的冲突

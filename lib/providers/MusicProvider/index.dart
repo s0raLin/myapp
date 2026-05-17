@@ -1,14 +1,15 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:audio_service/audio_service.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:myapp/model/Music/index.dart';
 import 'package:myapp/model/Playlist/index.dart';
+import 'package:myapp/service/Audio/index.dart';
 import 'package:myapp/service/Music/index.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:path/path.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -66,12 +67,15 @@ enum PlayTrigger {
 /// - LRC 歌词解析
 /// - 应用版本信息加载
 class MusicProvider extends ChangeNotifier {
+  final MyAudioHandler audioHandler;
   // ───────────────────────────
   // 播放器核心
   // ───────────────────────────
 
   /// just_audio 播放器实例，整个 Provider 生命周期内唯一。
-  final AudioPlayer player = AudioPlayer();
+  // final AudioPlayer player = AudioPlayer();
+  // 不再独立创建 AudioPlayer，而是直接共享后台服务的播放器
+  AudioPlayer get player => audioHandler.player;
 
   /// 监听 [ProcessingState]，当 [ProcessingState.completed] 时自动切歌。
   StreamSubscription? _stateSubscription;
@@ -190,7 +194,7 @@ class MusicProvider extends ChangeNotifier {
   // 构造函数
   // ─────────────────────────────────────────────
 
-  MusicProvider() {
+  MusicProvider({required this.audioHandler}) {
     // 歌曲播放完毕时自动切换到下一首
     _stateSubscription = player.processingStateStream.listen((state) {
       if (state == ProcessingState.completed) _playNext();
@@ -410,17 +414,30 @@ class MusicProvider extends ChangeNotifier {
 
     _addToHistory(music);
 
+    // 调用 audioHandler 更新系统元数据并播放
+    // 顺便把这首歌的 MediaItem 信息通知给系统
+    final item = MediaItem(
+      id: music.id,
+      album: music.album ?? "未知专辑",
+      title: music.title,
+      artist: music.artist,
+      duration: music.duration, // 确保 MusicInfo 里有这个 Duration 字段
+    );
+
+    // 更新系统的 MediaItem
+    audioHandler.mediaItem.add(item);
+
     // just_audio 会自动停止当前播放并加载新文件，无需手动调用 stop()
     await player.setFilePath(music.id);
-    player.play();
+    audioHandler.play(); //使用handler的播放命令
   }
 
   /// 切换播放 / 暂停状态。
   void togglePlay() {
     if (player.playing) {
-      player.pause();
+      audioHandler.pause();
     } else {
-      player.play();
+      audioHandler.play();
     }
     notifyListeners();
   }
