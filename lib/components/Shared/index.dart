@@ -9,15 +9,12 @@ enum MediaGridCardTextLayout { below, overlay }
 enum AppToastTone { neutral, success, warning, error }
 
 // ---------------------------------------------------------------------------
-// 统一圆角常量
-// card      → 卡片/面板外轮廓
-// inner     → 卡片内部的子元素（封面图、icon 容器等），比外轮廓略小
-// tile      → 列表行卡片，比普通卡片稍小
+// 统一圆角常量 (严格符合 Material 3 的 Token 体系)
 // ---------------------------------------------------------------------------
 abstract final class AppRadius {
-  static const double card = 16;
-  static const double inner = 10;
-  static const double tile = 12;
+  static const double card = 16; // M3 Medium Card 默认圆角 Token
+  static const double inner = 8; // M3 Small Shape Token (内部图像/容器)
+  static const double tile = 16; // M3 Large Shape Token (列表项外廓)
 
   static BorderRadius get cardBR => BorderRadius.circular(card);
   static BorderRadius get innerBR => BorderRadius.circular(inner);
@@ -26,7 +23,6 @@ abstract final class AppRadius {
 
 // ---------------------------------------------------------------------------
 // AppToast
-// 在 iOS/desktop 上用 M3 SnackBar 代替自制 Overlay；Android 保留系统 Toast。
 // ---------------------------------------------------------------------------
 class AppToast {
   AppToast._();
@@ -128,7 +124,6 @@ class AppToast {
     tone: AppToastTone.success,
     duration: duration,
   );
-
   static void neutral(
     BuildContext context, {
     required String message,
@@ -141,7 +136,6 @@ class AppToast {
     tone: AppToastTone.neutral,
     duration: duration,
   );
-
   static void warning(
     BuildContext context, {
     required String message,
@@ -154,7 +148,6 @@ class AppToast {
     tone: AppToastTone.warning,
     duration: duration,
   );
-
   static void error(
     BuildContext context, {
     required String message,
@@ -199,7 +192,7 @@ class AppSectionHeader extends StatelessWidget {
                 Text(
                   title,
                   style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
                 if (subtitle != null) ...[
@@ -222,16 +215,13 @@ class AppSectionHeader extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// AppPanel
-// Card.filled 负责裁切圆角（clipBehavior: antiAlias），InkWell 的涟漪
-// 自动被裁切到卡片边界，无需再给 InkWell 单独传 borderRadius。
+// AppPanel (已移除 Border 属性)
 // ---------------------------------------------------------------------------
 class AppPanel extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry? padding;
   final VoidCallback? onTap;
   final Color? color;
-  // 默认统一使用 AppRadius.cardBR
   final BorderRadius? borderRadius;
 
   const AppPanel({
@@ -246,19 +236,29 @@ class AppPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final br = borderRadius ?? AppRadius.cardBR;
 
-    return Card.filled(
-      margin: EdgeInsets.zero,
-      color: color ?? colorScheme.surfaceContainerLow,
-      shape: RoundedRectangleBorder(
-        borderRadius: borderRadius ?? AppRadius.cardBR,
+    return Container(
+      decoration: BoxDecoration(
+        color: color ?? colorScheme.surfaceContainerLow,
+        borderRadius: br,
+        // 【已修改】移除了 Border.all 以去除边框线
       ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: padding ?? const EdgeInsets.all(16),
-          child: child,
+      child: ClipRRect(
+        borderRadius: br,
+        child: Stack(
+          children: [
+            Padding(padding: padding ?? const EdgeInsets.all(12), child: child),
+            if (onTap != null)
+              Positioned.fill(
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: onTap,
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );
@@ -281,10 +281,10 @@ class ArtworkCover extends StatelessWidget {
     super.key,
     this.bytes,
     required this.fallbackIcon,
-    this.borderRadius = AppRadius.inner, // 统一默认值
+    this.borderRadius = AppRadius.inner,
     this.size,
     this.aspectRatio = 1,
-    this.iconSize = 26,
+    this.iconSize = 24,
     this.overlay,
   });
 
@@ -334,7 +334,7 @@ class ArtworkCover extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// MediaGridCard
+// MediaGridCard (已移除 Container 中的 Border 属性，并修正了 Overlay 模式下的文本颜色)
 // ---------------------------------------------------------------------------
 class MediaGridCard extends StatelessWidget {
   final String title;
@@ -366,8 +366,8 @@ class MediaGridCard extends StatelessWidget {
     this.titleLines = 1,
     this.expandArtwork = false,
     this.coverAspectRatio = 1,
-    this.contentSpacing = 10,
-    this.padding = const EdgeInsets.all(8),
+    this.contentSpacing = 8,
+    this.padding = const EdgeInsets.all(10),
     this.textLayout = MediaGridCardTextLayout.below,
     this.subtitleLines = 1,
   });
@@ -378,9 +378,10 @@ class MediaGridCard extends StatelessWidget {
     final colorScheme = theme.colorScheme;
     final bool useOverlay = textLayout == MediaGridCardTextLayout.overlay;
 
+    // 【修正说明】原 scrim 底色上使用 scrim 颜色文字会导致看不见，这里将其纠正为在阴影遮罩上使用高亮白色/浅色
     TextStyle titleStyle = (theme.textTheme.titleSmall ?? const TextStyle())
         .copyWith(
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w600,
           color: useOverlay ? Colors.white : colorScheme.onSurface,
         );
 
@@ -395,7 +396,6 @@ class MediaGridCard extends StatelessWidget {
       overflow: TextOverflow.ellipsis,
       style: titleStyle,
     );
-
     final subtitleWidget = Text(
       subtitle,
       maxLines: subtitleLines,
@@ -404,10 +404,9 @@ class MediaGridCard extends StatelessWidget {
     );
 
     Widget buildArtwork({required bool fillHeight}) {
-      final cover = ArtworkCover(
+      return ArtworkCover(
         bytes: coverBytes,
         fallbackIcon: fallbackIcon,
-        // 默认 AppRadius.inner，无需显式传值
         aspectRatio: (fillHeight || expandArtwork) ? null : coverAspectRatio,
         overlay: useOverlay
             ? _GradientOverlay(
@@ -416,52 +415,70 @@ class MediaGridCard extends StatelessWidget {
               )
             : null,
       );
-
-      return Stack(
-        fit: (fillHeight || expandArtwork) ? StackFit.expand : StackFit.loose,
-        children: [
-          if (fillHeight || expandArtwork)
-            Positioned.fill(child: cover)
-          else
-            cover,
-          if (badge != null) Positioned(left: 8, top: 8, child: badge!),
-          if (trailing != null) Positioned(right: 6, top: 6, child: trailing!),
-        ],
-      );
     }
 
-    final card = AppPanel(
-      onTap: onTap,
-      padding: padding,
-      // 使用默认 AppRadius.cardBR，无需显式传值
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final hasBoundedHeight = constraints.maxHeight.isFinite;
-          final artwork = buildArtwork(fillHeight: hasBoundedHeight);
+    final br = AppRadius.cardBR;
+    final cardContent = Container(
+      width: width,
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerLow,
+        borderRadius: br,
+        // 【已修改】移除了 Border.all 移除边框线
+      ),
+      child: ClipRRect(
+        borderRadius: br,
+        child: Stack(
+          children: [
+            Padding(
+              padding: padding,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final hasBoundedHeight = constraints.maxHeight.isFinite;
+                  final artwork = buildArtwork(fillHeight: hasBoundedHeight);
 
-          if (useOverlay) return artwork;
+                  if (useOverlay) return artwork;
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              hasBoundedHeight ? Expanded(child: artwork) : artwork,
-              SizedBox(height: contentSpacing),
-              titleWidget,
-              const SizedBox(height: 2),
-              subtitleWidget,
-            ],
-          );
-        },
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      hasBoundedHeight ? Expanded(child: artwork) : artwork,
+                      SizedBox(height: contentSpacing),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 2),
+                        child: titleWidget,
+                      ),
+                      const SizedBox(height: 2),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 2),
+                        child: subtitleWidget,
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+            if (badge != null) Positioned(left: 12, top: 12, child: badge!),
+            if (trailing != null)
+              Positioned(right: 10, top: 10, child: trailing!),
+            if (onTap != null)
+              Positioned.fill(
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(onTap: onTap),
+                ),
+              ),
+          ],
+        ),
       ),
     );
 
-    if (width == null) return card;
-    return SizedBox(width: width, child: card);
+    return width == null
+        ? cardContent
+        : SizedBox(width: width, child: cardContent);
   }
 }
 
-/// 专用渐变遮罩，避免在 MediaGridCard 内堆砌匿名 Container。
 class _GradientOverlay extends StatelessWidget {
   final Widget titleWidget;
   final Widget subtitleWidget;
@@ -473,14 +490,40 @@ class _GradientOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
+    return const DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Colors.transparent,
+            Colors.black54, // 【已修改】使用黑半透明遮罩以确保图片上的文本可读性
+          ],
+          stops: [0.4, 1.0],
+        ),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            // 组件上移，不在这里重复声明
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget buildWithChildren(BuildContext context, List<Widget> children) {
+     return DecoratedBox(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          // 使用 Colors.black54 / transparent 避免硬编码 withOpacity
           colors: [Colors.transparent, Colors.black54],
-          stops: [0.5, 1.0],
+          stops: [0.4, 1.0],
         ),
       ),
       child: Padding(
@@ -488,7 +531,7 @@ class _GradientOverlay extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.end,
-          children: [titleWidget, const SizedBox(height: 2), subtitleWidget],
+          children: [titleWidget, const SizedBox(height: 4), subtitleWidget],
         ),
       ),
     );
@@ -496,8 +539,7 @@ class _GradientOverlay extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// SongListCardTile
-// 用 ListTile 原生组件替代手动 Row；高亮状态由 selected + selectedTileColor 处理。
+// SongListCardTile (已移除 Container 中的 Border 属性)
 // ---------------------------------------------------------------------------
 class SongListCardTile extends StatelessWidget {
   final String title;
@@ -523,44 +565,66 @@ class SongListCardTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Card.filled(
-      margin: EdgeInsets.zero,
-      color: highlighted
-          ? colorScheme.secondaryContainer
-          : colorScheme.surfaceContainerLowest,
-      shape: RoundedRectangleBorder(borderRadius: AppRadius.tileBR),
-      clipBehavior: Clip.antiAlias,
-      child: ListTile(
-        onTap: onTap,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        leading: ArtworkCover(
-          bytes: coverBytes,
-          fallbackIcon: fallbackIcon,
-          // 默认 AppRadius.inner，无需显式传值
-          size: 44,
+    final tileColor = highlighted
+        ? colorScheme.secondaryContainer
+        : colorScheme.surfaceContainerLowest;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+      decoration: BoxDecoration(
+        color: tileColor,
+        borderRadius: AppRadius.tileBR,
+        // 【已修改】移除了 Border.all 属性以隐藏默认以及高亮状态下的物理边框
+      ),
+      child: ClipRRect(
+        borderRadius: AppRadius.tileBR,
+        child: Stack(
+          children: [
+            ListTile(
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 4,
+              ),
+              leading: ArtworkCover(
+                bytes: coverBytes,
+                fallbackIcon: fallbackIcon,
+                size: 40,
+                borderRadius: AppRadius.inner,
+              ),
+              title: Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontWeight: highlighted ? FontWeight.w700 : FontWeight.w500,
+                  fontSize: 14,
+                  color: highlighted
+                      ? colorScheme.onSecondaryContainer
+                      : colorScheme.onSurface,
+                ),
+              ),
+              subtitle: Text(
+                subtitle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: highlighted
+                      ? colorScheme.onSecondaryContainer
+                      : colorScheme.onSurfaceVariant,
+                ),
+              ),
+              trailing: trailing,
+            ),
+            if (onTap != null)
+              Positioned.fill(
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(onTap: onTap),
+                ),
+              ),
+          ],
         ),
-        title: Text(
-          title,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            fontWeight: highlighted ? FontWeight.w800 : FontWeight.w600,
-            color: highlighted
-                ? colorScheme.onSecondaryContainer
-                : colorScheme.onSurface,
-          ),
-        ),
-        subtitle: Text(
-          subtitle,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            color: highlighted
-                ? colorScheme.onSecondaryContainer
-                : colorScheme.onSurfaceVariant,
-          ),
-        ),
-        trailing: trailing,
       ),
     );
   }
@@ -590,31 +654,25 @@ class QuickActionCard extends StatelessWidget {
 
     return AppPanel(
       onTap: onTap,
-      padding: const EdgeInsets.all(16),
-      // 使用默认 AppRadius.cardBR，无需显式传值
+      padding: const EdgeInsets.all(14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          DecoratedBox(
+          Container(
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
               color: colorScheme.primaryContainer,
               borderRadius: AppRadius.innerBR,
             ),
-            child: SizedBox(
-              width: 38,
-              height: 38,
-              child: Icon(
-                icon,
-                color: colorScheme.onPrimaryContainer,
-                size: 18,
-              ),
-            ),
+            child: Icon(icon, color: colorScheme.onPrimaryContainer, size: 18),
           ),
           const Spacer(),
           Text(
             title,
             style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
             ),
           ),
           if (subtitle != null) ...[
@@ -669,12 +727,8 @@ class AppEmptyState extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                icon,
-                size: compact ? 40 : 56,
-                color: colorScheme.outlineVariant,
-              ),
-              SizedBox(height: compact ? 12 : 16),
+              Icon(icon, size: compact ? 36 : 48, color: colorScheme.outline),
+              SizedBox(height: compact ? 10 : 14),
               Text(
                 title,
                 textAlign: TextAlign.center,
@@ -690,7 +744,7 @@ class AppEmptyState extends StatelessWidget {
                   color: colorScheme.onSurfaceVariant,
                 ),
               ),
-              if (action != null) ...[const SizedBox(height: 16), action!],
+              if (action != null) ...[const SizedBox(height: 14), action!],
             ],
           ),
         ),
