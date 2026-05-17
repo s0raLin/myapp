@@ -658,13 +658,13 @@ class QuickActionCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 36,
-            height: 36,
+            width: 48,
+            height: 48,
             decoration: BoxDecoration(
               color: colorScheme.primaryContainer,
               borderRadius: AppRadius.innerBR,
             ),
-            child: Icon(icon, color: colorScheme.onPrimaryContainer, size: 18),
+            child: Icon(icon, color: colorScheme.onPrimaryContainer, size: 24),
           ),
           const Spacer(),
           Text(
