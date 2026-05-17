@@ -13,7 +13,7 @@ enum AppToastTone { neutral, success, warning, error }
 // ---------------------------------------------------------------------------
 abstract final class AppRadius {
   static const double card = 16; // M3 Medium Card 默认圆角 Token
-  static const double inner = 8; // M3 Small Shape Token (内部图像/容器)
+  static const double inner = 16; // M3 Small Shape Token (内部图像/容器)
   static const double tile = 16; // M3 Large Shape Token (列表项外廓)
 
   static BorderRadius get cardBR => BorderRadius.circular(card);
@@ -515,7 +515,6 @@ class _GradientOverlay extends StatelessWidget {
     );
   }
 
-  @override
   Widget buildWithChildren(BuildContext context, List<Widget> children) {
      return DecoratedBox(
       decoration: const BoxDecoration(
