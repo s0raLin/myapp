@@ -1,0 +1,19 @@
+<svg width="1280" height="720" viewBox="0 0 1280 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1280" height="720" rx="32" fill="#EEF6F8"/>
+  <rect x="64" y="64" width="1152" height="592" rx="28" fill="#FFFFFF" stroke="#D5E7EC" stroke-width="4"/>
+  <rect x="124" y="124" width="420" height="420" rx="36" fill="#D8F1F5"/>
+  <circle cx="334" cy="334" r="104" fill="#39C5BB"/>
+  <polygon points="316,282 316,386 398,334" fill="#FFFFFF"/>
+  <rect x="614" y="172" width="370" height="26" rx="13" fill="#1F2937"/>
+  <rect x="614" y="220" width="240" height="18" rx="9" fill="#64748B"/>
+  <rect x="614" y="302" width="472" height="14" rx="7" fill="#E2E8F0"/>
+  <rect x="614" y="302" width="256" height="14" rx="7" fill="#39C5BB"/>
+  <circle cx="870" cy="309" r="12" fill="#0F766E"/>
+  <circle cx="700" cy="422" r="28" fill="#D8F1F5"/>
+  <circle cx="792" cy="422" r="40" fill="#39C5BB"/>
+  <polygon points="780,396 780,448 824,422" fill="#FFFFFF"/>
+  <circle cx="904" cy="422" r="28" fill="#D8F1F5"/>
+  <rect x="614" y="494" width="420" height="18" rx="9" fill="#E2E8F0"/>
+  <rect x="614" y="530" width="360" height="18" rx="9" fill="#E2E8F0"/>
+  <text x="640" y="118" text-anchor="middle" fill="#475569" font-size="34" font-family="Arial, sans-serif">Player Preview Placeholder</text>
+</svg>

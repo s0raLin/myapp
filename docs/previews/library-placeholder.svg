@@ -1,0 +1,20 @@
+<svg width="1280" height="720" viewBox="0 0 1280 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1280" height="720" rx="32" fill="#F7F4EE"/>
+  <rect x="48" y="48" width="1184" height="624" rx="28" fill="#FFFDF9" stroke="#E6DFD0" stroke-width="4"/>
+  <rect x="96" y="96" width="1088" height="88" rx="22" fill="#F1E9D9"/>
+  <rect x="128" y="122" width="180" height="36" rx="18" fill="#3B2F2F"/>
+  <rect x="96" y="222" width="300" height="400" rx="24" fill="#F6EFE2"/>
+  <rect x="428" y="222" width="700" height="88" rx="20" fill="#FAF6EE"/>
+  <rect x="452" y="246" width="230" height="18" rx="9" fill="#2F3A4A"/>
+  <rect x="452" y="276" width="160" height="14" rx="7" fill="#94A3B8"/>
+  <rect x="428" y="332" width="700" height="88" rx="20" fill="#FAF6EE"/>
+  <rect x="452" y="356" width="280" height="18" rx="9" fill="#2F3A4A"/>
+  <rect x="452" y="386" width="140" height="14" rx="7" fill="#94A3B8"/>
+  <rect x="428" y="442" width="700" height="88" rx="20" fill="#FAF6EE"/>
+  <rect x="452" y="466" width="250" height="18" rx="9" fill="#2F3A4A"/>
+  <rect x="452" y="496" width="190" height="14" rx="7" fill="#94A3B8"/>
+  <rect x="428" y="552" width="700" height="88" rx="20" fill="#FAF6EE"/>
+  <rect x="452" y="576" width="300" height="18" rx="9" fill="#2F3A4A"/>
+  <rect x="452" y="606" width="168" height="14" rx="7" fill="#94A3B8"/>
+  <text x="640" y="144" text-anchor="middle" fill="#6B7280" font-size="32" font-family="Arial, sans-serif">Library Preview Placeholder</text>
+</svg>

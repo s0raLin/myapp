@@ -1,0 +1,20 @@
+<svg width="1280" height="720" viewBox="0 0 1280 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1280" height="720" rx="32" fill="#F4F6FB"/>
+  <rect x="64" y="64" width="1152" height="592" rx="28" fill="#FFFFFF" stroke="#D8DFEE" stroke-width="4"/>
+  <rect x="112" y="112" width="1056" height="72" rx="20" fill="#E9EEF8"/>
+  <rect x="142" y="134" width="180" height="28" rx="14" fill="#24324A"/>
+  <rect x="112" y="224" width="1056" height="108" rx="24" fill="#FAFBFE"/>
+  <rect x="146" y="258" width="180" height="18" rx="9" fill="#334155"/>
+  <rect x="146" y="288" width="140" height="14" rx="7" fill="#94A3B8"/>
+  <rect x="934" y="248" width="180" height="40" rx="20" fill="#39C5BB"/>
+  <rect x="112" y="360" width="1056" height="108" rx="24" fill="#FAFBFE"/>
+  <rect x="146" y="394" width="200" height="18" rx="9" fill="#334155"/>
+  <rect x="146" y="424" width="164" height="14" rx="7" fill="#94A3B8"/>
+  <rect x="992" y="390" width="96" height="48" rx="24" fill="#D6E4FF"/>
+  <circle cx="1060" cy="414" r="20" fill="#5B8DEF"/>
+  <rect x="112" y="496" width="1056" height="108" rx="24" fill="#FAFBFE"/>
+  <rect x="146" y="530" width="220" height="18" rx="9" fill="#334155"/>
+  <rect x="146" y="560" width="180" height="14" rx="7" fill="#94A3B8"/>
+  <rect x="948" y="520" width="160" height="56" rx="18" fill="#EEF2FF"/>
+  <text x="640" y="118" text-anchor="middle" fill="#475569" font-size="34" font-family="Arial, sans-serif">Settings Preview Placeholder</text>
+</svg>
