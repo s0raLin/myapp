@@ -383,6 +383,16 @@ class MusicProvider extends ChangeNotifier {
   /// - 若歌曲已在队列中，直接跳转至对应位置；
   /// - 否则追加到队尾后播放。
   void playFromLibrary(MusicInfo music) {
+    // 检查这首歌是否就是当前正在播放的歌
+    if (_currentIndex != -1 && _queue[_currentIndex].id == music.id) {
+      if (player.playing) {
+        // 如果正在播放，直接复用togglePlay() 来暂停它
+        togglePlay();
+        return;
+      }
+    }
+
+    // 如果不是当前正在播放的歌，走原有的逻辑
     final existingIndex = _queue.indexWhere((m) => m.id == music.id);
 
     if (existingIndex != -1) {

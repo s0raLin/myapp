@@ -1,8 +1,8 @@
-import 'dart:io';
+// import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart' as ft;
+// import 'package:fluttertoast/fluttertoast.dart' as ft;
 
 enum MediaGridCardTextLayout { below, overlay }
 
@@ -35,16 +35,16 @@ class AppToast {
     AppToastTone tone = AppToastTone.neutral,
     Duration duration = const Duration(seconds: 2),
   }) {
-    if (Platform.isAndroid) {
-      final text = title != null ? '$title: $message' : message;
-      ft.Fluttertoast.showToast(
-        msg: text,
-        toastLength: ft.Toast.LENGTH_SHORT,
-        gravity: ft.ToastGravity.BOTTOM,
-        fontSize: 14.0,
-      );
-      return;
-    }
+    // if (Platform.isAndroid) {
+    //   final text = title != null ? '$title: $message' : message;
+    //   ft.Fluttertoast.showToast(
+    //     msg: text,
+    //     toastLength: ft.Toast.LENGTH_SHORT,
+    //     gravity: ft.ToastGravity.BOTTOM,
+    //     fontSize: 14.0,
+    //   );
+    //   return;
+    // }
 
     final messenger = ScaffoldMessenger.of(context);
     messenger.hideCurrentSnackBar();

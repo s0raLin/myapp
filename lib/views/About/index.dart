@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:myapp/components/Shared/index.dart';
 import 'package:myapp/contants/Assets/index.dart';
 import 'package:myapp/providers/MusicProvider/index.dart';
 import 'package:provider/provider.dart';
@@ -8,16 +7,6 @@ import 'package:url_launcher/url_launcher.dart';
 
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
-
-  Future<void> _launchUrl(BuildContext context, String url) async {
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else {
-      if (!context.mounted) return;
-      AppToast.error(context, title: '链接打开失败', message: '无法打开链接：$url');
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
