@@ -13,8 +13,16 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
   }
 
   /// 供 Provider 调用：切换歌曲并播放
-  Future<void> playMusic(MusicInfo music) async {
-    final uri = await MusicService.getAudioServiceCoverFromBytes(music.coverBytes, music.id);
+  Future<void> playMusic(MusicInfo music, {bool autoPlay = true}) async {
+    // preload: true 会在后台把这首歌的音轨、时长、缓冲提前备好，但不会自发响起来
+    await _player.setAudioSource(
+      AudioSource.file(music.id),
+      preload: true
+    );
+    final uri = await MusicService.getAudioServiceCoverFromBytes(
+      music.coverBytes,
+      music.id,
+    );
     final item = MediaItem(
       id: music.id,
       album: music.album ?? "未知专辑",
@@ -27,8 +35,12 @@ class MyAudioHandler extends BaseAudioHandler with QueueHandler, SeekHandler {
     mediaItem.add(item);
 
     try {
-      await _player.setFilePath(music.id);
-      await play();
+      // 2. 根据状态决定是否立刻开播
+      if (autoPlay) {
+        await play();
+      } else {
+        await pause(); // 强行确保处于暂停准备状态
+      }
     } catch (e) {
       playbackState.add(
         playbackState.value.copyWith(errorMessage: e.toString()),

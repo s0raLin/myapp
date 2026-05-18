@@ -382,24 +382,31 @@ class MusicProvider extends ChangeNotifier {
   ///
   /// - 若歌曲已在队列中，直接跳转至对应位置；
   /// - 否则追加到队尾后播放。
-  void playFromLibrary(MusicInfo music) {
-    // 检查这首歌是否就是当前正在播放的歌
-    if (_currentIndex != -1 && _queue[_currentIndex].id == music.id) {
-      if (player.playing) {
-        // 如果正在播放，直接复用togglePlay() 来暂停它
-        togglePlay();
-        return;
+  void playFromLibrary(MusicInfo music, {bool autoPlay = true}) {
+    // 检查这首歌是否就是当前队列中正在激活的歌
+    final isCurrentMusic =
+        _currentIndex != -1 && _queue[_currentIndex].id == music.id;
+
+    if (isCurrentMusic) {
+      if (autoPlay) {
+        if (player.playing) {
+          togglePlay(); // 如果正在播放，直接暂停
+        } else {
+          togglePlay(); // 如果暂停了，直接让它继续播放
+        }
       }
+      // 如果 autoPlay 为 false 且是同一首歌，什么都不做，直接退出，防止切歌断音
+      return;
     }
 
     // 如果不是当前正在播放的歌，走原有的逻辑
     final existingIndex = _queue.indexWhere((m) => m.id == music.id);
 
     if (existingIndex != -1) {
-      playByIndex(existingIndex);
+      playByIndex(existingIndex, autoPlay: autoPlay);
     } else {
       _queue.add(music);
-      playByIndex(_queue.length - 1);
+      playByIndex(_queue.length - 1, autoPlay: autoPlay);
     }
   }
 
@@ -410,10 +417,10 @@ class MusicProvider extends ChangeNotifier {
   /// 2. 解析并更新歌词 [_currentLyrics]
   /// 3. 将歌曲写入播放历史
   /// 4. 加载音频文件并开始播放
-  Future<void> playByIndex(int index) async {
+  Future<void> playByIndex(int index, {bool autoPlay = true}) async {
     if (index < 0 || index >= _queue.length) return;
     // 同一首歌且正在播放时不重复操作
-    if (index == _currentIndex && player.playing) return;
+    if (index == _currentIndex && player.playing && autoPlay) return;
 
     _currentIndex = index;
     final music = _queue[index];
@@ -424,9 +431,12 @@ class MusicProvider extends ChangeNotifier {
     // 先通知 UI 更新歌词，再执行耗时的音频加载
     notifyListeners();
 
-    _addToHistory(music);
-
-    audioHandler.playMusic(music);
+    if (autoPlay) {
+      _addToHistory(music);
+      audioHandler.playMusic(music);
+    } else {
+      audioHandler.playMusic(music, autoPlay: false);
+    }
   }
 
   /// 切换播放 / 暂停状态。

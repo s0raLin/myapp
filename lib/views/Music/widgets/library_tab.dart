@@ -56,10 +56,11 @@ class LibraryTab extends StatelessWidget {
                   music: music,
                   isCurrent: music.id == musicProvider.currentMusic?.id,
                   onTap: () {
+                    musicProvider.playFromLibrary(music);
                     context.push("/music-detail");
                   },
                   onPressed: () {
-                    musicProvider.playFromLibrary(music);
+                    musicProvider.replaceQueue(library, startIndex: index);
                   },
                 );
               },
