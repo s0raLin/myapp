@@ -71,7 +71,7 @@ class _CoverFlowPageState extends State<CoverFlowPage> {
                       relativePosition: relativePos,
                       onTap: () {
                         mp.playByIndex(index);
-                        context.push('/music-detail');
+                        context.push('/music-detail', extra: music);
                       },
                     );
                   },

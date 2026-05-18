@@ -56,11 +56,10 @@ class LibraryTab extends StatelessWidget {
                   music: music,
                   isCurrent: music.id == musicProvider.currentMusic?.id,
                   onTap: () {
-                    AppToast.neutral(context, message: music.title);
+                    context.push("/music-detail", extra: music);
                   },
                   onPressed: () {
                     musicProvider.playFromLibrary(music);
-                    context.push("/music-detail", extra: music);
                   },
                 );
               },
@@ -98,7 +97,11 @@ class SongTile extends StatelessWidget {
       highlighted: isCurrent,
       trailing: FilledButton(
         onPressed: onPressed,
-        child: Icon(isCurrent&isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded),
+        child: Icon(
+          isCurrent & isPlaying
+              ? Icons.pause_rounded
+              : Icons.play_arrow_rounded,
+        ),
       ),
     );
   }

@@ -8,7 +8,8 @@ import 'package:provider/provider.dart';
 // ─── 主页面 ───────────────────────────────────────────────────────────────────
 
 class MusicDetailPage extends StatefulWidget {
-  const MusicDetailPage({super.key});
+  final MusicInfo music;
+  const MusicDetailPage({super.key, required this.music});
 
   @override
   State<MusicDetailPage> createState() => _MusicDetailPageState();
@@ -17,20 +18,14 @@ class MusicDetailPage extends StatefulWidget {
 class _MusicDetailPageState extends State<MusicDetailPage> {
   @override
   Widget build(BuildContext context) {
-    final music = context.select<MusicProvider, MusicInfo?>(
-      (p) => p.currentMusic,
-    );
-    if (music == null) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
 
     final isLiked = context.select<MusicProvider, bool>(
-      (p) => p.favList.any((m) => m.id == music.id),
+      (p) => p.favList.any((m) => m.id == widget.music.id),
     );
     final isWide = MediaQuery.sizeOf(context).width > 700;
 
     return isWide
-        ? WideLayout(music: music, isLiked: isLiked)
-        : NarrowLayout(music: music, isLiked: isLiked);
+        ? WideLayout(music: widget.music, isLiked: isLiked)
+        : NarrowLayout(music: widget.music, isLiked: isLiked);
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:myapp/model/Music/index.dart';
 import 'package:myapp/providers/MusicProvider/index.dart';
 import 'package:provider/provider.dart';
 
@@ -10,7 +11,15 @@ class NowPlayingMiniFab extends StatelessWidget {
   Widget build(BuildContext context) {
     final mp = context.watch<MusicProvider>();
     final cs = Theme.of(context).colorScheme;
-    final isPlaying = mp.player.playing;
+    final music = context.select<MusicProvider, MusicInfo?>(
+      (p) => p.currentMusic,
+    );
+    final isPlaying = context.select<MusicProvider, bool>(
+      (p) => p.player.playing,
+    );
+    if (music == null) {
+      return SizedBox.shrink();
+    }
     return GestureDetector(
       // 1. 长按：恢复成 Bar 模式
       onLongPress: () {
@@ -19,7 +28,7 @@ class NowPlayingMiniFab extends StatelessWidget {
       },
       // 2. 双击：跳转到详情页 (或者你可以把单击设为跳转，长按设为模式切换)
       onDoubleTap: () {
-        context.push('/music-detail');
+        context.push('/music-detail', extra: music);
       },
       child: FloatingActionButton(
         onPressed: () {

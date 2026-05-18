@@ -172,8 +172,9 @@ final _routes = [
   GoRoute(
     path: "/music-detail",
     pageBuilder: (context, state) {
+      final music = state.extra as MusicInfo;
       return CustomTransitionPage(
-        child: MusicDetailPage(),
+        child: MusicDetailPage(music: music),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return SlideTransition(
             position:
