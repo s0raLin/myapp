@@ -388,13 +388,13 @@ class MusicProvider extends ChangeNotifier {
         _currentIndex != -1 && _queue[_currentIndex].id == music.id;
 
     if (isCurrentMusic) {
-      if (autoPlay) {
-        if (player.playing) {
-          togglePlay(); // 如果正在播放，直接暂停
-        } else {
-          togglePlay(); // 如果暂停了，直接让它继续播放
-        }
-      }
+      // if (autoPlay) {
+      //   if (player.playing) {
+      //     togglePlay(); // 如果正在播放，直接暂停
+      //   } else {
+      //     togglePlay(); // 如果暂停了，直接让它继续播放
+      //   }
+      // }
       // 如果 autoPlay 为 false 且是同一首歌，什么都不做，直接退出，防止切歌断音
       return;
     }
