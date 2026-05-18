@@ -371,19 +371,7 @@ class MusicProvider extends ChangeNotifier {
     // 1. 安全边界检查
     if (songs.isEmpty || startIndex < 0 || startIndex >= songs.length) return;
 
-    final targetMusic = songs[startIndex];
-
-    // 2. 核心修正：智能化判断。如果点的是当前队列中正在激活的这首歌
-    if (_currentIndex != -1 && currentMusic?.id == targetMusic.id) {
-      if (autoPlay) {
-        // 如果用户期望的操作是激活/播放，那就在这里直接切换 播放/暂停
-        togglePlay();
-      }
-      // 执行完单曲控制后直接退出，绝对不要去动底层的整个队列和 player.stop()
-      return;
-    }
-
-    // 3. 真正需要换队列的情况
+    // 真正需要换队列的情况
     _queue = List.from(songs);
     _currentIndex = -1;
 
@@ -461,11 +449,13 @@ class MusicProvider extends ChangeNotifier {
 
   /// 切换播放 / 暂停状态。
   void togglePlay() {
+
     if (player.playing) {
-      audioHandler.pause();
-    } else {
-      audioHandler.play();
-    }
+        player.pause(); // 如果正在播放，直接暂停
+      } else {
+        player.play(); // 如果暂停了，直接让它继续播放
+      }
+
     notifyListeners();
   }
 

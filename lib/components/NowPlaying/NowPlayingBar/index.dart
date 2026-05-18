@@ -108,7 +108,7 @@ class _WideLayout extends StatelessWidget {
                   ),
                   // M3 Filled Icon Button — 主操作，使用 primary container
                   IconButton.filled(
-                    onPressed: mp.togglePlay,
+                    onPressed: () => mp.togglePlay(),
                     style: IconButton.styleFrom(
                       // M3：Filled Icon Button 使用 primary color，尺寸 40dp
                       minimumSize: const Size(40, 40),
@@ -199,7 +199,7 @@ class _CompactLayout extends StatelessWidget {
           ),
           iconSize: 24,
           tooltip: isPlaying ? '暂停' : '播放',
-          onPressed: mp.togglePlay,
+          onPressed: () => mp.togglePlay(),
         ),
         IconButton(
           icon: const Icon(Icons.queue_music_rounded),

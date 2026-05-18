@@ -14,6 +14,11 @@ class LibraryTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final musicProvider = context.watch<MusicProvider>();
     final library = musicProvider.library;
+
+    final currentMusic = context.select<MusicProvider, MusicInfo?>(
+      (p) => p.currentMusic,
+    );
+
     return RefreshIndicator(
       onRefresh: () async {},
       child: library.isEmpty
@@ -60,7 +65,11 @@ class LibraryTab extends StatelessWidget {
                     context.push("/music-detail");
                   },
                   onPressed: () {
-                    musicProvider.replaceQueue(library, startIndex: index);
+                    if (currentMusic == null || currentMusic.id != music.id) {
+                      musicProvider.playFromLibrary(music);
+                    } else {
+                      musicProvider.togglePlay();
+                    }
                   },
                 );
               },
