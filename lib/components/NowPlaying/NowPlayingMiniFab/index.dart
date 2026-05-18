@@ -28,7 +28,7 @@ class NowPlayingMiniFab extends StatelessWidget {
       },
       // 2. 双击：跳转到详情页 (或者你可以把单击设为跳转，长按设为模式切换)
       onDoubleTap: () {
-        context.push('/music-detail', extra: music);
+        context.push('/music-detail');
       },
       child: FloatingActionButton(
         onPressed: () {

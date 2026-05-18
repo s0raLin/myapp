@@ -171,7 +171,7 @@ class _HomePageState extends State<HomePage> {
                             onTap: () {
                               final mp = context.read<MusicProvider>();
                               mp.replaceQueue(mp.history, startIndex: index);
-                              context.push('/music-detail', extra: item);
+                              context.push('/music-detail');
                             },
                             badge: Container(
                               padding: const EdgeInsets.symmetric(
