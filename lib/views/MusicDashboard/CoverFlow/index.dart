@@ -15,22 +15,22 @@ class _CoverFlowPageState extends State<CoverFlowPage> {
   late PageController _pageController;
   double _currentPage = 0.0;
 
-  // 设定一个你认为最舒服的卡片物理宽度
-  final double _idealCardWidth = 300.0;
+  final double _cardWidth = 280.0;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // ✅ 动态计算 viewportFraction：确保卡片间距紧凑
-    // 如果屏幕宽 1200，卡片宽 300，比例就是 0.25
-    double screenWidth = MediaQuery.of(context).size.width;
-    double fraction = (_idealCardWidth / screenWidth).clamp(0.2, 0.8);
+
+    final screenWidth = MediaQuery.of(context).size.width;
+    final fraction = (_cardWidth / screenWidth).clamp(0.22, 0.75);
 
     _pageController = PageController(viewportFraction: fraction);
-    _pageController.addListener(() {
-      setState(() {
-        _currentPage = _pageController.page ?? 0.0;
-      });
+    _pageController.addListener(_onPageChanged);
+  }
+
+  void _onPageChanged() {
+    setState(() {
+      _currentPage = _pageController.page ?? 0.0;
     });
   }
 
@@ -43,53 +43,48 @@ class _CoverFlowPageState extends State<CoverFlowPage> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-
     final mp = context.read<MusicProvider>();
     final queue = mp.queue;
 
     return Scaffold(
-      // 使用 M3 标准的表面颜色
       backgroundColor: colorScheme.surface,
       appBar: AppBar(
         title: const Text("Now Playing"),
-        backgroundColor: Colors.transparent,
+        backgroundColor: colorScheme.surface,
         scrolledUnderElevation: 0,
       ),
       body: queue.isEmpty
-          ? _buildEmptyState(colorScheme, textTheme)
+          ? _buildEmptyState(context)
           : Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    height: _idealCardWidth + 80, // 预留文字空间
-                    child: PageView.builder(
-                      controller: _pageController,
-                      clipBehavior: Clip.none, // 允许左右卡片超出边界显示，增加紧凑感
-                      itemCount: queue.length,
-                      itemBuilder: (context, index) {
-                        double relativePosition = index - _currentPage;
-                        final music = queue[index];
-                        return _buildM3Card(
-                          music,
-                          relativePosition,
-                          context,
-                          onTap: () {
-                            context.push('/music-detail');
-                            mp.playByIndex(index);
-                          },
-                        );
+              child: SizedBox(
+                height: _cardWidth + 120,
+                child: PageView.builder(
+                  controller: _pageController,
+                  clipBehavior: Clip.none,
+                  itemCount: queue.length,
+                  itemBuilder: (context, index) {
+                    final music = queue[index];
+                    final relativePos = index - _currentPage;
+
+                    return _buildMusicCard(
+                      music: music,
+                      relativePosition: relativePos,
+                      onTap: () {
+                        mp.playByIndex(index);
+                        context.push('/music-detail');
                       },
-                    ),
-                  ),
-                ],
+                    );
+                  },
+                ),
               ),
             ),
     );
   }
 
-  Widget _buildEmptyState(ColorScheme colorScheme, TextTheme textTheme) {
+  Widget _buildEmptyState(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return Center(
       child: Text(
         "队列为空",
@@ -100,73 +95,81 @@ class _CoverFlowPageState extends State<CoverFlowPage> {
     );
   }
 
-  Widget _buildM3Card(
-    MusicInfo music,
-    double relativePosition,
-    BuildContext context, {
+  Widget _buildMusicCard({
+    required MusicInfo music,
+    required double relativePosition,
     required VoidCallback onTap,
   }) {
-    // 变换逻辑：侧边卡片稍微缩小并旋转
-    final double scale = (1 - (relativePosition.abs() * 0.15)).clamp(0.0, 1.0);
-    final double rotation = (relativePosition * 0.2).clamp(-1.0, 1.0);
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
+    // M3 风格的轻微 3D 效果
+    final scale = (1 - (relativePosition.abs() * 0.18)).clamp(0.75, 1.0);
+    final rotation = (relativePosition * 0.15).clamp(-0.8, 0.8);
+
     return Center(
-      child: Container(
-        width: _idealCardWidth,
+      child: Transform(
         transform: Matrix4.identity()
-          ..setEntry(3, 2, 0.001)
+          ..setEntry(3, 2, 0.001) // 轻微透视
           ..scale(scale)
           ..rotateY(rotation),
-        transformAlignment: Alignment.center,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // 卡片主体
-            Card(
-              elevation: 0, // M3 风格倾向于使用色调变化而非深阴影
-              clipBehavior: Clip.antiAlias,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(28), // M3 典型的圆角
-                side: BorderSide(
-                  color: colorScheme.outlineVariant.withOpacity(0.5),
-                  width: 1,
+        alignment: Alignment.center,
+        child: SizedBox(
+          width: _cardWidth,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Card(
+                elevation: 1,
+                color: colorScheme.surfaceContainerHigh,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(28),
                 ),
-              ),
-              color: colorScheme.surfaceContainerHigh,
-              child: InkWell(
-                onTap: onTap,
-                child: AspectRatio(
-                  aspectRatio: 1,
-                  child:
-                      music.coverBytes != null && music.coverBytes!.isNotEmpty
-                      ? Image.memory(
-                          music.coverBytes!,
-                          fit: BoxFit.cover,
-                          filterQuality: FilterQuality.medium, // 兼顾性能与清晰度
-                        )
-                      : Icon(Icons.music_note_rounded),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-            // 文字部分：使用 FittedBox 解决越界，使用 M3 字体样式
-            SizedBox(
-              width: _idealCardWidth * 0.8,
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  music.title,
-                  style: textTheme.titleLarge?.copyWith(
-                    color: colorScheme.onSurface,
-                    fontWeight: FontWeight.w600,
+                clipBehavior: Clip.antiAlias,
+                child: InkWell(
+                  onTap: onTap,
+                  child: AspectRatio(
+                    aspectRatio: 1,
+                    child:
+                        music.coverBytes != null && music.coverBytes!.isNotEmpty
+                        ? Image.memory(
+                            music.coverBytes!,
+                            fit: BoxFit.cover,
+                            filterQuality: FilterQuality.medium,
+                          )
+                        : Container(
+                            color: colorScheme.surfaceContainer,
+                            child: Icon(
+                              Icons.music_note_rounded,
+                              size: 64,
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                          ),
                   ),
                 ),
               ),
-            ),
-          ],
+              const SizedBox(height: 20),
+              Text(
+                music.title,
+                style: textTheme.titleLarge?.copyWith(
+                  color: colorScheme.onSurface,
+                  fontWeight: FontWeight.w600,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              Text(
+                music.artist,
+                style: textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
         ),
       ),
     );
