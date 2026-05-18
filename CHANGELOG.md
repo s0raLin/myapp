@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.18.0](https://github.com/s0raLin/miku_music/compare/v1.17.0...v1.18.0) (2026-05-18)
+
+
+### Features
+
+* **music:** enhance library playback controls and UI feedback ([2f029ec](https://github.com/s0raLin/miku_music/commit/2f029ec6b79f1fc8cfc59144e98bce17b5d9562e))
+* **music:** pass music data via router extra to detail page ([2b33458](https://github.com/s0raLin/miku_music/commit/2b33458789aa0e495dbebd8f9020c78faf33f135))
+
 ## [1.17.0](https://github.com/s0raLin/miku_music/compare/v1.16.0...v1.17.0) (2026-05-17)
 
 
