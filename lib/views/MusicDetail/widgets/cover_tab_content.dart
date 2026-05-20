@@ -84,10 +84,7 @@ class CoverTabContent extends StatelessWidget {
               onPressed: () {
                 provider.toggleFav(music);
                 final isFav = provider.favList.any((m) => m.id == music.id);
-                AppToast.neutral(
-                  context,
-                  message: isFav ? '已添加到喜欢' : '已取消收藏',
-                );
+                AppToast.neutral(context, message: isFav ? '已添加到喜欢' : '已取消收藏');
               },
               icon: Icon(
                 isLiked
@@ -187,8 +184,6 @@ class CoverTabContent extends StatelessWidget {
   }
 }
 
-
-
 // ─── 播放控制按钮组 ────────────────────────────────────────────────────────────
 
 class _PlaybackControls extends StatelessWidget {
@@ -205,6 +200,11 @@ class _PlaybackControls extends StatelessWidget {
       PlayMode.shuffle => Icons.shuffle_rounded,
       PlayMode.repeat => Icons.repeat_one_rounded,
     };
+    String modeTooltip(PlayMode mode) => switch (mode) {
+      PlayMode.sequence => "顺序播放",
+      PlayMode.shuffle => "随机播放",
+      PlayMode.repeat => "单曲循环",
+    };
 
     return StreamBuilder<ProcessingState>(
       stream: provider.player.processingStateStream,
@@ -217,7 +217,7 @@ class _PlaybackControls extends StatelessWidget {
               onPressed: provider.togglePlayMode,
               icon: Icon(modeIcon(provider.playMode)),
               color: cs.onSurfaceVariant,
-              tooltip: '播放模式',
+              tooltip: modeTooltip(provider.playMode),
             ),
             const SizedBox(width: 12),
             IconButton(
@@ -265,8 +265,6 @@ class _VolumeButton extends StatefulWidget {
   @override
   State<_VolumeButton> createState() => _VolumeButtonState();
 }
-
-
 
 class _VolumeButtonState extends State<_VolumeButton> {
   final MenuController _menuController = MenuController();
