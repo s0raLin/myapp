@@ -148,7 +148,7 @@ class ThemeProvider extends ChangeNotifier {
 
     return baseTheme.copyWith(
       // 整合：桌面端优化动画
-      pageTransitionsTheme: const PageTransitionsTheme(
+      pageTransitionsTheme: PageTransitionsTheme(
         builders: {
           TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
           TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
